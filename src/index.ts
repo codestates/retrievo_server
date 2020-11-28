@@ -16,6 +16,9 @@ import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, __prod__ } from "./constrants";
 import { verifyPassword, hashPassword } from "./utils/authUtils";
 
+import dotenv from "dotenv-safe";
+dotenv.config({ example: "./.env" });
+
 const main = async () => {
   //orm Setting
   await createConnection({
@@ -27,7 +30,7 @@ const main = async () => {
     synchronize: true, // projection에선 제외해야함,
     entities: [User],
   });
-  // await Post.delete({});
+
   //passport setting
   passport.serializeUser((user: any, done): void => {
     done(null, user.id);
@@ -91,6 +94,10 @@ const main = async () => {
       resave: false,
     })
   );
+
+  app.get("/", (req, res) => {
+    res.send("<h1>Hi this is retrievo!</h1>");
+  });
 
   //apollo Setting
   const apolloServer = new ApolloServer({
