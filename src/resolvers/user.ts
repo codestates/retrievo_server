@@ -9,12 +9,12 @@ import {
   ObjectType,
   Query,
 } from "type-graphql";
-import argon2 from "argon2";
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constrants";
+// import argon2 from "argon2";
+// import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constrants";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
 // import { validateRegister } from "../utils/validateRegister";
 // import { sendEmail } from "../utils/sendEmail";
-import { getConnection } from "typeorm";
+// import { getConnection } from "typeorm";
 import { FieldError } from "../types";
 import { hashPassword } from "../utils/authUtils";
 
