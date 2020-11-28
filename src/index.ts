@@ -112,7 +112,7 @@ const main = async () => {
     development: { ssl: false, port: 4000, hostname: "localhost" },
   };
 
-  const environment = process.env.NODE_ENV || "production";
+  const environment = process.env.NODE_ENV || "development";
   const config = configurations[environment];
 
   const apolloServer = new ApolloServer({
@@ -129,20 +129,7 @@ const main = async () => {
     cors: false,
   });
 
-  let server;
-  if (config.ssl) {
-    // Assumes certificates are in a .ssl folder off of the package root. Make sure
-    // these files are secured.
-    server = https.createServer(
-      {
-        key: fs.readFileSync(`./ssl/${environment}/server.key`),
-        cert: fs.readFileSync(`./ssl/${environment}/server.crt`),
-      },
-      app
-    );
-  } else {
-    server = http.createServer(app);
-  }
+  let server = http.createServer(app);
 
   //open app
   app.listen(4000, () => {
