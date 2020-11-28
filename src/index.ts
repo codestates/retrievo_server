@@ -10,6 +10,9 @@ import { GraphQLLocalStrategy, buildContext } from "graphql-passport";
 import { buildSchema } from "type-graphql";
 import { createConnection, getManager } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
+import http from "http";
+import https from "https";
+import fs from "fs";
 // local
 import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
@@ -23,7 +26,9 @@ const main = async () => {
   //orm Setting
   await createConnection({
     type: "postgres",
-    database: "retrievo_db",
+    database: "retrievo_dev",
+    host: process.env.POSTGRES_HOST,
+    port: 5432,
     username: process.env.POSTGRES_USERNAME || "postgres",
     password: process.env.POSTGRES_PASSWORD || "root",
     logging: true,
@@ -65,8 +70,8 @@ const main = async () => {
   const app = express();
 
   //redis Setting (before apollo middleware)
-  const RedisStore = connectRedis(session);
-  const redis = new Redis();
+  // const RedisStore = connectRedis(session);
+  // const redis = new Redis();
 
   app.use(
     cors({
@@ -78,10 +83,10 @@ const main = async () => {
   app.use(
     session({
       name: COOKIE_NAME,
-      store: new RedisStore({
-        client: redis,
-        disableTouch: true,
-      }),
+      // store: new RedisStore({
+      //   client: redis,
+      //   disableTouch: true,
+      // }),
       cookie: {
         path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 30, //1 month
@@ -100,6 +105,16 @@ const main = async () => {
   });
 
   //apollo Setting
+
+  const configurations = {
+    // Note: You may need sudo to run on port 443
+    production: { ssl: true, port: 4000, hostname: "54.180.201.19" },
+    development: { ssl: false, port: 4000, hostname: "localhost" },
+  };
+
+  const environment = process.env.NODE_ENV || "production";
+  const config = configurations[environment];
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [UserResolver],
@@ -114,9 +129,29 @@ const main = async () => {
     cors: false,
   });
 
+  let server;
+  if (config.ssl) {
+    // Assumes certificates are in a .ssl folder off of the package root. Make sure
+    // these files are secured.
+    server = https.createServer(
+      {
+        key: fs.readFileSync(`./ssl/${environment}/server.key`),
+        cert: fs.readFileSync(`./ssl/${environment}/server.crt`),
+      },
+      app
+    );
+  } else {
+    server = http.createServer(app);
+  }
+
   //open app
   app.listen(4000, () => {
-    console.log("server started on localhost:4000");
+    console.log(
+      "🚀 Server ready at",
+      `http${config.ssl ? "s" : ""}://${config.hostname}:${config.port}${
+        apolloServer.graphqlPath
+      }`
+    );
   });
 };
 
