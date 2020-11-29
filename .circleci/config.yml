@@ -27,13 +27,13 @@ jobs:
       
       ##### deploy starts
       
-   deploy:
-    machine:
-    enabled: true
-    steps:
-      - run:
-          name: Deploy Over SSH
-          command: ssh [hostID]@[domain] "./deploy.sh"
+  deploy:
+   machine:
+   enabled: true
+   steps:
+    - run:
+      name: Deploy Over SSH
+      command: ssh [hostID]@[domain] "./deploy.sh"
 
 workflows:
   version: 2
