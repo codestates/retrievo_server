@@ -35,6 +35,7 @@
     "@types/passport-google-oauth20": "^2.0.4",
     "apollo-server-express": "^2.16.1",
     "argon2": "^0.26.2",
+    "class-validator": "^0.12.2",
     "connect-redis": "^5.0.0",
     "cors": "^2.8.5",
     "dataloader": "^2.0.0",
