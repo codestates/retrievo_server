@@ -24,7 +24,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: yarn install, build
-    - run: |
+      run: |
         yarn 
         yarn build --if-present #Convert ts file into dist folder 
 
