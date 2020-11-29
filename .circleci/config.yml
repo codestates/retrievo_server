@@ -23,14 +23,13 @@ jobs:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      # run build
       - run: yarn build
       
       ##### deploy starts
       
-         deploy:
+   deploy:
     machine:
-      enabled: true
+    enabled: true
     steps:
       - run:
           name: Deploy Over SSH
@@ -46,4 +45,4 @@ workflows:
             - build
           filters:
             branches:
-              only: develop
+              only: dev
