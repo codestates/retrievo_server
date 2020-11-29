@@ -32,7 +32,7 @@ jobs:
     steps:
       - run:
           name: Deploy Over SSH
-          command: ssh ubuntu@ec2-54-180-201-19.ap-northeast-2.compute.amazonaws.com "./deploy.sh"
+          command: ssh ubuntu@54.180.201.19 "./deploy.sh"
 
 workflows:
   version: 2
