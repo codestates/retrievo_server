@@ -1,4 +1,3 @@
-
 version: 2
 jobs:
   build:
@@ -24,16 +23,16 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
 
       - run: yarn build
-      
+
       ##### deploy starts
-      
+
   deploy:
-   machine:
-   enabled: true
-   steps:
-    - run:
-      name: Deploy Over SSH
-      command: ssh [hostID]@[domain] "./deploy.sh"
+    machine:
+      enabled: true
+    steps:
+      - run:
+          name: Deploy Over SSH
+          command: ssh [hostID]@[domain] "./deploy.sh"
 
 workflows:
   version: 2
