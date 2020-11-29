@@ -147,4 +147,6 @@ main().catch((err) => {
 });
 
 //I am here for action test
+// 과연 circleci는 작동할 것인가ㅏ...(test3)
+// 풀리퀘스트는 과연 될 것인가.. JIRA(test2)
 // 과연 circleci CD는 작동할 것인가ㅏ...(test4)
