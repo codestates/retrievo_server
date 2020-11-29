@@ -3,6 +3,14 @@ import { Session, SessionData } from "express-session";
 import { Redis } from "ioredis";
 import { ObjectType, Field } from "type-graphql";
 
+declare global {
+  namespace Express {
+    interface SessionData {
+      cookie: any
+    }
+  }
+}
+
 export type MyContext = {
   req: Request & {
     session: Session & Partial<SessionData> & { userId?: number };
@@ -22,3 +30,4 @@ export class FieldError {
   @Field()
   code: number;
 }
+

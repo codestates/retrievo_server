@@ -1,5 +1,5 @@
 import { User } from "../entities/User";
-import { MyContext } from "src/types";
+// import { MyContext } from "src/types";
 import {
   Resolver,
   Ctx,
