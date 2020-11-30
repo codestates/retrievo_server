@@ -93,20 +93,21 @@ export class UserResolver {
   ): Promise<UserResponse | undefined> {
     // const errors = validateRegister(options);
     // if (errors) return { errors };
-    const hashed = await hashPassword(options.password);
-    if (!hashed) {
-      return {
-        errors: [
-          {
-            field: "password",
-            message: "Internal Server Error",
-            code: 500,
-          },
-        ],
-      };
-    }
 
     try {
+      const hashed = await hashPassword(options.password);
+      if (hashed instanceof Error) {
+        return {
+          errors: [
+            {
+              field: "password",
+              message: "Internal Server Error",
+              code: 500,
+            },
+          ],
+        };
+      }
+
       const user = await User.create({
         username: options.username,
         email: options.email,

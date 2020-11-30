@@ -1,7 +1,7 @@
 module.exports = {
   env: {
     browser: true,
-    es6: true,
+    es2021: true,
     node: true,
   },
   settings: {
@@ -41,5 +41,9 @@ module.exports = {
         tsx: "never",
       },
     ],
+    "prettier/prettier": "error",
+    "no-unused-vars": "warn",
+    "no-console": "warn",
+    "click-events-have-key-events": "off",
   },
 };

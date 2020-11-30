@@ -14,7 +14,7 @@ import { ApolloServer } from "apollo-server-express";
 import dotenv from "dotenv-safe";
 import User from "./entities/User";
 import { UserResolver } from "./resolvers/user";
-import { COOKIE_NAME, __prod__ } from "./constrants";
+import { COOKIE_NAME, prod } from "./constrants";
 import { verifyPassword } from "./utils/authUtils";
 
 dotenv.config({ example: "./.env" });
@@ -89,7 +89,7 @@ const main = async () => {
         maxAge: 1000 * 60 * 60 * 24 * 30, // 1 month
         httpOnly: true,
         sameSite: "lax", // csrf
-        secure: __prod__, // cookie only work in https
+        secure: prod, // cookie only work in https
       },
       saveUninitialized: false,
       secret: process.env.COOKIE_SECRET!,
