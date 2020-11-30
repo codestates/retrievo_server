@@ -1,5 +1,6 @@
 #!/bin/bash
 echo ""
+echo ""
 echo "(more check before push}🐶"
 
 echo "push to: $1"
