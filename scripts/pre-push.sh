@@ -2,6 +2,8 @@
 echo "(more check before push}🐶"
 
 echo "1: $1"
+echo "2: $2"
+echo "3: $3"
 
 BRANCH_NAME=$(git symbolic-ref --short HEAD)
 BRANCH_NAME="${BRANCH_NAME##*/}"
