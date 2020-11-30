@@ -74,9 +74,9 @@
     "url": "https://github.com/codestates/im23final4_server/issues"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,jsx}": [
       "eslint --fix",
-      "git add"
+      "prettier --write"
     ]
   },
   "homepage": "https://github.com/codestates/im23final4_server#readme"

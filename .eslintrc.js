@@ -1,8 +1,11 @@
 module.exports = {
   env: {
     browser: true,
-    es2021: true,
+    es6: true,
     node: true,
+  },
+  settings: {
+    "import/resolver": { node: { extensions: [".js", ".jsx", ".ts", ".tsx"] } },
   },
   extends: [
     "eslint:recommended",
@@ -22,8 +25,21 @@ module.exports = {
   plugins: ["@typescript-eslint"],
   rules: {
     indent: ["error", 2],
-    "linebreak-style": ["error", "unix"],
     quotes: ["error", "double"],
     semi: ["error", "always"],
+    "no-shadow": 0,
+    "linebreak-style": ["error", "unix"],
+    "no-return-await": 0,
+    "class-methods-use-this": 0,
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        js: "never",
+        jsx: "never",
+        ts: "never",
+        tsx: "never",
+      },
+    ],
   },
 };

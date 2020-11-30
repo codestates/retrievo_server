@@ -1,31 +1,14 @@
-import { User } from "../entities/User";
 // import { MyContext } from "src/types";
-import {
-  Resolver,
-  Ctx,
-  Arg,
-  Mutation,
-  Field,
-  ObjectType,
-  Query,
-} from "type-graphql";
 // import argon2 from "argon2";
 // import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constrants";
-import { UsernamePasswordInput } from "./UsernamePasswordInput";
 // import { validateRegister } from "../utils/validateRegister";
 // import { sendEmail } from "../utils/sendEmail";
 // import { getConnection } from "typeorm";
-import { FieldError } from "../types";
+import { Resolver, Ctx, Arg, Mutation, Query } from "type-graphql";
+import User from "../entities/User";
+import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { hashPassword } from "../utils/authUtils";
-
-@ObjectType()
-class UserResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
-
-  @Field(() => User, { nullable: true })
-  user?: User;
-}
+import { UserResponse } from "./UserResponse";
 
 @Resolver()
 export class UserResolver {
@@ -116,7 +99,7 @@ export class UserResolver {
         errors: [
           {
             field: "password",
-            message: `Internal Server Error`,
+            message: "Internal Server Error",
             code: 500,
           },
         ],
@@ -134,7 +117,7 @@ export class UserResolver {
       return { user };
     } catch (error) {
       if (error.code === "23505") {
-        //duplicate username error
+        // duplicate username error
         return {
           errors: [
             {
@@ -150,7 +133,7 @@ export class UserResolver {
         errors: [
           {
             field: "Error",
-            message: `Something bad happened 😱`,
+            message: "Something bad happened 😱",
             code: 500,
           },
         ],
@@ -200,3 +183,5 @@ export class UserResolver {
   //     );
   //   }
 }
+
+export default UserResolver;
