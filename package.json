@@ -26,6 +26,7 @@
     "@types/nodemailer": "^6.4.0",
     "@types/passport": "^1.0.4",
     "gen-env-types": "^1.0.3",
+    "husky": "^4.3.0",
     "nodemon": "^2.0.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
