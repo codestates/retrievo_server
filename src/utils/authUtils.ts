@@ -17,11 +17,11 @@ export const verifyPassword = async (
 
 export const hashPassword = async (
   password: string
-): Promise<string | undefined> => {
+): Promise<string | Error> => {
   try {
     const hashedPassword = await argon2.hash(password);
     return hashedPassword;
   } catch (err) {
-    return;
+    return new Error(err);
   }
 };

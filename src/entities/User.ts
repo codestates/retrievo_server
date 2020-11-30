@@ -31,7 +31,7 @@ registerEnumType(roleTypes, {
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export default class User extends BaseEntity {
   @Field(() => String)
   @PrimaryGeneratedColumn("uuid")
   id!: string;

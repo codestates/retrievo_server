@@ -3,10 +3,11 @@ import { Session, SessionData } from "express-session";
 import { Redis } from "ioredis";
 import { ObjectType, Field } from "type-graphql";
 
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface SessionData {
-      cookie: any
+      cookie: any;
     }
   }
 }
@@ -30,4 +31,3 @@ export class FieldError {
   @Field()
   code: number;
 }
-
