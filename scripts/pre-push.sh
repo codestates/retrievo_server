@@ -1,15 +1,11 @@
 #!/bin/bash
+echo ""
 echo "(more check before push}🐶"
 
-ARR_GIT_STDIN=$(echo $HUSKY_GIT_STDIN)
-
-echo "1: ${ARR_GIT_STDIN[0]}"
-echo "2: ${ARR_GIT_STDIN[1]}"
-echo "3: ${ARR_GIT_STDIN[2]}"
-echo "4: ${ARR_GIT_STDIN[3]}"
+echo "1: $1"
 
 BRANCH_NAME=$(git symbolic-ref --short HEAD)
-BRANCH_NAME="${BRANCH_NAME##*/}"
+# BRANCH_NAME="${BRANCH_NAME##*/}"
 
 JIRA_ID=$(echo $BRANCH_NAME)
 

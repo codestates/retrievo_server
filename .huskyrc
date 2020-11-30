@@ -2,6 +2,6 @@
   "hooks":{
     "pre-commit": "sh scripts/pre-commit.sh",
     "prepare-commit-msg": "sh scripts/prepare-commit-msg.sh $HUSKY_GIT_PARAMS",
-    "pre-push": "sh scripts/pre-push.sh $HUSKY_GIT_STDIN"
+    "pre-push": "sh scripts/pre-push.sh $HUSKY_GIT_PARAMS"
   }
 }
