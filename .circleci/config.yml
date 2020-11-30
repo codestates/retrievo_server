@@ -46,6 +46,3 @@ workflows:
             branches:
               only: dev
               
-              
-              #test1: chmod +x deploy.sh
-              #test2: fixed path dfrom retrievo-dev to retrievo_dev last 3teste[44
