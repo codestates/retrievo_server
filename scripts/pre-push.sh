@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "(more check before push}🐶"
 
-ARR_GIT_STDIN=($(echo $HUSKY_GIT_STDIN))
+ARR_GIT_STDIN=$(echo $HUSKY_GIT_STDIN)
 
 echo "1: ${ARR_GIT_STDIN[0]}"
 echo "2: ${ARR_GIT_STDIN[1]}"
