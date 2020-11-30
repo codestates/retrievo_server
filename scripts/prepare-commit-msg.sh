@@ -12,6 +12,8 @@ JIRA_ID=$(echo $BRANCH_NAME)
 
 echo "JIRA_ID: $JIRA_ID"
 echo "commit: $1"
+echo "commit: $2"
+echo "commit: $3"
 
 if [ $JIRA_ID = "master" ]; then
   echo "master에 commit 하지 마시오!👿"
