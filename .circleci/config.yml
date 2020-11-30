@@ -48,4 +48,4 @@ workflows:
               
               
               #test1: chmod +x deploy.sh
-              #test2: fixed path from retrievo-dev to retrievo_dev last test3
+              #test2: fixed path from retrievo-dev to retrievo_dev last test4
