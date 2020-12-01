@@ -12,6 +12,8 @@ import {
 } from "typeorm";
 import SocialLogin from "./SocialLogins";
 import ProjectPermission from "./ProjectPermission";
+import Action from "./Action";
+import Comment from "./Comment";
 
 export enum roleTypes {
   MEMBER = "member",
@@ -46,8 +48,8 @@ export default class User extends BaseEntity {
   username!: string;
 
   // owner의 OneToOne은 관계성을 지정함
-  // 의심이 간다면 여길 먼저 수정 < 이제 확실해졌음 지워질 놈이 cascade 설정해야함
-  @OneToOne(() => SocialLogin, (socialLogin) => socialLogin.id)
+  // 이제 확실해졌음 지워질 놈이 cascade 설정해야함
+  @OneToOne(() => SocialLogin, (socialLogin) => socialLogin.user)
   @JoinColumn({ name: "socialLogin_id" }) // 상대편의 id 참조.
   socialLogin?: SocialLogin;
 
@@ -80,7 +82,16 @@ export default class User extends BaseEntity {
 
   @OneToMany(
     () => ProjectPermission,
-    (projectPermission) => projectPermission.id
+    (projectPermission) => projectPermission.user
   )
   projectPermissions?: ProjectPermission[];
+
+  @OneToMany(() => Action, (action) => action.initiator)
+  inititor?: Action[];
+
+  @OneToMany(() => Action, (action) => action.target)
+  target?: Action[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comment?: Comment[];
 }

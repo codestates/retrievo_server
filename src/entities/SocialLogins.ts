@@ -46,8 +46,9 @@ export default class SocialLogin extends BaseEntity {
   socialProvider!: socialProviderType;
 
   // user의 pk를 참조해야함
-  @OneToOne(() => User, (user) => user.id, { onDelete: "CASCADE" }) // specify inverse side as a second parameter
+  @OneToOne(() => User, (user) => user.socialLogin, { onDelete: "CASCADE" })
   user: User;
+  // specify inverse side as a second parameter
 }
 
 // const paul = `

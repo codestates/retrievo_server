@@ -8,7 +8,10 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from "typeorm";
+import Action from "./Action";
 import ProjectPermission from "./ProjectPermission";
+import Sprint from "./Sprint";
+import Label from "./Label";
 
 @ObjectType()
 @Entity()
@@ -38,4 +41,13 @@ export default class Project extends BaseEntity {
     (projectPermission) => projectPermission.id
   )
   projectPermissions?: ProjectPermission[];
+
+  @OneToMany(() => Action, (action) => action.project)
+  action?: Action[];
+
+  @OneToMany(() => Sprint, (sprint) => sprint.project)
+  sprint?: Sprint[];
+
+  @OneToMany(() => Label, (label) => label.project)
+  label?: Label[];
 }
