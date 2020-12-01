@@ -13,9 +13,9 @@ import { ApolloServer } from "apollo-server-express";
 // local
 import dotenv from "dotenv-safe";
 import User from "./entities/User";
-import SocialLogin from "./entities/Social_logins";
 import { COOKIE_NAME, prod } from "./constrants";
 import { verifyPassword } from "./utils/authUtils";
+import entities from "./entities";
 import resolvers from "./resolvers";
 
 dotenv.config({ example: "./.env" });
@@ -31,7 +31,7 @@ const main = async () => {
     password: process.env.POSTGRES_PASSWORD,
     logging: true,
     synchronize: true, // projection에선 제외해야함,
-    entities: [User, SocialLogin],
+    entities,
   });
 
   // passport setting
@@ -118,12 +118,22 @@ const main = async () => {
 
   // open app
   app.listen(4000, () => {
-    console.log("🐶 Retrievo Woof Woof! 🐶");
+    /* eslint-disable */
+    console.log(`
+
+  　　　　 ／  ＞　フ   -------------------------
+　　　　　| 　_　 _ l  |  🍖 Retrievo Server 🍖  |
+　 　　　／ ミ ＿Y ノ  < CAT is the owner of the world! NOT DOG
+　　 　 /　　　 　 |   |       Port: 4000        |
+　　　 /　 ヽ　　 ﾉ    |       DB: Local         |
+　 　 │　　|　|　|     |                         |
+　／￣|　　 |　|　|    | 🐶Retrievo Woof Woof!🐶 |
+　| (￣ヽ＿_ヽ_)__)    -----------------------------
+　＼二つ
+    `);
   });
 };
 
 main().catch((err) => {
   console.log(err);
 });
-
-// husky push test
