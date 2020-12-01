@@ -15,24 +15,13 @@ import dotenv from "dotenv-safe";
 import User from "./entities/User";
 import { COOKIE_NAME, prod } from "./constrants";
 import { verifyPassword } from "./utils/authUtils";
-import entities from "./entities";
 import resolvers from "./resolvers";
 
 dotenv.config({ example: "./.env" });
 
 const main = async () => {
   // orm Setting/
-  await createConnection({
-    type: "postgres",
-    database: "retrievo_dev",
-    host: process.env.POSTGRES_HOST,
-    port: 5432,
-    username: process.env.POSTGRES_USERNAME,
-    password: process.env.POSTGRES_PASSWORD,
-    logging: true,
-    synchronize: true, // projection에선 제외해야함,
-    entities,
-  });
+  await createConnection();
 
   // passport setting
   passport.serializeUser((user: any, done): void => {
