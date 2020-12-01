@@ -13,7 +13,7 @@ import {
 import SocialLogin from "./SocialLogins";
 import ProjectPermission from "./ProjectPermission";
 
-enum roleTypes {
+export enum roleTypes {
   MEMBER = "member",
   GUEST = "guest",
   ADMIN = "admin",

@@ -9,7 +9,7 @@ import {
 } from "typeorm";
 import User from "./User";
 
-enum socialProviderType {
+export enum socialProviderType {
   GOOGLE = "google",
   GITHUB = "github",
 }
@@ -35,7 +35,7 @@ export default class SocialLogin extends BaseEntity {
 
   @Field(() => String)
   @Column({ name: "provider_id" })
-  proiverId: string;
+  providerId: string;
 
   @Field(() => socialProviderType)
   @Column({
