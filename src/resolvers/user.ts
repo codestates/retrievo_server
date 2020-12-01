@@ -6,15 +6,15 @@
 // import { getConnection } from "typeorm";
 import { Resolver, Ctx, Arg, Mutation, Query } from "type-graphql";
 import User from "../entities/User";
-import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { hashPassword } from "../utils/authUtils";
-import { UserResponse } from "./UserResponse";
+import { UserResponse } from "./types/UserResponse";
+import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 
 @Resolver()
 export class UserResolver {
-  @Query(() => [User], { nullable: true })
-  async users(): Promise<User[] | null> {
-    return await User.find({});
+  @Query(() => User, { nullable: true })
+  async user(@Arg("id") id: string): Promise<User | undefined> {
+    return await User.findOne(id);
   }
 
   // @Mutation(() => UserResponse)
