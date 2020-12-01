@@ -12,6 +12,7 @@ import Action from "./Action";
 import ProjectPermission from "./ProjectPermission";
 import Sprint from "./Sprint";
 import Label from "./Label";
+import Board from "./Board";
 
 @ObjectType()
 @Entity()
@@ -47,6 +48,9 @@ export default class Project extends BaseEntity {
 
   @OneToMany(() => Sprint, (sprint) => sprint.project)
   sprint?: Sprint[];
+
+  @OneToMany(() => Board, (board) => board.project)
+  board?: Board[];
 
   @OneToMany(() => Label, (label) => label.project)
   label?: Label[];

@@ -12,7 +12,6 @@ import {
 } from "typeorm";
 import Action from "./Action";
 import Project from "./Project";
-import Board from "./Board";
 import Task from "./Task";
 
 @ObjectType()
@@ -68,7 +67,4 @@ export default class Sprint extends BaseEntity {
 
   @OneToMany(() => Task, (task) => task.sprint)
   task?: Task;
-
-  @OneToMany(() => Board, (board) => board.sprint)
-  board?: Board[];
 }

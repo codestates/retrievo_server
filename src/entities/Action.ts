@@ -8,8 +8,6 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  // OneToMany,
-  // JoinColumn,
 } from "typeorm";
 import User from "./User";
 import Project from "./Project";

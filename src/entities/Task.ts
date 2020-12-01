@@ -27,8 +27,8 @@ export default class Task extends BaseEntity {
   id!: string;
 
   @Field(() => String)
-  @Column({ name: "root_task_id" })
-  rootTaskId!: string;
+  @Column({ name: "root_task_id", nullable: true })
+  rootTaskId?: string;
 
   @Field()
   @Column()

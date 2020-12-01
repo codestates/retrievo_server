@@ -11,7 +11,7 @@ import {
   JoinColumn,
 } from "typeorm";
 import Task from "./Task";
-import Sprint from "./Sprint";
+import Project from "./Project";
 
 @ObjectType()
 @Entity()
@@ -24,10 +24,10 @@ export default class Board extends BaseEntity {
   @Column()
   title!: string;
 
-  @ManyToOne(() => Sprint, (sprint) => sprint.id)
-  @Field(() => Sprint)
-  @JoinColumn({ name: "sprint_id" })
-  sprint: Sprint;
+  @ManyToOne(() => Project, (project) => project.board)
+  @Field(() => Project)
+  @JoinColumn({ name: "project_id" })
+  project: Project;
 
   @Field(() => Number)
   @Column({ name: "board_column_index", default: 0 })
