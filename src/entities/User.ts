@@ -8,8 +8,10 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from "typeorm";
-import SocialLogin from "./Social_logins";
+import SocialLogin from "./SocialLogins";
+import ProjectPermission from "./ProjectPermission";
 
 enum roleTypes {
   MEMBER = "member",
@@ -44,14 +46,10 @@ export default class User extends BaseEntity {
   username!: string;
 
   // owner의 OneToOne은 관계성을 지정함
-  // 의심이 간다면 여길 먼저 수정
-  @OneToOne(() => SocialLogin, (socialLogin) => socialLogin.id, {
-    // Join table
-    onDelete: "CASCADE",
-    nullable: true,
-  })
+  // 의심이 간다면 여길 먼저 수정 < 이제 확실해졌음 지워질 놈이 cascade 설정해야함
+  @OneToOne(() => SocialLogin, (socialLogin) => socialLogin.id)
   @JoinColumn({ name: "socialLogin_id" }) // 상대편의 id 참조.
-  socialLogin: SocialLogin;
+  socialLogin?: SocialLogin;
 
   @Field()
   @Column({ unique: true })
@@ -79,10 +77,10 @@ export default class User extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
-}
 
-// user에서 검색이 가능해야 함 -> field에 있어야 함
-// user가 생성되면 자동으로 social login의 row도 생성되고 userId는 user id여야 함
-// 그럼 user에 있는 field는 social login의 id를 받아와야 하는건데..
-// user가 삭제되면 social login도 삭제되어야 함
-//
+  @OneToMany(
+    () => ProjectPermission,
+    (projectPermission) => projectPermission.id
+  )
+  projectPermissions?: ProjectPermission[];
+}

@@ -5,7 +5,7 @@
 // import { sendEmail } from "../utils/sendEmail";
 // import { getConnection } from "typeorm";
 import { Resolver, Query } from "type-graphql";
-import SocialLogin from "../entities/Social_logins";
+import SocialLogin from "../entities/SocialLogins";
 
 @Resolver()
 export class SocialLoginResolver {
