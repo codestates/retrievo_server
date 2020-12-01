@@ -13,9 +13,10 @@ import { ApolloServer } from "apollo-server-express";
 // local
 import dotenv from "dotenv-safe";
 import User from "./entities/User";
-import { UserResolver } from "./resolvers/user";
+import SocialLogin from "./entities/Social_logins";
 import { COOKIE_NAME, prod } from "./constrants";
 import { verifyPassword } from "./utils/authUtils";
+import resolvers from "./resolvers";
 
 dotenv.config({ example: "./.env" });
 
@@ -30,7 +31,7 @@ const main = async () => {
     password: process.env.POSTGRES_PASSWORD,
     logging: true,
     synchronize: true, // projection에선 제외해야함,
-    entities: [User],
+    entities: [User, SocialLogin],
   });
 
   // passport setting
@@ -104,7 +105,7 @@ const main = async () => {
   // apollo Setting
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver],
+      resolvers,
       validate: false,
     }),
     context: ({ req, res }) => buildContext({ req, res }),
