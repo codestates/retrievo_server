@@ -47,6 +47,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.165",
     "@types/passport-github2": "^1.2.4",
     "@types/passport-google-oauth20": "^2.0.4",
     "apollo-server-express": "^2.16.1",
@@ -62,6 +63,7 @@
     "graphql": "^15.3.0",
     "graphql-passport": "^0.6.3",
     "ioredis": "^4.17.3",
+    "lodash": "^4.17.20",
     "nodemailer": "^6.4.11",
     "passport": "^0.4.1",
     "passport-github2": "^0.1.12",
