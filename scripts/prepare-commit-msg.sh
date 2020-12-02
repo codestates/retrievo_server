@@ -1,4 +1,6 @@
 #!/bin/bash
+echo ""
+echo ""
 echo "(ok! then commit msg styling start}🐶"
 
 BRANCH_NAME=$(git symbolic-ref --short HEAD)
