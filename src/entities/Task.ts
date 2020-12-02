@@ -9,15 +9,15 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
 } from "typeorm";
-import Action from "./Action";
 import Sprint from "./Sprint";
 import Board from "./Board";
 import Comment from "./Comment";
-import User from "./User";
 import File from "./File";
+import UserTask from "./UserTask";
+import TaskLabel from "./TaskLabel";
+import CommentNotification from "./CommentNotification";
+import TaskNotification from "./TaskNotification";
 
 @ObjectType()
 @Entity()
@@ -66,14 +66,23 @@ export default class Task extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  @OneToMany(() => Action, (action) => action.task)
-  action?: Action[];
-
   @OneToMany(() => Comment, (comment) => comment.task)
   comment?: Comment[];
 
   @OneToMany(() => File, (file) => file.task)
   file?: File[];
+
+  @OneToMany(
+    () => CommentNotification,
+    (commentNotification) => commentNotification.task
+  )
+  commentNotification?: CommentNotification[];
+
+  @OneToMany(
+    () => TaskNotification,
+    (taskNotification) => taskNotification.task
+  )
+  taskNotification?: TaskNotification[];
 
   @ManyToOne(() => Sprint, (sprint) => sprint.task)
   @Field(() => Sprint, { nullable: true })
@@ -85,15 +94,9 @@ export default class Task extends BaseEntity {
   @JoinColumn({ name: "board_id" })
   board!: Board;
 
-  @ManyToMany(() => User)
-  @Field(() => User)
-  @JoinTable({ name: "user_task" })
-  user?: User[];
-}
+  @OneToMany(() => UserTask, (userTask) => userTask.task)
+  userTask?: UserTask[];
 
-// task sprintindex & boardindex;
-// 1. 프로젝트 정보를 불러온다
-// 2-A. 모든 보드를 불러온다
-// 2-B. did_Start: true 스프린트를 불러온다
-//     -> + 스프린트의 모든 태스크를 불러온다.
-//     -> + 태스크의 모든 라벨&AssignedUser을 같이 불러온다.
+  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
+  taskLabel?: TaskLabel[];
+}

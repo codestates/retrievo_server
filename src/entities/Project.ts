@@ -8,11 +8,13 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from "typeorm";
-import Action from "./Action";
 import ProjectPermission from "./ProjectPermission";
 import Sprint from "./Sprint";
 import Label from "./Label";
 import Board from "./Board";
+import SprintNotification from "./SprintNotification";
+import CommentNotification from "./CommentNotification";
+import TaskNotification from "./TaskNotification";
 
 @ObjectType()
 @Entity()
@@ -43,8 +45,23 @@ export default class Project extends BaseEntity {
   )
   projectPermissions?: ProjectPermission[];
 
-  @OneToMany(() => Action, (action) => action.project)
-  action?: Action[];
+  @OneToMany(
+    () => TaskNotification,
+    (taskNotification) => taskNotification.project
+  )
+  taskNotification?: TaskNotification[];
+
+  @OneToMany(
+    () => SprintNotification,
+    (sprintNotification) => sprintNotification.project
+  )
+  sprintNotification?: SprintNotification[];
+
+  @OneToMany(
+    () => CommentNotification,
+    (commentNotification) => commentNotification.project
+  )
+  commentNotification?: CommentNotification[];
 
   @OneToMany(() => Sprint, (sprint) => sprint.project)
   sprint?: Sprint[];

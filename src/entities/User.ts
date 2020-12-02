@@ -12,8 +12,11 @@ import {
 } from "typeorm";
 import SocialLogin from "./SocialLogins";
 import ProjectPermission from "./ProjectPermission";
-import Action from "./Action";
 import Comment from "./Comment";
+import UserTask from "./UserTask";
+import SprintNotification from "./SprintNotification";
+import CommentNotification from "./CommentNotification";
+import TaskNotification from "./TaskNotification";
 
 export enum roleTypes {
   MEMBER = "member",
@@ -60,9 +63,9 @@ export default class User extends BaseEntity {
   @Column()
   password!: string;
 
-  @Field({ nullable: true })
+  @Field()
   @Column({ nullable: true })
-  avatar: string;
+  avatar?: string;
 
   @Field(() => roleTypes, { defaultValue: "member" })
   @Column({
@@ -86,12 +89,33 @@ export default class User extends BaseEntity {
   )
   projectPermissions?: ProjectPermission[];
 
-  @OneToMany(() => Action, (action) => action.initiator)
-  inititor?: Action[];
+  @OneToMany(
+    () => SprintNotification,
+    (sprintNotification) => sprintNotification.target
+  )
+  sprintTarget?: SprintNotification[];
 
-  @OneToMany(() => Action, (action) => action.target)
-  target?: Action[];
+  @OneToMany(
+    () => SprintNotification,
+    (sprintNotification) => sprintNotification.target
+  )
+  taskTarget?: TaskNotification[];
+
+  @OneToMany(
+    () => CommentNotification,
+    (commentNotification) => commentNotification.author
+  )
+  commentAuthor?: CommentNotification[];
+
+  @OneToMany(
+    () => CommentNotification,
+    (commentNotification) => commentNotification.target
+  )
+  commentTarget?: CommentNotification[];
 
   @OneToMany(() => Comment, (comment) => comment.user)
   comment?: Comment[];
+
+  @OneToMany(() => UserTask, (userTask) => userTask.task)
+  userTask!: UserTask[];
 }

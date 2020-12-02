@@ -12,6 +12,7 @@ import {
 } from "typeorm";
 import Task from "./Task";
 import Project from "./Project";
+import TaskNotification from "./TaskNotification";
 
 @ObjectType()
 @Entity()
@@ -43,4 +44,10 @@ export default class Board extends BaseEntity {
 
   @OneToMany(() => Task, (task) => task.board)
   task: Task[];
+
+  @OneToMany(
+    () => TaskNotification,
+    (taskNotificaiton) => taskNotificaiton.status
+  )
+  taskNotification: TaskNotification[];
 }

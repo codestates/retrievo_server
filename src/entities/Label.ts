@@ -6,11 +6,10 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
+  OneToMany,
 } from "typeorm";
-import Task from "./Task";
 import Project from "./Project";
+import TaskLabel from "./TaskLabel";
 
 @ObjectType()
 @Entity()
@@ -27,13 +26,12 @@ export default class Label extends BaseEntity {
   @Column()
   color!: string;
 
-  @Field(() => Project)
   @ManyToOne(() => Project, (project) => project.label)
+  @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  @ManyToMany(() => Task)
-  @Field(() => Task)
-  @JoinTable({ name: "task_label" })
-  task?: Task[];
+  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)
+  @Field(() => TaskLabel)
+  task?: TaskLabel[];
 }

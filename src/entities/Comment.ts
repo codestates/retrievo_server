@@ -12,7 +12,7 @@ import {
 } from "typeorm";
 import User from "./User";
 import Task from "./Task";
-import Action from "./Action";
+import CommentNotification from "./CommentNotification";
 
 @ObjectType()
 @Entity()
@@ -35,6 +35,12 @@ export default class Comment extends BaseEntity {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
+  @OneToMany(
+    () => CommentNotification,
+    (commentNotification) => commentNotification.comment
+  )
+  commentNotification?: CommentNotification[];
+
   @Field(() => String)
   @Column()
   content!: string;
@@ -46,7 +52,4 @@ export default class Comment extends BaseEntity {
   @Field(() => String)
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
-
-  @OneToMany(() => Action, (action) => action.comment)
-  action?: Action;
 }

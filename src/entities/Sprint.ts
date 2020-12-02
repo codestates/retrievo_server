@@ -10,9 +10,9 @@ import {
   OneToMany,
   ManyToOne,
 } from "typeorm";
-import Action from "./Action";
 import Project from "./Project";
 import Task from "./Task";
+import SprintNotification from "./SprintNotification";
 
 @ObjectType()
 @Entity()
@@ -38,8 +38,8 @@ export default class Sprint extends BaseEntity {
   isCompleted: boolean;
 
   @Field(() => Number)
-  @Column({ name: "board_row" })
-  boardRow: number;
+  @Column({ name: "row" })
+  row: number;
 
   @Field(() => String, { nullable: true })
   @Column({ type: "timestamp", name: "due_date" })
@@ -62,8 +62,11 @@ export default class Sprint extends BaseEntity {
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  @OneToMany(() => Action, (action) => action.project)
-  action?: Action[];
+  @OneToMany(
+    () => SprintNotification,
+    (sprintNotification) => sprintNotification.sprint
+  )
+  sprintNotification?: SprintNotification[];
 
   @OneToMany(() => Task, (task) => task.sprint)
   task?: Task;
