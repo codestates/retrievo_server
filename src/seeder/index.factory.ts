@@ -3,6 +3,7 @@ import Faker from "faker";
 import _ from "lodash";
 
 // entities
+import TaskLabel from "../entities/TaskLabel";
 import User, { roleTypes } from "../entities/User";
 import Project from "../entities/Project";
 import Task from "../entities/Task";
@@ -10,20 +11,27 @@ import ProjectPermission from "../entities/ProjectPermission";
 import SocialLogin, { socialProviderType } from "../entities/SocialLogins";
 import Comment from "../entities/Comment";
 import Sprint from "../entities/Sprint";
-import Action, { actionType } from "../entities/Action";
 import Board from "../entities/Board";
 import Label from "../entities/Label";
 import File from "../entities/File";
+import UserTask from "../entities/UserTask";
+import CommentNotification from "../entities/CommentNotification";
+import TaskNotification, {
+  taskNotificationType,
+} from "../entities/TaskNotification";
+import SprintNotification, {
+  sprintNotificationType,
+} from "../entities/SprintNotification";
 
 define(User, (faker: typeof Faker) => {
-  const roles = [roleTypes.MEMBER, roleTypes.GUEST, roleTypes.ADMIN];
+  const roles = [roleTypes.MEMBER, roleTypes.ADMIN];
 
   const user = new User();
   user.id = faker.random.uuid();
   user.username = faker.name.findName();
   user.email = faker.internet.email();
   user.password = faker.random.word();
-  user.role = roles[Math.floor(Math.random() * 3)];
+  user.role = roles[_.random(0, roles.length - 1)];
   return user;
 });
 
@@ -33,7 +41,7 @@ define(SocialLogin, (faker: typeof Faker) => {
       socialProviderType.GITHUB,
       socialProviderType.GOOGLE,
     ];
-    return socialProviderArray[Math.floor(Math.random() * 2)];
+    return socialProviderArray[_.random(0, socialProviderArray.length - 1)];
   };
 
   const socialLogin = new SocialLogin();
@@ -56,21 +64,6 @@ define(Project, (faker: typeof Faker) => {
   project.name = faker.company.companyName();
   project.logo = faker.image.imageUrl();
   return project;
-});
-
-define(Action, (faker: typeof Faker) => {
-  const types = [
-    actionType.TASK_ASSIGNMENT,
-    actionType.TASK_STATUS_CHANGE,
-    actionType.COMMENT_NEW,
-    actionType.SPRINT_START,
-    actionType.SPRINT_END,
-  ];
-
-  const action = new Action();
-  action.id = faker.random.uuid();
-  action.description = types[_.random(0, 4)];
-  return action;
 });
 
 define(Task, (faker: typeof Faker) => {
@@ -96,7 +89,7 @@ define(Sprint, (faker: typeof Faker) => {
   sprint.id = faker.random.uuid();
   sprint.title = faker.random.words();
   sprint.description = faker.lorem.sentence();
-  sprint.boardRow = faker.random.number();
+  sprint.row = faker.random.number();
   sprint.startedAt = faker.date.recent();
   sprint.dueDate = faker.date.future();
   return sprint;
@@ -110,10 +103,11 @@ define(File, (faker: typeof Faker) => {
 });
 
 define(Label, (faker: typeof Faker) => {
+  const colorTypes = ["RED", "BLUE", "GREEN", "ORANGE", "PINK"];
   const label = new Label();
   label.id = faker.random.uuid();
   label.name = faker.random.word();
-  label.color = faker.commerce.color();
+  label.color = colorTypes[_.random(0, colorTypes.length - 1)];
   return label;
 });
 
@@ -122,4 +116,48 @@ define(Board, (faker: typeof Faker) => {
   board.id = faker.random.uuid();
   board.title = faker.random.words();
   return board;
+});
+
+define(UserTask, (faker: typeof Faker) => {
+  const userTask = new UserTask();
+  userTask.id = faker.random.uuid();
+  return userTask;
+});
+
+define(TaskLabel, (faker: typeof Faker) => {
+  const taskLabel = new TaskLabel();
+  taskLabel.id = faker.random.uuid();
+  return taskLabel;
+});
+
+define(TaskNotification, (faker: typeof Faker) => {
+  const types = [
+    taskNotificationType.CREATED,
+    taskNotificationType.STATUS_CHANGED,
+  ];
+
+  const taskNotification = new TaskNotification();
+  taskNotification.id = faker.random.uuid();
+  taskNotification.isRead = faker.random.boolean();
+  taskNotification.type = types[_.random(0, 1)];
+  return taskNotification;
+});
+
+define(SprintNotification, (faker: typeof Faker) => {
+  const types = [
+    sprintNotificationType.SPRINT_START,
+    sprintNotificationType.SPRINT_END,
+  ];
+  const sprintNotification = new SprintNotification();
+  sprintNotification.id = faker.random.uuid();
+  sprintNotification.isRead = faker.random.boolean();
+  sprintNotification.type = types[_.random(0, types.length - 1)];
+  return sprintNotification;
+});
+
+define(CommentNotification, (faker: typeof Faker) => {
+  const commentNotification = new CommentNotification();
+  commentNotification.id = faker.random.uuid();
+  commentNotification.isRead = faker.random.boolean();
+  return commentNotification;
 });
