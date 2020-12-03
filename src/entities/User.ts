@@ -60,8 +60,8 @@ export default class User extends BaseEntity {
   @Column({ unique: true })
   email!: string;
 
-  @Column()
-  password!: string;
+  @Column({ nullable: true })
+  password?: string;
 
   @Field()
   @Column({ nullable: true })
