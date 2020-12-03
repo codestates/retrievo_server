@@ -24,7 +24,7 @@ jobs:
 
       - run: yarn build
 
-      ##### deploy starts
+      ##### deploy starts it better work!
 
   deploy:
     machine:
