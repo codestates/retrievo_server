@@ -18,7 +18,7 @@ import { verifyPassword } from "./utils/authUtils";
 import resolvers from "./resolvers";
 
 dotenv.config({ example: "./.env" });
-// 이 주석 지우시오
+// 이 주석 지우시오2
 
 const main = async () => {
   // orm Setting/
