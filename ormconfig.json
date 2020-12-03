@@ -7,7 +7,7 @@
   "database": "retrievo_dev",
   "logging": true,
   "synchronize": true,
-  "dropSchema": false,
+  "dropSchema": true,
   "entities": ["dist/entities/**.js"],
   "seeds": ["dist/seeder/**.seed.js"],
   "factories": ["dist/seeder/**.factory.js"]
