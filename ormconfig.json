@@ -1,0 +1,14 @@
+{
+  "type": "postgres",
+  "host": "localhost",
+  "port": 5432,
+  "username": "postgres",
+  "password": "root",
+  "database": "retrievo_dev",
+  "logging": true,
+  "synchronize": true,
+  "dropSchema": false,
+  "entities": ["dist/entities/**.js"],
+  "seeds": ["dist/seeder/**.seed.js"],
+  "factories": ["dist/seeder/**.factory.js"]
+}
