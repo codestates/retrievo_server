@@ -3,64 +3,33 @@ import "reflect-metadata";
 import express from "express";
 import session from "express-session";
 import cors from "cors";
-// import Redis from "ioredis";
-// import connectRedis from "connect-redis"
-import passport from "passport";
-import { GraphQLLocalStrategy, buildContext } from "graphql-passport";
+import Redis from "ioredis";
+import connectRedis from "connect-redis";
+import { buildContext } from "graphql-passport";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 // local
 import dotenv from "dotenv-safe";
-import User from "./entities/User";
-import { COOKIE_NAME, prod } from "./constrants";
-import { verifyPassword } from "./utils/authUtils";
-import resolvers from "./resolvers";
+import { UserResolver } from "./resolvers/user";
+import { COOKIE_NAME, prod } from "./constants";
 
-dotenv.config({ example: "./.env" });
-// 이 주석 지우시오2
+dotenv.config({ example: ".env" });
+// passport need env
+// eslint-disable-next-line import/first
+import myPassport from "./services/authService";
+
+// redis Setting (before apollo middleware)
+const RedisStore = connectRedis(session);
+// eslint-disable-next-line import/prefer-default-export
+export const redis = new Redis();
 
 const main = async () => {
-  // orm Setting/
+  // orm Setting
   await createConnection();
 
-  // passport setting
-  passport.serializeUser((user: any, done): void => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    const user = await User.findOne(id);
-    done(null, user);
-  });
-
-  // 일반 로그인
-  passport.use(
-    new GraphQLLocalStrategy(
-      async (
-        email: unknown,
-        password: unknown,
-        done: (error: string | null, data: User | null) => void
-      ) => {
-        const user = await User.findOne({ where: { email } });
-        if (!user) return done("Cannot find the user", null);
-
-        const isVerified = await verifyPassword(
-          user.password,
-          password as string
-        );
-        if (isVerified) return done(null, user);
-        return done("Invalid Password", null);
-      }
-    )
-  );
-
+  // express Setting
   const app = express();
-
-  // redis Setting (before apollo middleware)
-  // const RedisStore = connectRedis(session);
-  // const redis = new Redis();
-
   app.use(
     cors({
       origin: "http://localhost:3000",
@@ -71,10 +40,10 @@ const main = async () => {
   app.use(
     session({
       name: COOKIE_NAME,
-      // store: new RedisStore({
-      //   client: redis,
-      //   disableTouch: true,
-      // }),
+      store: new RedisStore({
+        client: redis,
+        disableTouch: true,
+      }),
       cookie: {
         path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 30, // 1 month
@@ -83,22 +52,49 @@ const main = async () => {
         secure: prod, // cookie only work in https
       },
       saveUninitialized: false,
-      secret: process.env.COOKIE_SECRET!,
+      secret: process.env.COOKIE_SECRET as string,
       resave: false,
     })
   );
 
-  app.get("/", (_, res) => {
-    res.send("<h1>Hi this is retrievo!</h1>");
-  });
+  app.use(myPassport.initialize());
+  app.use(myPassport.session());
+
+  app.get(
+    "/auth/google",
+    myPassport.authenticate("google", { scope: ["email", "profile"] })
+  );
+
+  app.get(
+    "/auth/github",
+    myPassport.authenticate("github", { scope: ["user:email"] })
+  );
+
+  app.get(
+    "/auth/google/callback",
+    myPassport.authenticate("google", {
+      successRedirect: "http://localhost:4000/graphql",
+      failureRedirect: "http://localhost:4000/graphql",
+    })
+  );
+
+  app.get(
+    "/auth/github/callback",
+    myPassport.authenticate("github", {
+      successRedirect: "http://localhost:4000/graphql",
+      failureRedirect: "http://localhost:4000/graphql",
+    })
+  );
+
+  // passport test end
 
   // apollo Setting
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers,
+      resolvers: [UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => buildContext({ req, res }),
+    context: ({ req, res }) => buildContext({ req, res, redis }),
   });
 
   apolloServer.applyMiddleware({
@@ -106,21 +102,9 @@ const main = async () => {
     cors: false,
   });
 
-  // open app
-  app.listen(4000, () => {
-    /* eslint-disable */
-    console.log(`
-
-  　　　　 ／  ＞　フ   -------------------------
-　　　　　| 　_　 _ l  |  🍖 Retrievo Server 🍖  |
-　 　　　／ ミ ＿Y ノ  < CAT is the owner of the world! NOT DOG
-　　 　 /　　　 　 |   |       Port: 4000        |
-　　　 /　 ヽ　　 ﾉ    |       DB: Local         |
-　 　 │　　|　|　|     |                         |
-　／￣|　　 |　|　|    | 🐶Retrievo Woof Woof!🐶 |
-　| (￣ヽ＿_ヽ_)__)    -----------------------------
-　＼二つ
-    `);
+  const PORT = process.env.ENVIRONMENT || 4000;
+  app.listen(PORT, () => {
+    console.log(`🐶Retrievo Server is running : Port ${PORT}🐶`);
   });
 };
 
