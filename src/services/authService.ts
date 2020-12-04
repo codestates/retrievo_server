@@ -24,9 +24,9 @@ myPassport.deserializeUser(async (id: string, done) => {
   }
 });
 
-/// /////////////////
-/// / localLogin ////
-/// /////////////////
+/// ////////////////// ///
+/// // Local Login /// ///
+/// ////////////////// ///
 
 myPassport.use(
   new GraphQLLocalStrategy(
@@ -35,7 +35,6 @@ myPassport.use(
       password: unknown,
       done: (error: Error | null, data: User | null) => void
     ) => {
-      console.log("Local Strategy 실행이 됐");
       const user = await User.findOne({ where: { email } });
       if (!user) return done(new Error("Cannot find the user"), null);
 

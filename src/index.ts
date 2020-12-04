@@ -59,7 +59,6 @@ const main = async () => {
     })
   );
 
-  console.log("- 이니셜라이즈");
   app.use(myPassport.initialize());
   app.use(myPassport.session());
   //ts-disable
