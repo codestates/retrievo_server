@@ -194,16 +194,10 @@ let allPhotos = await photoRepository.find();
     @Ctx() context: MyContext // FIXME,
   ): Promise<undefined> {
     try {
-      console.log(
-        "🚀 ~ file: user.ts ~ line 159 ~ UserResolver ~ context",
-        context.authenticate("graphql-local")
-      );
-
       const { user } = await context.authenticate("graphql-local", {
         email,
         password,
       });
-      console.log("user는 과연?!:", user);
       if (user) {
         await context.login(user);
       }
