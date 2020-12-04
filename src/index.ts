@@ -17,7 +17,7 @@ import { COOKIE_NAME, prod } from "./constants";
 dotenv.config({ example: ".env" });
 /* eslint-disable */
 // import "./services/authService";
-import myPassport from "./services/authService";
+import passport from "./services/authService";
 // import { redis } from "../index";
 
 // redis Setting (before apollo middleware)
@@ -59,8 +59,8 @@ const main = async () => {
     })
   );
 
-  app.use(myPassport.initialize());
-  app.use(myPassport.session());
+  app.use(passport.initialize());
+  app.use(passport.session());
   //ts-disable
   // app.post(
   //   "/auth/local",
@@ -72,17 +72,17 @@ const main = async () => {
 
   app.get(
     "/auth/google",
-    myPassport.authenticate("google", { scope: ["email", "profile"] })
+    passport.authenticate("google", { scope: ["email", "profile"] })
   );
 
   app.get(
     "/auth/github",
-    myPassport.authenticate("github", { scope: ["user:email"] })
+    passport.authenticate("github", { scope: ["user:email"] })
   );
 
   app.get(
     "/auth/google/callback",
-    myPassport.authenticate("google", {
+    passport.authenticate("google", {
       successRedirect: "http://localhost:4000/graphql",
       failureRedirect: "http://localhost:4000/graphql",
     })
@@ -90,7 +90,7 @@ const main = async () => {
 
   app.get(
     "/auth/github/callback",
-    myPassport.authenticate("github", {
+    passport.authenticate("github", {
       successRedirect: "http://localhost:4000/graphql",
       failureRedirect: "http://localhost:4000/graphql",
     })

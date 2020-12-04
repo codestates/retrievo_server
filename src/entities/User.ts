@@ -56,9 +56,9 @@ export default class User extends BaseEntity {
   @JoinColumn({ name: "socialLogin_id" }) // 상대편의 id 참조.
   socialLogin?: SocialLogin;
 
-  @Field()
-  @Column({ unique: true })
-  email!: string;
+  @Field({ nullable: true })
+  @Column({ unique: true, nullable: true })
+  email?: string;
 
   @Column({ nullable: true })
   password?: string;

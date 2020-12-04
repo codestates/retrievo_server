@@ -1,11 +1,11 @@
 import { Field, ObjectType } from "type-graphql";
+import { ApolloError } from "apollo-server-express";
 import User from "../../entities/User";
-import { FieldError } from "./Error";
 
 @ObjectType()
 export class UserResponse {
-  @Field(() => [FieldError], { nullable: true })
-  errors?: FieldError[];
+  @Field(() => [ApolloError], { nullable: true })
+  errors?: ApolloError[];
 
   @Field(() => User, { nullable: true })
   user?: User;
