@@ -4,6 +4,7 @@ import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
 // import { redis } from "../index";
+import { ApolloError } from "apollo-server-express";
 import { verifyPassword } from "../utils/authUtils";
 import User from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
@@ -80,6 +81,13 @@ const socialCallback = async (
       where: { providerId: profile.id },
     });
 
+    const email = profile.emails[0]?.value;
+    const hasEmail = await User.findOne({ email });
+
+    if (!socialUser && hasEmail) {
+      throw new ApolloError("User already exists", "401");
+    }
+
     if (!socialUser) {
       let username = "";
       if (profile.provider === "github") {
@@ -101,14 +109,14 @@ const socialCallback = async (
         const tempUser = await em.create(User, {
           socialLogin: newSocialLogin,
           username,
-          email: profile.emails && profile.emails[0] && profile.emails[0].value,
+          email,
         });
         newUser = await transactionalEntityManager.save(tempUser);
       });
 
       done(null, newUser);
     } else {
-      const user = await User.findOne({ where: { email: profile.email } });
+      const user = await User.findOne({ where: { email } });
       done(null, user);
     }
   } catch (err) {

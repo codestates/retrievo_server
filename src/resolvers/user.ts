@@ -12,6 +12,8 @@ import {
   Query,
   UseMiddleware,
 } from "type-graphql";
+import { AuthenticationError } from "apollo-server-express";
+// import { getManager } from "typeorm";
 import checkAuthStatus from "../middleware/isAuth";
 import { MyContext } from "../types";
 import User from "../entities/User";
@@ -21,17 +23,36 @@ import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, { nullable: true })
+  @Query(() => User)
   @UseMiddleware(checkAuthStatus)
   async user(@Arg("id") id: string): Promise<User | undefined> {
     try {
       const user = await User.findOne({ id });
+      if (!user) {
+        throw new AuthenticationError("user not found");
+      }
       return user;
     } catch (err) {
-      console.log("get user error", err);
+      throw new AuthenticationError(err.message);
     }
-    return undefined;
   }
+  /*
+let allPhotos = await photoRepository.find();
+    console.log("All photos from the db: ", allPhotos);
+
+    let firstPhoto = await photoRepository.findOne(1);
+    console.log("First photo from the db: ", firstPhoto);
+
+    let meAndBearsPhoto = await photoRepository.findOne({ name: "Me and Bears" });
+    console.log("Me and Bears photo from the db: ", meAndBearsPhoto);
+
+    let allViewedPhotos = await photoRepository.find({ views: 1 });
+    console.log("All viewed photos: ", allViewedPhotos);
+
+    let allPublishedPhotos = await photoRepository.find({ isPublished: true });
+    console.log("All published photos: ", allPublishedPhotos);
+
+*/
 
   //
   // @Mutation(() => UserResponse)
