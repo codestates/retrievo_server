@@ -4,7 +4,15 @@
 // import { validateRegister } from "../utils/validateRegister";
 // import { sendEmail } from "../utils/sendEmail";
 // import { getConnection } from "typeorm";
-import { Resolver, Ctx, Arg, Mutation, Query } from "type-graphql";
+import {
+  Resolver,
+  Ctx,
+  Arg,
+  Mutation,
+  Query,
+  UseMiddleware,
+} from "type-graphql";
+import checkAuthStatus from "../middleware/isAuth";
 import { MyContext } from "../types";
 import User from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
@@ -14,10 +22,18 @@ import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
+  @UseMiddleware(checkAuthStatus)
   async user(@Arg("id") id: string): Promise<User | undefined> {
-    return await User.findOne(id);
+    try {
+      const user = await User.findOne({ id });
+      return user;
+    } catch (err) {
+      console.log("get user error", err);
+    }
+    return undefined;
   }
 
+  //
   // @Mutation(() => UserResponse)
   // async changePassword(
   //   @Arg("token") token: string,
