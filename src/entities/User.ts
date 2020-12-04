@@ -63,7 +63,7 @@ export default class User extends BaseEntity {
   @Column({ nullable: true })
   password?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ nullable: true })
   avatar?: string;
 

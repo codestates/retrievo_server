@@ -9,15 +9,16 @@ import { buildContext } from "graphql-passport";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
-// local
 import dotenv from "dotenv-safe";
 import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, prod } from "./constants";
-
-dotenv.config({ example: ".env" });
+// local
 // passport need env
-// eslint-disable-next-line import/first
+dotenv.config({ example: ".env" });
+/* eslint-disable */
+// import "./services/authService";
 import myPassport from "./services/authService";
+// import { redis } from "../index";
 
 // redis Setting (before apollo middleware)
 const RedisStore = connectRedis(session);
@@ -30,6 +31,7 @@ const main = async () => {
 
   // express Setting
   const app = express();
+
   app.use(
     cors({
       origin: "http://localhost:3000",
@@ -57,8 +59,17 @@ const main = async () => {
     })
   );
 
+  console.log("- 이니셜라이즈");
   app.use(myPassport.initialize());
   app.use(myPassport.session());
+  //ts-disable
+  // app.post(
+  //   "/auth/local",
+  //   myPassport.authenticate("graphql-local", [
+  //     "testKj@rockpaperqueens.com",
+  //     "123123",
+  //   ])
+  // );
 
   app.get(
     "/auth/google",
@@ -95,6 +106,11 @@ const main = async () => {
       validate: false,
     }),
     context: ({ req, res }) => buildContext({ req, res, redis }),
+    playground: {
+      settings: {
+        "request.credentials": "same-origin",
+      },
+    },
   });
 
   apolloServer.applyMiddleware({
