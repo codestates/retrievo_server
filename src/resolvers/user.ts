@@ -89,8 +89,8 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Ctx() context: MyContext
+    @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput
+    // @Ctx() context: MyContext
   ): Promise<UserResponse | undefined> {
     try {
       const hashed = await hashPassword(options.password);
