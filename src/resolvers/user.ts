@@ -157,8 +157,6 @@ export class UserResolver {
     @Ctx() context: MyContext // FIXME,
   ): Promise<undefined> {
     try {
-      console.log("- login start");
-
       console.log(
         "🚀 ~ file: user.ts ~ line 159 ~ UserResolver ~ context",
         context.authenticate("graphql-local")
