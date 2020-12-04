@@ -3,24 +3,21 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
-// import { redis } from "../index";
-import { ApolloError } from "apollo-server-express";
+import { ApolloError, AuthenticationError } from "apollo-server-express";
 import { verifyPassword } from "../utils/authUtils";
-import User from "../entities/User";
+import User, { roleTypes } from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
 
-const myPassport = new passport.Passport();
-
-myPassport.serializeUser((user: any, done): void => {
+passport.serializeUser((user: any, done): void => {
   done(null, user.id);
 });
 
-myPassport.deserializeUser(async (id: string, done) => {
+passport.deserializeUser(async (id: string, done) => {
   if (id) {
     const user = await User.findOne(id);
     done(null, user);
   } else {
-    console.log("desc Error: no id");
+    throw new AuthenticationError("Failed to deserialize");
   }
 });
 
@@ -28,7 +25,7 @@ myPassport.deserializeUser(async (id: string, done) => {
 /// // Local Login /// ///
 /// ////////////////// ///
 
-myPassport.use(
+passport.use(
   new GraphQLLocalStrategy(
     async (
       email: unknown,
@@ -36,25 +33,26 @@ myPassport.use(
       done: (error: Error | null, data: User | null) => void
     ) => {
       const user = await User.findOne({ where: { email } });
-      if (!user) return done(new Error("Cannot find the user"), null);
 
+      if (!user) return done(new Error("Cannot find the user"), null);
       try {
         const isVerified = await verifyPassword(
           user.password as string,
           password as string
         );
-        if (isVerified) return done(null, user);
+        if (isVerified || user.role === roleTypes.GUEST)
+          return done(null, user);
       } catch (err) {
-        console.log("grapqhql local stretgy error:", err);
+        return done(new ApolloError("Internal Server Error", "500"), null);
       }
-      return done(new Error("no matching user"), null);
+      return done(new AuthenticationError("no matching user"), null);
     }
   )
 );
 
-/// /////////////////
-/// /SocialLogins////
-/// /////////////////
+/// ///////////////  ///
+/// /SocialLogins//  ///
+/// ///////////////  ///
 
 const googleOptions = {
   clientID: process.env.GOOGLE_CLIENT_ID as string,
@@ -120,14 +118,14 @@ const socialCallback = async (
     }
   } catch (err) {
     // TODO 에러핸들링
-    console.log("소셜 로그인 에러 발생:", err);
+    throw new ApolloError("Oooops! Something bad happened", "500");
   }
 
   // TODO: invitation 확인 util 실행
   return undefined; // TODO delete
 };
 
-myPassport.use(new GoogleStrategy(googleOptions, socialCallback));
-myPassport.use(new GitHubStrategy(githubOptions, socialCallback));
+passport.use(new GoogleStrategy(googleOptions, socialCallback));
 
-export default myPassport;
+passport.use(new GitHubStrategy(githubOptions, socialCallback));
+export default passport;
