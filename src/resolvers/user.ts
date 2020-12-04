@@ -5,6 +5,7 @@
 // import { sendEmail } from "../utils/sendEmail";
 // import { getConnection } from "typeorm";
 import { Resolver, Ctx, Arg, Mutation, Query } from "type-graphql";
+import { MyContext } from "../types";
 import User from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
 import { UserResponse } from "./types/UserResponse";
@@ -89,11 +90,8 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Ctx() context: any // FIXME
+    @Ctx() context: MyContext
   ): Promise<UserResponse | undefined> {
-    // const errors = validateRegister(options);
-    // if (errors) return { errors };
-
     try {
       const hashed = await hashPassword(options.password);
       if (hashed instanceof Error) {
@@ -113,8 +111,7 @@ export class UserResolver {
         email: options.email,
         password: hashed,
       }).save();
-      // user = result.raw[0];
-      context.req.session.userId = user.id;
+
       return { user };
     } catch (error) {
       if (error.code === "23505") {
@@ -140,6 +137,46 @@ export class UserResolver {
         ],
       };
     }
+  }
+
+  /*
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: ({ req }) => ({
+      getUser: () => req.user,
+      logout: () => req.logout(),
+    }),
+});
+*/
+
+  @Mutation(() => UserResponse)
+  async login(
+    @Arg("email") email: string,
+    @Arg("password") password: string,
+    @Ctx() context: MyContext // FIXME,
+  ): Promise<undefined> {
+    try {
+      console.log("- login start");
+
+      console.log(
+        "🚀 ~ file: user.ts ~ line 159 ~ UserResolver ~ context",
+        context.authenticate("graphql-local")
+      );
+
+      const { user } = await context.authenticate("graphql-local", {
+        email,
+        password,
+      });
+      console.log("user는 과연?!:", user);
+      if (user) {
+        await context.login(user);
+      }
+      // return { user };
+    } catch (err) {
+      console.log(err);
+    }
+    return undefined;
   }
 
   //   @Mutation(() => UserResponse)
