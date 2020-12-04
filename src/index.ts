@@ -105,7 +105,9 @@ const main = async () => {
       resolvers: [UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => buildContext({ req, res, redis }),
+    context: ({ req, res }) => {
+      return buildContext({ req, res, redis });
+    },
     playground: {
       settings: {
         "request.credentials": "same-origin",
