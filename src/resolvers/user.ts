@@ -137,6 +137,7 @@ export class UserResolver {
     );
   }
 
+  @UseMiddleware(checkAuthStatus)
   @UseMiddleware(checkIfGuest)
   @Query(() => UserResponse)
   async userSetting(@Ctx() context: MyContext): Promise<UserResponse> {
@@ -153,6 +154,31 @@ export class UserResolver {
     }
   }
 
+  @UseMiddleware(checkAuthStatus)
+  @Mutation(() => Boolean)
+  async deleteAccount(@Ctx() { req, res }: MyContext): Promise<boolean> {
+    const userId = req.session.passport?.user;
+    try {
+      const deleteRes = await User.delete({ id: userId });
+      if (!deleteRes.affected || deleteRes.affected < 1) return false;
+
+      return new Promise((resolve) =>
+        req.session.destroy((err) => {
+          res.clearCookie(COOKIE_NAME);
+          if (err) {
+            console.log(err);
+            resolve(false);
+            return;
+          }
+          resolve(true);
+        })
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @UseMiddleware(checkAuthStatus)
   @UseMiddleware(checkIfGuest)
   @Mutation(() => UserResponse)
   async updateUserSetting(
@@ -181,12 +207,6 @@ export class UserResolver {
   ): Promise<ProjectListResponse> {
     const userId = context.req.session.passport?.user;
 
-    // 1. projectPermission에서 userid가 일치하는것 전부 찾음
-    // 2. projectPermission의 Project들을 연동시킴
-    // 3-1. 만약 하나도 존재하지 않는다면
-    // 3-2. 존재한다면 반환
-
-    // etc: 서버에러
     try {
       const projects = await ProjectPermission.find({
         where: { user: userId },

@@ -41,7 +41,9 @@ export default class TaskNotification extends BaseEntity {
   isRead: boolean;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.taskTarget)
+  @ManyToOne(() => User, (user) => user.taskTarget, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "target_id" })
   target?: User;
 

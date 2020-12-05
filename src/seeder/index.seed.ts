@@ -27,13 +27,15 @@ export default class CreateSeeds implements Seeder {
     const projectNum = 10;
 
     // NOTE USER;
-    const groupOfUsers = await factory(User)()
-      .map(async (user: User) => {
-        const socialLogin = await factory(SocialLogin)().create();
-        // NOTE socialLogin created;
-        return Object.assign(user, { socialLogin });
-      })
-      .createMany(userNum);
+    const groupOfSocialLogins = await factory(SocialLogin)().makeMany(userNum);
+    const groupOfUsers = await factory(User)().createMany(userNum);
+    let socialLoginIndex = 0;
+    for await (const socialLogin of groupOfSocialLogins) {
+      const user = groupOfUsers[socialLoginIndex];
+      Object.assign(socialLogin, { user });
+      await factory(SocialLogin)().create(socialLogin);
+      socialLoginIndex++;
+    }
 
     // NOTE Project Relations Created
     const projects = await factory(Project)().createMany(projectNum);
