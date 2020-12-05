@@ -10,12 +10,12 @@ import { v4 as uuidv4 } from "uuid";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import { MyContext } from "../types";
 import UserResponse from "./types/UserResponse";
+import UserUpdateOptions from "./types/UserUpdateOptions";
 import User, { roleTypes } from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
-// import checkIfGuest from "../middleware/checkIfGuest";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkIfGuest from "../middleware/checkIfGuest";
 import { prod } from "../constants";
 
 @Resolver()
@@ -122,6 +122,43 @@ export class UserResolver {
         error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
       };
     } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @UseMiddleware(checkIfGuest)
+  @Query(() => UserResponse)
+  async userSetting(@Ctx() context: MyContext): Promise<UserResponse> {
+    const userId = context.req.session.passport?.user;
+    try {
+      const user = await User.findOne({
+        where: { id: userId },
+        relations: ["projectPermissions", "projectPermissions.project"],
+      });
+      if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+      return { user };
+    } catch (_) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @UseMiddleware(checkIfGuest)
+  @Mutation(() => UserResponse)
+  async updateUserSetting(
+    @Arg("options") options: UserUpdateOptions,
+    @Ctx() context: MyContext
+  ): Promise<UserResponse> {
+    try {
+      const userId = context.req.session.passport?.user;
+      const res = await User.update({ id: userId }, { ...options });
+
+      if (!res.affected || res.affected < 1)
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+
+      const user = await User.findOne({ id: userId });
+      if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+      return { user };
+    } catch (error) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
