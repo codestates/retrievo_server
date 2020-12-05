@@ -16,7 +16,7 @@ import { hashPassword } from "../utils/authUtils";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 import checkIfGuest from "../middleware/checkIfGuest";
-import { prod } from "../constants";
+import { COOKIE_NAME, prod } from "../constants";
 
 @Resolver()
 export class UserResolver {
@@ -124,6 +124,21 @@ export class UserResolver {
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req, res }: MyContext): Promise<boolean> {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 
   @UseMiddleware(checkIfGuest)
