@@ -7,6 +7,7 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { v4 as uuidv4 } from "uuid";
+import ProjectPermission from "../entities/ProjectPermission";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import { MyContext } from "../types";
 import UserResponse from "./types/UserResponse";
@@ -16,7 +17,8 @@ import { hashPassword } from "../utils/authUtils";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 import checkIfGuest from "../middleware/checkIfGuest";
-import { prod } from "../constants";
+import { COOKIE_NAME, prod } from "../constants";
+import ProjectListResponse from "./types/ProjectListResponse";
 
 @Resolver()
 export class UserResolver {
@@ -110,12 +112,6 @@ export class UserResolver {
       if (user) {
         const localUser = await User.findOne({ email });
         await context.login(user);
-
-        // FIXME 프로젝트 리졸버가 완성됬을 때 절 지워주세요 TT
-        // if (context.req.session) {
-        //   context.req.session.projectId =
-        //     "f00c4326-77cd-4e7e-85a2-cfacbf736c55";
-        // }
         return { user: localUser };
       }
       return {
@@ -124,6 +120,21 @@ export class UserResolver {
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req, res }: MyContext): Promise<boolean> {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 
   @UseMiddleware(checkIfGuest)
@@ -159,6 +170,31 @@ export class UserResolver {
       if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
       return { user };
     } catch (error) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @UseMiddleware(checkAuthStatus)
+  @Query(() => ProjectListResponse)
+  async projectsOfUser(
+    @Ctx() context: MyContext
+  ): Promise<ProjectListResponse> {
+    const userId = context.req.session.passport?.user;
+
+    // 1. projectPermission에서 userid가 일치하는것 전부 찾음
+    // 2. projectPermission의 Project들을 연동시킴
+    // 3-1. 만약 하나도 존재하지 않는다면
+    // 3-2. 존재한다면 반환
+
+    // etc: 서버에러
+    try {
+      const projects = await ProjectPermission.find({
+        where: { user: userId },
+        relations: ["project"],
+      });
+      if (!projects) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { projects };
+    } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
