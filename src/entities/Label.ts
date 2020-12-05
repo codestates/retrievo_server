@@ -26,7 +26,9 @@ export default class Label extends BaseEntity {
   @Column()
   color!: string;
 
-  @ManyToOne(() => Project, (project) => project.label)
+  @ManyToOne(() => Project, (project) => project.label, {
+    onDelete: "SET NULL",
+  })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project!: Project;

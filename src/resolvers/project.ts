@@ -6,6 +6,7 @@ import {
   Mutation,
   // UseMiddleware,
 } from "type-graphql";
+import { ProjectReturnType } from "./types/ProjectResponse";
 import { prod } from "../constants";
 import { MyContext } from "../types";
 import Project from "../entities/Project";
@@ -46,6 +47,26 @@ export class ProjectResolver {
       }).save();
       console.log(project);
       return project;
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => ProjectReturnType)
+  async deleteProject(
+    @Ctx() context: MyContext
+  ): Promise<ProjectReturnType | undefined> {
+    const projectId = prod
+      ? context.req.query.projectId
+      : "4f1ca847-5d88-4120-a792-d5340be631e8";
+
+    if (!projectId) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+
+    try {
+      await Project.delete(projectId);
+      return { field: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
@@ -154,4 +175,3 @@ export default ProjectResolver;
 //   } catch (err) {
 //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
 //   }
-// }

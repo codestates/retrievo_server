@@ -31,7 +31,9 @@ export default class CommentNotification extends BaseEntity {
   id!: string;
 
   @Field(() => Project, { nullable: true })
-  @ManyToOne(() => Project, (project) => project.commentNotification)
+  @ManyToOne(() => Project, (project) => project.commentNotification, {
+    onDelete: "SET NULL",
+  })
   @JoinColumn({ name: "project_id" })
   project?: Project;
 

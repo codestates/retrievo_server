@@ -59,8 +59,21 @@ export default class TaskNotification extends BaseEntity {
   })
   type: taskNotificationType;
 
+  //    */
+  // cascade?: boolean | ("insert" | "update" | "remove" | "soft-remove" | "recover")[];
+  // /**
+  //  * Indicates if relation column value can be nullable or not.
+  //  */
+  // nullable?: boolean;
+  // /**
+  //  * Database cascade action on delete.
+  //  */
+  // // onDelete?: OnDeleteType;
+  // = "RESTRICT" | "CASCADE" | "SET NULL" | "DEFAULT" | "NO ACTION"
   @Field(() => Project)
-  @ManyToOne(() => Project, (project) => project.taskNotification)
+  @ManyToOne(() => Project, (project) => project.taskNotification, {
+    onDelete: "SET NULL",
+  })
   @JoinColumn({ name: "project_id" })
   project: Project;
 
