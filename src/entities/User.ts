@@ -83,6 +83,7 @@ export default class User extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [ProjectPermission])
   @OneToMany(
     () => ProjectPermission,
     (projectPermission) => projectPermission.user
