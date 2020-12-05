@@ -36,12 +36,13 @@ passport.use(
       done: (error: Error | null, data: User | null) => void
     ) => {
       const inputEmail = email as string;
+      const inputPassword = password as string;
       // const user = await User.findOne({ email: inputEmail });
       // FIXME 테스트 유저를 위해 임의로 만들었습니당....
       const user = await User.findOne({
         where: {
           email: inputEmail,
-          password,
+          password: inputPassword,
         },
       });
 

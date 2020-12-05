@@ -116,10 +116,10 @@ export class UserResolver {
         await context.login(user);
 
         // FIXME 프로젝트 리졸버가 완성됬을 때 절 지워주세요 TT
-        // if (context.req.session) {
-        //   context.req.session.projectId =
-        //     "998bbdfb-2af6-48c3-b2c4-499e39371087";
-        // }
+        if (context.req.session) {
+          context.req.session.projectId =
+            "f00c4326-77cd-4e7e-85a2-cfacbf736c55";
+        }
         return { user: localUser };
       }
       return {
