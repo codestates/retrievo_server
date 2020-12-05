@@ -3,13 +3,14 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
-// import { verifyPassword } from "../utils/authUtils";
-import User from "../entities/User";
+import User, { roleTypes } from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
 import generateError, {
   errorKeys,
   generateApolloError,
 } from "../utils/ErrorFactory";
+import { verifyPassword } from "../utils/authUtils";
+import { prod } from "../constants";
 
 passport.serializeUser((user: any, done): void => {
   done(null, user.id);
@@ -21,12 +22,7 @@ passport.deserializeUser(async (id: string, done) => {
     return done(null, user);
   }
   return generateError(errorKeys.AUTH_FAIL_DESERIALIZE);
-  // throw new AuthenticationError("Failed to deserialize");
 });
-
-/// ////////////////// ///
-/// // Local Login /// ///
-/// ////////////////// ///
 
 passport.use(
   new GraphQLLocalStrategy(
@@ -36,30 +32,29 @@ passport.use(
       done: (error: Error | null, data: User | null) => void
     ) => {
       const inputEmail = email as string;
-      const inputPassword = password as string;
-      // const user = await User.findOne({ email: inputEmail });
-      // FIXME 테스트 유저를 위해 임의로 만들었습니당....
-      const user = await User.findOne({
-        where: {
-          email: inputEmail,
-          password: inputPassword,
-        },
-      });
+      try {
+        const user = await User.findOne({ email: inputEmail });
 
-      if (!user)
-        return done(generateApolloError(errorKeys.AUTH_NOT_FOUND), null);
-      // try {
-      // FIXME 테스트 유저를 위해 해싱을 잠시 꺼두겠습니다
-      // const isVerified = await verifyPassword(
-      //   user.password as string,
-      //   password as string
-      // );
-      // if (isVerified || user.role === roleTypes.GUEST)
-      return done(null, user);
-      // } catch (err) {
-      //   return done(generateApolloError(errorKeys.INTERNAL_SERVER_ERROR), null);
-      // }
-      // return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
+        if (!user)
+          return done(generateApolloError(errorKeys.AUTH_NOT_FOUND), null);
+
+        // NOTE 환경변수 prod 에 따라 hash verification 작동여부 판단.
+        if (prod) {
+          const isVerified = await verifyPassword(
+            user.password as string,
+            password as string
+          );
+          if (!isVerified && user.role !== roleTypes.GUEST)
+            return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
+        }
+
+        if (!prod && user.password !== password)
+          return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
+
+        return done(null, user);
+      } catch (err) {
+        return done(generateApolloError(errorKeys.INTERNAL_SERVER_ERROR), null);
+      }
     }
   )
 );
@@ -95,9 +90,8 @@ const socialCallback = async (
     const email = profile.emails[0]?.value;
     const hasEmail = await User.findOne({ email });
 
-    if (!socialUser && hasEmail) {
+    if (!socialUser && hasEmail)
       return generateError(errorKeys.AUTH_ALREADY_EXIST);
-    }
 
     if (!socialUser) {
       let username = "";

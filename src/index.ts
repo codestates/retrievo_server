@@ -16,13 +16,10 @@ import { COOKIE_NAME, prod } from "./constants";
 // passport need env
 dotenv.config({ example: ".env" });
 /* eslint-disable */
-// import "./services/authService";
 import passport from "./services/authService";
-// import { redis } from "../index";
 
 // redis Setting (before apollo middleware)
 const RedisStore = connectRedis(session);
-// eslint-disable-next-line import/prefer-default-export
 export const redis = new Redis();
 
 const main = async () => {
@@ -61,14 +58,6 @@ const main = async () => {
 
   app.use(passport.initialize());
   app.use(passport.session());
-  //ts-disable
-  // app.post(
-  //   "/auth/local",
-  //   myPassport.authenticate("graphql-local", [
-  //     "testKj@rockpaperqueens.com",
-  //     "123123",
-  //   ])
-  // );
 
   app.get(
     "/auth/google",
@@ -95,8 +84,6 @@ const main = async () => {
       failureRedirect: "http://localhost:4000/graphql",
     })
   );
-
-  // passport test end
 
   // apollo Setting
   const apolloServer = new ApolloServer({
