@@ -10,7 +10,7 @@ import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import dotenv from "dotenv-safe";
-import { UserResolver } from "./resolvers/user";
+import resolvers from "./resolvers";
 import { COOKIE_NAME, prod } from "./constants";
 
 // local
@@ -89,7 +89,7 @@ const main = async () => {
   // apollo Setting
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver],
+      resolvers,
       validate: false,
     }),
     context: ({ req, res }) => {

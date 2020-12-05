@@ -39,9 +39,10 @@ export default class Project extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [ProjectPermission], { nullable: true })
   @OneToMany(
     () => ProjectPermission,
-    (projectPermission) => projectPermission.id
+    (projectPermission) => projectPermission.project
   )
   projectPermissions?: ProjectPermission[];
 

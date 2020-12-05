@@ -16,6 +16,10 @@ type UserObject = {
   userId?: string;
 }; // FIXME
 
+interface QueryParamIFC {
+  [key: string]: string;
+}
+
 export type MyContext = Context<UserObject> & {
   req: Request & {
     session: Session &
@@ -23,6 +27,8 @@ export type MyContext = Context<UserObject> & {
         passport?: { user?: string };
         projectId?: string;
       };
+    query: QueryParamIFC;
+    params: QueryParamIFC;
   };
   res: Response;
   redis: Redis;
