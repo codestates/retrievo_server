@@ -17,7 +17,7 @@ import User, { roleTypes } from "../entities/User";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 // import checkIfGuest from "../middleware/checkIfGuest";
-import checkProjectPermission from "../middleware/checkProjectPermission";
+// import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class UserResolver {

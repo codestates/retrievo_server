@@ -3,8 +3,8 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
-import { verifyPassword } from "../utils/authUtils";
-import User, { roleTypes } from "../entities/User";
+// import { verifyPassword } from "../utils/authUtils";
+import User from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
 import generateError, {
   errorKeys,
@@ -36,7 +36,14 @@ passport.use(
       done: (error: Error | null, data: User | null) => void
     ) => {
       const inputEmail = email as string;
-      const user = await User.findOne({ email: inputEmail });
+      // const user = await User.findOne({ email: inputEmail });
+      // FIXME 테스트 유저를 위해 임의로 만들었습니당....
+      const user = await User.findOne({
+        where: {
+          email: inputEmail,
+          password,
+        },
+      });
 
       if (!user)
         return done(generateApolloError(errorKeys.AUTH_NOT_FOUND), null);
