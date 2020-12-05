@@ -11,11 +11,13 @@ import checkAuthStatus from "../middleware/checkAuthStatus";
 import { MyContext } from "../types";
 import UserResponse from "./types/UserResponse";
 import User, { roleTypes } from "../entities/User";
-import { hashPassword } from "../utils/authUtils";
+// import { hashPassword } from "../utils/authUtils";
 // import checkIfGuest from "../middleware/checkIfGuest";
 // import { UsernamePasswordInput } from "./types/";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
+// import checkIfGuest from "../middleware/checkIfGuest";
+// import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class UserResolver {
@@ -23,10 +25,6 @@ export class UserResolver {
   @UseMiddleware(checkAuthStatus)
   async user(@Arg("id") id: string): Promise<UserResponse> {
     try {
-      console.log(
-        "errorKeys 작동하면 오늘 치킨 쏩니다",
-        errorKeys.AUTH_NOT_FOUND
-      );
       const user = await User.findOne({ id });
       if (!user) {
         return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
@@ -66,28 +64,37 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput
+    @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
+    @Ctx() context: MyContext
   ): Promise<UserResponse> {
     try {
-      const hashed = await hashPassword(options.password);
-      if (hashed instanceof Error) {
-        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      // FIXME 테스트 유저를 위해 해싱을 잠시 꺼두겠습니다
+      // const hashed = await hashPassword(options.password);
+      // if (hashed instanceof Error) {
+      //   return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      // }
+
+      const doesUserExist = await User.findOne({ email: options.email });
+      if (doesUserExist) {
+        return { error: generateError(errorKeys.AUTH_ALREADY_EXIST) };
       }
 
-      const user = await User.create({
+      const newUser = await User.create({
         username: options.username,
         email: options.email,
-        password: hashed,
+        password: options.password,
+        // FIXME password: hashed,
       }).save();
 
-      return { user };
-    } catch (error) {
-      if (error.code === "23505") {
-        // duplicate username error
-        return {
-          error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
-        };
+      if (newUser) {
+        const { user } = await context.authenticate("graphql-local", {
+          email: options.email,
+          password: options.password,
+        });
+        if (user) await context.login(user);
       }
+      return { user: newUser };
+    } catch (error) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -103,9 +110,16 @@ export class UserResolver {
         email,
         password,
       });
+
       if (user) {
-        await context.login(user);
         const localUser = await User.findOne({ email });
+        await context.login(user);
+
+        // FIXME 프로젝트 리졸버가 완성됬을 때 절 지워주세요 TT
+        // if (context.req.session) {
+        //   context.req.session.projectId =
+        //     "998bbdfb-2af6-48c3-b2c4-499e39371087";
+        // }
         return { user: localUser };
       }
       return {

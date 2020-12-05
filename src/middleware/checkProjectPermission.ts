@@ -1,23 +1,28 @@
 import { MiddlewareFn } from "type-graphql";
-import User from "../entities/User";
 import { MyContext } from "../types";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
+import ProjectPermission from "../entities/ProjectPermission";
 
-export const checkIfGuest: MiddlewareFn<MyContext> = async (
+export const checkProjectPermission: MiddlewareFn<MyContext> = async (
   { context },
   next
 ) => {
   const userId = context.req.session.passport?.user;
+  const projectId = context.req.session?.projectId;
   try {
-    const currentUser = await User.findOne({ id: userId });
+    const hasPermission = await ProjectPermission.findOne({
+      where: {
+        user: userId,
+        project: projectId,
+      },
+    });
 
-    if (currentUser?.role === "guest") {
+    if (!hasPermission)
       return { error: generateError(errorKeys.AUTH_NO_PERMISSION) };
-    }
   } catch (err) {
     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
   }
   return await next();
 };
 
-export default checkIfGuest;
+export default checkProjectPermission;

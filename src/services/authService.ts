@@ -3,8 +3,8 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
-import { verifyPassword } from "../utils/authUtils";
-import User, { roleTypes } from "../entities/User";
+// import { verifyPassword } from "../utils/authUtils";
+import User from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
 import generateError, {
   errorKeys,
@@ -35,22 +35,30 @@ passport.use(
       password: unknown,
       done: (error: Error | null, data: User | null) => void
     ) => {
-      const user = await User.findOne({ where: { email } });
+      const inputEmail = email as string;
+      // const user = await User.findOne({ email: inputEmail });
+      // FIXME 테스트 유저를 위해 임의로 만들었습니당....
+      const user = await User.findOne({
+        where: {
+          email: inputEmail,
+          password,
+        },
+      });
 
       if (!user)
         return done(generateApolloError(errorKeys.AUTH_NOT_FOUND), null);
-
-      try {
-        const isVerified = await verifyPassword(
-          user.password as string,
-          password as string
-        );
-        if (isVerified || user.role === roleTypes.GUEST)
-          return done(null, user);
-      } catch (err) {
-        return done(generateApolloError(errorKeys.INTERNAL_SERVER_ERROR), null);
-      }
-      return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
+      // try {
+      // FIXME 테스트 유저를 위해 해싱을 잠시 꺼두겠습니다
+      // const isVerified = await verifyPassword(
+      //   user.password as string,
+      //   password as string
+      // );
+      // if (isVerified || user.role === roleTypes.GUEST)
+      return done(null, user);
+      // } catch (err) {
+      //   return done(generateApolloError(errorKeys.INTERNAL_SERVER_ERROR), null);
+      // }
+      // return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
     }
   )
 );

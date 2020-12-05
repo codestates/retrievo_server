@@ -18,7 +18,11 @@ type UserObject = {
 
 export type MyContext = Context<UserObject> & {
   req: Request & {
-    session: Session & Partial<SessionData> & { passport?: { user?: string } };
+    session: Session &
+      Partial<SessionData> & {
+        passport?: { user?: string };
+        projectId?: string;
+      };
   };
   res: Response;
   redis: Redis;
