@@ -10,9 +10,9 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from "typeorm";
-import User from "./User";
 import Task from "./Task";
 import CommentNotification from "./CommentNotification";
+import User from "./User";
 
 @ObjectType()
 @Entity()
@@ -26,12 +26,18 @@ export default class Comment extends BaseEntity {
   rootCommentId?: string;
 
   @Field(() => Task)
-  @ManyToOne(() => Task, (task) => task.comment, { onDelete: "CASCADE" })
+  @ManyToOne(() => Task, (task) => task.comment, {
+    onDelete: "SET NULL",
+    nullable: true,
+  })
   @JoinColumn({ name: "task_id" })
   task!: Task;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.comment, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (user) => user.comment, {
+    onDelete: "SET NULL",
+    nullable: true,
+  })
   @JoinColumn({ name: "user_id" })
   user!: User;
 

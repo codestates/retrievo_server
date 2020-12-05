@@ -35,27 +35,36 @@ export default class CommentNotification extends BaseEntity {
   @JoinColumn({ name: "project_id" })
   project?: Project;
 
-  @Field(() => User)
-  @ManyToOne(() => User, (user) => user.commentAuthor)
-  @JoinColumn({ name: "author_id" })
-  author?: User;
-
-  @Field(() => User)
-  @ManyToOne(() => User, (user) => user.commentTarget)
-  @JoinColumn({ name: "target_id" })
-  target?: User;
-
   @Field(() => Boolean)
   @Column({ default: false, name: "is_read" })
   isRead: boolean;
 
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.commentAuthor, {
+    onDelete: "SET NULL",
+    nullable: true,
+  })
+  @JoinColumn({ name: "author_id" })
+  author?: User;
+
+  @Field(() => User)
+  @ManyToOne(() => User, (user) => user.commentTarget, {
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "target_id" })
+  target?: User;
+
   @Field(() => Comment, { nullable: true })
-  @ManyToOne(() => Comment, (comment: Comment) => comment.commentNotification)
+  @ManyToOne(() => Comment, (comment: Comment) => comment.commentNotification, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "comment_id" })
   comment?: Comment;
 
   @Field(() => Task, { nullable: true })
-  @ManyToOne(() => Task, (task: Task) => task.commentNotification)
+  @ManyToOne(() => Task, (task: Task) => task.commentNotification, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "task_id" })
   task?: Task;
 
