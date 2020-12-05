@@ -105,18 +105,18 @@ const socialCallback = async (
       let newUser;
       const em = getManager();
       await em.transaction(async (transactionalEntityManager) => {
-        const newSocialLogin = await em.create(SocialLogins, {
-          providerId: profile.id,
-          socialProvider: profile.provider,
-        });
-        await transactionalEntityManager.save(newSocialLogin);
-
         const tempUser = await em.create(User, {
-          socialLogin: newSocialLogin,
           username,
           email,
         });
         newUser = await transactionalEntityManager.save(tempUser);
+
+        const newSocialLogin = await em.create(SocialLogins, {
+          user: newUser,
+          providerId: profile.id,
+          socialProvider: profile.provider,
+        });
+        await transactionalEntityManager.save(newSocialLogin);
       });
 
       done(null, newUser);

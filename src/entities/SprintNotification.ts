@@ -59,12 +59,16 @@ export default class SprintNotification extends BaseEntity {
   isRead: boolean;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.sprintTarget)
+  @ManyToOne(() => User, (user) => user.sprintTarget, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "target_id" })
   target?: User;
 
   @Field(() => Project, { nullable: true })
-  @ManyToOne(() => Project, (project) => project.sprintNotification)
+  @ManyToOne(() => Project, (project) => project.sprintNotification, {
+    onDelete: "SET NULL",
+  })
   @JoinColumn({ name: "project_id" })
   project?: Project;
 
