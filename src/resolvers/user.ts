@@ -1,7 +1,3 @@
-// import argon2 from "argon2";
-// import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constrants";
-// import { validateRegister } from "../utils/validateRegister";
-// import { sendEmail } from "../utils/sendEmail";
 import {
   Resolver,
   Ctx,
@@ -10,34 +6,35 @@ import {
   Query,
   UseMiddleware,
 } from "type-graphql";
-import { AuthenticationError, ApolloError } from "apollo-server-express";
 import { v4 as uuidv4 } from "uuid";
 import checkAuthStatus from "../middleware/isAuth";
 import { MyContext } from "../types";
 import User, { roleTypes } from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
-import { UserResponse } from "./types/UserResponse";
+import UserResponse from "./types/UserResponse";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
+import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User)
+  @Query(() => UserResponse)
   @UseMiddleware(checkAuthStatus)
-  async user(@Arg("id") id: string): Promise<User | undefined> {
+  async user(@Arg("id") id: string): Promise<UserResponse> {
     try {
+      console.log(
+        "errorKeys 작동하면 오늘 치킨 쏩니다",
+        errorKeys.AUTH_NOT_FOUND
+      );
       const user = await User.findOne({ id });
       if (!user) {
-        throw new ApolloError("User Not Found", "401");
+        return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+        // Error -> modify 최종적으로 에러를 던져준다.
       }
-      return user;
+      return { user };
     } catch (err) {
-      throw new AuthenticationError(err.message);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
-
-  // guest 로그인
-  // 1) 중요한 기능을 클릭할 때 => 로그인을 하셔야압니다.]
-  // 2) 비회원가입하기... username => 버튼 클릭 => 안녕하세요 시영님....
 
   @Mutation(() => UserResponse)
   async createGuest(@Ctx() context: MyContext): Promise<UserResponse> {
@@ -59,20 +56,20 @@ export class UserResolver {
         context.login(user);
         return { user: guestUser };
       }
-      throw new AuthenticationError("User Not Found");
+      return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
     } catch (err) {
-      throw new ApolloError("Internal Server Error", "500");
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput
-  ): Promise<UserResponse | undefined> {
+  ): Promise<UserResponse> {
     try {
       const hashed = await hashPassword(options.password);
       if (hashed instanceof Error) {
-        throw new ApolloError("Internal Server Error", "500");
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       }
 
       const user = await User.create({
@@ -85,12 +82,11 @@ export class UserResolver {
     } catch (error) {
       if (error.code === "23505") {
         // duplicate username error
-        throw new ApolloError("Email Already Exists", "404", {
-          field: "email",
-        });
+        return {
+          error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
+        };
       }
-
-      throw new ApolloError("Interner Server Error", "500");
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
@@ -99,7 +95,7 @@ export class UserResolver {
     @Arg("email") email: string,
     @Arg("password") password: string,
     @Ctx() context: MyContext
-  ): Promise<UserResponse | undefined> {
+  ): Promise<UserResponse | Error> {
     try {
       const { user } = await context.authenticate("graphql-local", {
         email,
@@ -110,9 +106,11 @@ export class UserResolver {
         const localUser = await User.findOne({ email });
         return { user: localUser };
       }
-      throw new ApolloError("No Matching User", "402", { field: "email" });
+      return {
+        error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
+      };
     } catch (err) {
-      throw new ApolloError("Internal Serval Error", "500");
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 }

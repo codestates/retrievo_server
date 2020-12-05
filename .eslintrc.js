@@ -45,5 +45,6 @@ module.exports = {
     "no-unused-vars": "warn",
     "no-console": "warn",
     "click-events-have-key-events": "off",
+    "max-classes-per-file": "off",
   },
 };
