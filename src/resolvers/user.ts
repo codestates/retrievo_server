@@ -17,7 +17,6 @@ import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 // import checkIfGuest from "../middleware/checkIfGuest";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 import { prod } from "../constants";
-// import mailSender from "../services/mailerService";
 
 @Resolver()
 export class UserResolver {
