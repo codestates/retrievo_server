@@ -12,6 +12,7 @@ import { ApolloServer } from "apollo-server-express";
 import dotenv from "dotenv-safe";
 import { UserResolver } from "./resolvers/user";
 import { COOKIE_NAME, prod } from "./constants";
+
 // local
 // passport need env
 dotenv.config({ example: ".env" });
