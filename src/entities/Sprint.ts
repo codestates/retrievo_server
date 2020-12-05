@@ -57,7 +57,9 @@ export default class Sprint extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  @ManyToOne(() => Project, (project) => project.sprint)
+  @ManyToOne(() => Project, (project) => project.sprint, {
+    onDelete: "SET NULL",
+  })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project!: Project;
