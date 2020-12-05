@@ -28,8 +28,8 @@ export default class Project extends BaseEntity {
   name!: string;
 
   @Field()
-  @Column()
-  logo: string;
+  @Column({ nullable: true })
+  logo?: string;
 
   @Field(() => String)
   @CreateDateColumn({ name: "created_at" })

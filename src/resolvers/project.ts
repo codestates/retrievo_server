@@ -1,10 +1,9 @@
 import {
   Resolver,
   Ctx,
-  // Arg,
-  // Mutation,
+  Arg,
   Query,
-  // Mutation,
+  Mutation,
   // UseMiddleware,
 } from "type-graphql";
 import { prod } from "../constants";
@@ -32,6 +31,21 @@ export class ProjectResolver {
     try {
       const project = await Project.findOne({ where: { id: projectId } });
       return project || { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => Project)
+  async createProject(
+    @Arg("name") name: string
+  ): Promise<Project | { error: FieldError }> {
+    try {
+      const project = await Project.create({
+        name,
+      }).save();
+      console.log(project);
+      return project;
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
