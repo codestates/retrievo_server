@@ -9,11 +9,12 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import checkAuthStatus from "../middleware/isAuth";
 import { MyContext } from "../types";
+import UserResponse from "./types/UserResponse";
 import User, { roleTypes } from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
-import UserResponse from "./types/UserResponse";
-import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
+// import { UsernamePasswordInput } from "./types/";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
+import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 
 @Resolver()
 export class UserResolver {
