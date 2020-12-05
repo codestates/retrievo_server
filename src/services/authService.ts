@@ -3,10 +3,13 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
-import { ApolloError, AuthenticationError } from "apollo-server-express";
 import { verifyPassword } from "../utils/authUtils";
 import User, { roleTypes } from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
+import generateError, {
+  errorKeys,
+  generateApolloError,
+} from "../utils/ErrorFactory";
 
 passport.serializeUser((user: any, done): void => {
   done(null, user.id);
@@ -15,10 +18,10 @@ passport.serializeUser((user: any, done): void => {
 passport.deserializeUser(async (id: string, done) => {
   if (id) {
     const user = await User.findOne(id);
-    done(null, user);
-  } else {
-    throw new AuthenticationError("Failed to deserialize");
+    return done(null, user);
   }
+  return generateError(errorKeys.AUTH_FAIL_DESERIALIZE);
+  // throw new AuthenticationError("Failed to deserialize");
 });
 
 /// ////////////////// ///
@@ -34,7 +37,9 @@ passport.use(
     ) => {
       const user = await User.findOne({ where: { email } });
 
-      if (!user) return done(new Error("Cannot find the user"), null);
+      if (!user)
+        return done(generateApolloError(errorKeys.AUTH_NOT_FOUND), null);
+
       try {
         const isVerified = await verifyPassword(
           user.password as string,
@@ -43,9 +48,9 @@ passport.use(
         if (isVerified || user.role === roleTypes.GUEST)
           return done(null, user);
       } catch (err) {
-        return done(new ApolloError("Internal Server Error", "500"), null);
+        return done(generateApolloError(errorKeys.INTERNAL_SERVER_ERROR), null);
       }
-      return done(new AuthenticationError("no matching user"), null);
+      return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
     }
   )
 );
@@ -82,7 +87,7 @@ const socialCallback = async (
     const hasEmail = await User.findOne({ email });
 
     if (!socialUser && hasEmail) {
-      throw new ApolloError("User already exists", "401");
+      return generateError(errorKeys.AUTH_ALREADY_EXIST);
     }
 
     if (!socialUser) {
@@ -117,8 +122,7 @@ const socialCallback = async (
       done(null, user);
     }
   } catch (err) {
-    // TODO 에러핸들링
-    throw new ApolloError("Oooops! Something bad happened", "500");
+    return generateError(errorKeys.INTERNAL_SERVER_ERROR);
   }
 
   // TODO: invitation 확인 util 실행
@@ -126,6 +130,5 @@ const socialCallback = async (
 };
 
 passport.use(new GoogleStrategy(googleOptions, socialCallback));
-
 passport.use(new GitHubStrategy(githubOptions, socialCallback));
 export default passport;
