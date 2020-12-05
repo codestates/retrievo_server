@@ -7,11 +7,12 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { v4 as uuidv4 } from "uuid";
-import checkAuthStatus from "../middleware/isAuth";
+import checkAuthStatus from "../middleware/checkAuthStatus";
 import { MyContext } from "../types";
 import UserResponse from "./types/UserResponse";
 import User, { roleTypes } from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
+// import checkIfGuest from "../middleware/checkIfGuest";
 // import { UsernamePasswordInput } from "./types/";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";

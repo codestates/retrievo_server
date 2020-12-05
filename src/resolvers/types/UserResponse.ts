@@ -1,15 +1,6 @@
 import { Field, ObjectType } from "type-graphql";
 import User from "../../entities/User";
 
-// @ObjectType()
-// class Args {
-//   @Field()
-//   name: string;
-
-//   @Field()
-//   message: string;
-// }
-
 @ObjectType()
 export class FieldError {
   @Field()
@@ -18,7 +9,7 @@ export class FieldError {
   @Field()
   message: string;
 
-  @Field()
+  @Field({ nullable: true })
   field?: string;
 }
 
