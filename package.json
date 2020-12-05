@@ -47,6 +47,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.4.0",
     "@types/lodash": "^4.14.165",
     "@types/passport-github2": "^1.2.4",
     "@types/passport-google-oauth20": "^2.0.4",
@@ -71,6 +72,7 @@
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.3.0",
     "reflect-metadata": "^0.1.13",
+    "sendgrid-mail": "^0.0.2",
     "type-graphql": "^1.0.0-rc.3",
     "typeorm": "^0.2.25",
     "typeorm-seeding": "^1.6.1",
