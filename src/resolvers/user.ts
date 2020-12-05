@@ -11,13 +11,12 @@ import checkAuthStatus from "../middleware/checkAuthStatus";
 import { MyContext } from "../types";
 import UserResponse from "./types/UserResponse";
 import User, { roleTypes } from "../entities/User";
-// import { hashPassword } from "../utils/authUtils";
-// import checkIfGuest from "../middleware/checkIfGuest";
-// import { UsernamePasswordInput } from "./types/";
+import { hashPassword } from "../utils/authUtils";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 // import checkIfGuest from "../middleware/checkIfGuest";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
+import { prod } from "../constants";
 
 @Resolver()
 export class UserResolver {
@@ -26,10 +25,7 @@ export class UserResolver {
   async user(@Arg("id") id: string): Promise<UserResponse> {
     try {
       const user = await User.findOne({ id });
-      if (!user) {
-        return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
-        // Error -> modify 최종적으로 에러를 던져준다.
-      }
+      if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
       return { user };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -68,22 +64,22 @@ export class UserResolver {
     @Ctx() context: MyContext
   ): Promise<UserResponse> {
     try {
-      // FIXME 테스트 유저를 위해 해싱을 잠시 꺼두겠습니다
-      // const hashed = await hashPassword(options.password);
-      // if (hashed instanceof Error) {
-      //   return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-      // }
+      // NOTE 환경변수가 prod 면 hashPassword 작동여부 판단
+      let hashed;
+      if (prod) {
+        hashed = await hashPassword(options.password);
+        if (hashed instanceof Error)
+          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      }
 
       const doesUserExist = await User.findOne({ email: options.email });
-      if (doesUserExist) {
+      if (doesUserExist)
         return { error: generateError(errorKeys.AUTH_ALREADY_EXIST) };
-      }
 
       const newUser = await User.create({
         username: options.username,
         email: options.email,
-        password: options.password,
-        // FIXME password: hashed,
+        password: hashed || options.password,
       }).save();
 
       if (newUser) {
@@ -116,10 +112,10 @@ export class UserResolver {
         await context.login(user);
 
         // FIXME 프로젝트 리졸버가 완성됬을 때 절 지워주세요 TT
-        if (context.req.session) {
-          context.req.session.projectId =
-            "f00c4326-77cd-4e7e-85a2-cfacbf736c55";
-        }
+        // if (context.req.session) {
+        //   context.req.session.projectId =
+        //     "f00c4326-77cd-4e7e-85a2-cfacbf736c55";
+        // }
         return { user: localUser };
       }
       return {
