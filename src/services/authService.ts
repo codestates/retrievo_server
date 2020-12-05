@@ -3,58 +3,61 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GraphQLLocalStrategy } from "graphql-passport";
 import { getManager } from "typeorm";
-// import { redis } from "../index";
 import { verifyPassword } from "../utils/authUtils";
-import User from "../entities/User";
+import User, { roleTypes } from "../entities/User";
 import SocialLogins from "../entities/SocialLogins";
+import generateError, {
+  errorKeys,
+  generateApolloError,
+} from "../utils/ErrorFactory";
 
-const myPassport = new passport.Passport();
-
-myPassport.serializeUser((user: any, done): void => {
+passport.serializeUser((user: any, done): void => {
   done(null, user.id);
 });
 
-myPassport.deserializeUser(async (id: string, done) => {
+passport.deserializeUser(async (id: string, done) => {
   if (id) {
     const user = await User.findOne(id);
-    done(null, user);
-  } else {
-    console.log("desc Error: no id");
+    return done(null, user);
   }
+  return generateError(errorKeys.AUTH_FAIL_DESERIALIZE);
+  // throw new AuthenticationError("Failed to deserialize");
 });
 
-/// /////////////////
-/// / localLogin ////
-/// /////////////////
+/// ////////////////// ///
+/// // Local Login /// ///
+/// ////////////////// ///
 
-myPassport.use(
+passport.use(
   new GraphQLLocalStrategy(
     async (
       email: unknown,
       password: unknown,
       done: (error: Error | null, data: User | null) => void
     ) => {
-      console.log("Local Strategy 실행이 됐");
       const user = await User.findOne({ where: { email } });
-      if (!user) return done(new Error("Cannot find the user"), null);
+
+      if (!user)
+        return done(generateApolloError(errorKeys.AUTH_NOT_FOUND), null);
 
       try {
         const isVerified = await verifyPassword(
           user.password as string,
           password as string
         );
-        if (isVerified) return done(null, user);
+        if (isVerified || user.role === roleTypes.GUEST)
+          return done(null, user);
       } catch (err) {
-        console.log("grapqhql local stretgy error:", err);
+        return done(generateApolloError(errorKeys.INTERNAL_SERVER_ERROR), null);
       }
-      return done(new Error("no matching user"), null);
+      return done(generateApolloError(errorKeys.AUTH_NOT_MATCH), null);
     }
   )
 );
 
-/// /////////////////
-/// /SocialLogins////
-/// /////////////////
+/// ///////////////  ///
+/// /SocialLogins//  ///
+/// ///////////////  ///
 
 const googleOptions = {
   clientID: process.env.GOOGLE_CLIENT_ID as string,
@@ -80,6 +83,13 @@ const socialCallback = async (
       where: { providerId: profile.id },
     });
 
+    const email = profile.emails[0]?.value;
+    const hasEmail = await User.findOne({ email });
+
+    if (!socialUser && hasEmail) {
+      return generateError(errorKeys.AUTH_ALREADY_EXIST);
+    }
+
     if (!socialUser) {
       let username = "";
       if (profile.provider === "github") {
@@ -101,26 +111,24 @@ const socialCallback = async (
         const tempUser = await em.create(User, {
           socialLogin: newSocialLogin,
           username,
-          email: profile.emails && profile.emails[0] && profile.emails[0].value,
+          email,
         });
         newUser = await transactionalEntityManager.save(tempUser);
       });
 
       done(null, newUser);
     } else {
-      const user = await User.findOne({ where: { email: profile.email } });
+      const user = await User.findOne({ where: { email } });
       done(null, user);
     }
   } catch (err) {
-    // TODO 에러핸들링
-    console.log("소셜 로그인 에러 발생:", err);
+    return generateError(errorKeys.INTERNAL_SERVER_ERROR);
   }
 
   // TODO: invitation 확인 util 실행
   return undefined; // TODO delete
 };
 
-myPassport.use(new GoogleStrategy(googleOptions, socialCallback));
-myPassport.use(new GitHubStrategy(githubOptions, socialCallback));
-
-export default myPassport;
+passport.use(new GoogleStrategy(googleOptions, socialCallback));
+passport.use(new GitHubStrategy(githubOptions, socialCallback));
+export default passport;

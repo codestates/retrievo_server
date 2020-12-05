@@ -50,6 +50,7 @@
     "@types/lodash": "^4.14.165",
     "@types/passport-github2": "^1.2.4",
     "@types/passport-google-oauth20": "^2.0.4",
+    "@types/uuid": "^8.3.0",
     "apollo-server-express": "^2.16.1",
     "argon2": "^0.26.2",
     "class-validator": "^0.12.2",
@@ -72,7 +73,8 @@
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.0.0-rc.3",
     "typeorm": "^0.2.25",
-    "typeorm-seeding": "^1.6.1"
+    "typeorm-seeding": "^1.6.1",
+    "uuid": "^8.3.1"
   },
   "keywords": [],
   "author": "",

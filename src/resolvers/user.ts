@@ -1,109 +1,75 @@
-// import { MyContext } from "src/types";
-// import argon2 from "argon2";
-// import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constrants";
-// import { validateRegister } from "../utils/validateRegister";
-// import { sendEmail } from "../utils/sendEmail";
-// import { getConnection } from "typeorm";
-import { Resolver, Ctx, Arg, Mutation, Query } from "type-graphql";
+import {
+  Resolver,
+  Ctx,
+  Arg,
+  Mutation,
+  Query,
+  UseMiddleware,
+} from "type-graphql";
+import { v4 as uuidv4 } from "uuid";
+import checkAuthStatus from "../middleware/isAuth";
 import { MyContext } from "../types";
-import User from "../entities/User";
+import User, { roleTypes } from "../entities/User";
 import { hashPassword } from "../utils/authUtils";
-import { UserResponse } from "./types/UserResponse";
+import UserResponse from "./types/UserResponse";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
+import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, { nullable: true })
-  async user(@Arg("id") id: string): Promise<User | undefined> {
-    return await User.findOne(id);
+  @Query(() => UserResponse)
+  @UseMiddleware(checkAuthStatus)
+  async user(@Arg("id") id: string): Promise<UserResponse> {
+    try {
+      console.log(
+        "errorKeys 작동하면 오늘 치킨 쏩니다",
+        errorKeys.AUTH_NOT_FOUND
+      );
+      const user = await User.findOne({ id });
+      if (!user) {
+        return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+        // Error -> modify 최종적으로 에러를 던져준다.
+      }
+      return { user };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
   }
 
-  // @Mutation(() => UserResponse)
-  // async changePassword(
-  //   @Arg("token") token: string,
-  //   @Arg("newPassword") newPassword: string,
-  //   // @Ctx() { redis, req }: MyContext
-  // ): Promise<UserResponse> {
-  //   if (newPassword.length <= 2) {
-  //     return {
-  //       errors: [
-  //         { field: "newPassword", message: "length must be greater than 2" },
-  //       ],
-  //     };
-  //   }
-  // const key = FORGET_PASSWORD_PREFIX + token;
-  // const userId = await redis.get(key);
-  // if (!userId) {
-  //   return {
-  //     errors: [{ field: "token", message: "token expired" }],
-  //   };
-  // }
-  // const userIdNum = parseInt(userId);
-  // const user = await User.findOne(userIdNum);
-  // if (!user) {
-  //   return { errors: [{ field: "token", message: "user no longer exists" }] };
-  // }
-  // await User.update(
-  //   { id: userIdNum },
-  //   // {
-  //   //   password: await argon2.hash(newPassword),
-  //   // }
-  // );
-  // await redis.del(key);
-  // req.session.userId = user.id;
-  // return { user };
-  // }
-  // @Mutation(() => Boolean)
-  // async forgotPassword(
-  //   @Arg("email") email: string,
-  //   @Ctx() { redis }: MyContext
-  // ) {
-  //   const user = await User.findOne({ where: { email } });
-  //   if (!user) {
-  //     //the email is not in the db
-  //     return true;
-  //   }
-  //   const token = v4();
-  //   // 3일 후에 소멸되는 token
-  //   redis.set(
-  //     FORGET_PASSWORD_PREFIX + token,
-  //     user.id,
-  //     "ex",
-  //     1000 * 60 * 60 * 24 * 3
-  //   );
-  //   await sendEmail(
-  //     email,
-  //     `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
-  //   );
-  //   return true;
-  // }
-  // @Query(() => User, { nullable: true })
-  // async me(@Ctx() { req }: MyContext) {
-  //   //you are not logged In
-  //   if (!req.session.userId) {
-  //     return null;
-  //   }
-  //   // 비동기 작업이 하나라면 바로 return 시켜라
-  //   return User.findOne(req.session.userId);
-  // }
+  @Mutation(() => UserResponse)
+  async createGuest(@Ctx() context: MyContext): Promise<UserResponse> {
+    const uuidEmail = `${uuidv4()}@retrievo.io`;
+
+    try {
+      const guestUser = await User.create({
+        email: uuidEmail,
+        username: "Guest",
+        role: roleTypes.GUEST,
+      }).save();
+
+      const { user } = await context.authenticate("graphql-local", {
+        email: uuidEmail,
+        password: null,
+      });
+
+      if (user) {
+        context.login(user);
+        return { user: guestUser };
+      }
+      return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput
-    // @Ctx() context: MyContext
-  ): Promise<UserResponse | undefined> {
+  ): Promise<UserResponse> {
     try {
       const hashed = await hashPassword(options.password);
       if (hashed instanceof Error) {
-        return {
-          errors: [
-            {
-              field: "password",
-              message: "Internal Server Error",
-              code: 500,
-            },
-          ],
-        };
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       }
 
       const user = await User.create({
@@ -117,107 +83,36 @@ export class UserResolver {
       if (error.code === "23505") {
         // duplicate username error
         return {
-          errors: [
-            {
-              field: "username",
-              message: `${options.username} alredy exists`,
-              code: 402,
-            },
-          ],
+          error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
         };
       }
-
-      return {
-        errors: [
-          {
-            field: "Error",
-            message: "Something bad happened 😱",
-            code: 500,
-          },
-        ],
-      };
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
-
-  /*
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: ({ req }) => ({
-      getUser: () => req.user,
-      logout: () => req.logout(),
-    }),
-});
-*/
 
   @Mutation(() => UserResponse)
   async login(
     @Arg("email") email: string,
     @Arg("password") password: string,
-    @Ctx() context: MyContext // FIXME,
-  ): Promise<undefined> {
+    @Ctx() context: MyContext
+  ): Promise<UserResponse | Error> {
     try {
-      console.log(
-        "🚀 ~ file: user.ts ~ line 159 ~ UserResolver ~ context",
-        context.authenticate("graphql-local")
-      );
-
       const { user } = await context.authenticate("graphql-local", {
         email,
         password,
       });
-      console.log("user는 과연?!:", user);
       if (user) {
         await context.login(user);
+        const localUser = await User.findOne({ email });
+        return { user: localUser };
       }
-      // return { user };
+      return {
+        error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
+      };
     } catch (err) {
-      console.log(err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
-    return undefined;
   }
-
-  //   @Mutation(() => UserResponse)
-  //   async login(
-  //     @Arg("usernameOrEmail") usernameOrEmail: string,
-  //     @Arg("password") password: string,
-  //     @Ctx() { req }: MyContext
-  //   ): Promise<UserResponse> {
-  //     const user = await User.findOne(
-  //       usernameOrEmail.includes("@")
-  //         ? { where: { email: usernameOrEmail } }
-  //         : { where: { username: usernameOrEmail } }
-  //     );
-  //     if (!user) {
-  //       return {
-  //         errors: [
-  //           { field: "usernameOrEmail", message: "that username doesn't exist" },
-  //         ],
-  //       };
-  //     }
-  //     const valid = await argon2.verify(user.password, password);
-  //     if (!valid) {
-  //       return {
-  //         errors: [{ field: "password", message: "password not matched" }],
-  //       };
-  //     }
-  //     req.session.userId = user.id;
-  //     return { user };
-  //   }
-  //   @Mutation(() => Boolean)
-  //   async logout(@Ctx() { req, res }: MyContext) {
-  //     return new Promise((resolve) =>
-  //       req.session.destroy((err) => {
-  //         res.clearCookie(COOKIE_NAME);
-  //         if (err) {
-  //           console.log(err);
-  //           resolve(false);
-  //           return;
-  //         }
-  //         resolve(true);
-  //       })
-  //     );
-  //   }
 }
 
 export default UserResolver;
