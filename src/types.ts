@@ -15,6 +15,7 @@ declare global {
 type UserObject = {
   userId?: string;
 }; // FIXME
+
 export type MyContext = Context<UserObject> & {
   req: Request & {
     session: Session & Partial<SessionData> & { passport?: { user?: string } };
