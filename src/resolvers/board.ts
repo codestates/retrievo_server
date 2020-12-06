@@ -7,11 +7,8 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { getCustomRepository } from "typeorm";
-// import { getManager } from "typeorm";
 
 /* Entities */
-// import Project from "../entities/Project";
-// import User from "../entities/User";
 import Board from "../entities/Board";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import Project from "../entities/Project";
@@ -40,15 +37,11 @@ export class BoardResolver {
     try {
       console.log("req.query.projectId:", req.query.projectId);
       // FIXME : const { projectId } = req.query;
-      const projectId = "1435cb06-5318-4a4a-9a32-cdae21a8b0e0";
-
-      const boards = await Project.findOne({
-        where: { id: projectId },
-        relations: ["board", "board.task"],
-      });
+      const projectId = "a5bb5bdf-20e1-4aee-a2cc-f001a0745af4";
+      const boards = await Board.find({ where: { project: projectId } });
 
       if (!boards) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-      return { project: boards };
+      return { boards };
     } catch (err) {
       console.log("Board Read Query Error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -66,19 +59,20 @@ export class BoardResolver {
     const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
 
     try {
-      const project = await Project.findOne({
-        where: { id: projectId },
-        relations: ["board"],
+      const boards = await Board.find({
+        where: { project: projectId },
       });
 
-      const duplicated = project?.board?.filter((board) => {
+      const duplicated = boards?.filter((board) => {
         return board.title === title;
       });
 
       if (duplicated?.length)
         return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
 
-      const boardColumnIndex = project?.board?.length;
+      const boardColumnIndex = boards?.length;
+
+      const project = await Project.findOne({ id: projectId });
 
       await Board.create({
         title,
@@ -86,15 +80,15 @@ export class BoardResolver {
         boardColumnIndex,
       }).save();
 
-      const newProject = await Project.findOne({
-        where: { id: projectId },
-        relations: ["board", "board.task"],
+      const newBoards = await Board.find({
+        where: { project: projectId },
+        relations: ["task"],
       });
 
-      if (!newProject) {
+      if (!newBoards) {
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       }
-      return { project: newProject };
+      return { boards: newBoards };
     } catch (err) {
       console.log("Board create Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -137,12 +131,12 @@ export class BoardResolver {
           return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       }
 
-      const project = await Project.findOne({
-        where: { id: projectId },
-        relations: ["board", "board.task"],
+      const boards = await Board.find({
+        where: { project: projectId },
+        relations: ["task"],
       });
 
-      return { project };
+      return { boards };
     } catch (err) {
       console.log("Board update Mutation error:", err);
       if (err.code === "22P02")
