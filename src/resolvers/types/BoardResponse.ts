@@ -1,11 +1,11 @@
 import { Field, ObjectType } from "type-graphql";
-import Project from "../../entities/Project";
+import Board from "../../entities/Board";
 import { FieldError } from "./UserResponse";
 
 @ObjectType()
 export class BoardResponse {
-  @Field(() => Project, { nullable: true })
-  project?: Project;
+  @Field(() => [Board], { nullable: true })
+  boards?: Board[];
 
   @Field(() => FieldError, { nullable: true })
   error?: FieldError;
