@@ -37,8 +37,18 @@ export class BoardResolver {
     try {
       console.log("req.query.projectId:", req.query.projectId);
       // FIXME : const { projectId } = req.query;
-      const projectId = "a5bb5bdf-20e1-4aee-a2cc-f001a0745af4";
-      const boards = await Board.find({ where: { project: projectId } });
+      const projectId = "002692aa-f191-43d7-9b95-300226629e77";
+      const boards = await Board.find({
+        where: { project: projectId },
+        relations: [
+          "task",
+          "task.userTask",
+          "task.userTask.user",
+          "task.taskLabel",
+          "task.taskLabel.label",
+        ],
+      });
+      console.log("boards", boards);
 
       if (!boards) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { boards };
