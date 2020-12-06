@@ -12,6 +12,7 @@ import {
 } from "typeorm";
 import Sprint from "./Sprint";
 import Board from "./Board";
+import Project from "./Project";
 import Comment from "./Comment";
 import File from "./File";
 import UserTask from "./UserTask";
@@ -95,6 +96,11 @@ export default class Task extends BaseEntity {
   @Field(() => Board)
   @JoinColumn({ name: "board_id" })
   board!: Board;
+
+  @ManyToOne(() => Project, (project) => project.task, { onDelete: "SET NULL" })
+  @Field(() => Project)
+  @JoinColumn({ name: "project_id" })
+  project!: Project;
 
   @OneToMany(() => UserTask, (userTask) => userTask.task)
   @Field(() => [UserTask], { nullable: true })

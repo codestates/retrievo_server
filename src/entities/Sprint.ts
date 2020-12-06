@@ -70,6 +70,7 @@ export default class Sprint extends BaseEntity {
   )
   sprintNotification?: SprintNotification[];
 
+  @Field(() => [Task])
   @OneToMany(() => Task, (task) => task.sprint)
-  task?: Task;
+  task?: Task[];
 }
