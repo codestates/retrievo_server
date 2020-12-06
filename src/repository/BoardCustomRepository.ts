@@ -7,28 +7,36 @@ export class BoardRepository extends Repository<Board> {
   // TODO : 인자를 sprintId로 바꾸시오
   async changeBoardIndex(boardId: string, newIndex: number): Promise<boolean> {
     try {
+      // TODO : entitiy를 Sprint로 바꾸시오
       const board = await Board.findOne({
         where: { id: boardId },
         relations: ["project"],
       });
 
       if (board) {
+        // NOTE: board의 project와 oldIndex를 꺼낸다.
         const { project } = board;
         const oldIndex = board.boardColumnIndex;
 
+        // NOTE: 이동하려는 인덱스가 같은 위치라면 false
         if (oldIndex === newIndex) return false;
+        // NOTE: 이동하려는 위치가 음수라면 false
         if (newIndex < 0) return false;
 
+        // NOTE: 정렬 방향과 추출할 인덱스를 확인한다
         const asc = oldIndex < newIndex;
         const start = asc ? oldIndex + 1 : newIndex;
         const end = asc ? newIndex : oldIndex - 1;
 
+        // NOTE 같은 project 내의 모든 board를 찾는다
         const allBoards = await Project.findOne({
           where: { id: project.id },
           relations: ["board"],
         });
 
+        // NOTE: board가 하나도 없다면 false
         if (!allBoards?.board?.length) return false;
+        // NOTE: 총 board들의 갯수보다 더 크게 이동하려고 한다면 false
         if (newIndex >= allBoards.board.length) return false;
 
         const targetBoards = allBoards.board.filter((board) => {
@@ -37,6 +45,7 @@ export class BoardRepository extends Repository<Board> {
           );
         });
 
+        // NOTE: transaction으로 현재 보드의 이동에 영향을 받는 보드들의 인덱스를 바꾼다
         await getManager().transaction(async (transactionalEntityManager) => {
           await Promise.all(
             targetBoards.map(async (currnetBoard) => {
@@ -56,12 +65,14 @@ export class BoardRepository extends Repository<Board> {
             })
           );
 
+          // NOTE 원래 이동하려던 board의 Index도 변경한다
           await transactionalEntityManager.update(
             Board,
             { id: boardId },
             { boardColumnIndex: newIndex }
           );
         });
+        // NOTE transaction 성공시 true를 반환
         return true;
       }
       return false;
@@ -81,7 +92,9 @@ export default BoardRepository;
 // 2. oldIndex랑 ProjectId를 알아낸다
 // const res = await Board.update({ id }, { ...titleOrIndex });
 
-// 4. 정렬한다.
+// 3. 변경될 board들만 걸러낸다.
+
+// 4. 수정한다
 // 이동할 인덱스가 원래 인덱스보다 뒤라면
 // [0] [1] [old] [3] [4] [new] [5]
 // 2 -> 4 Between(oldIndex + 1, newIndex)
@@ -97,19 +110,3 @@ export default BoardRepository;
 // new = new
 // new ~ old : 인덱스 + 1
 // old 이후 무시
-
-// eslint-disable-next-line no-restricted-syntax
-// for await (const currentBoard of someBoards) {
-//   console.log("------ before", currentBoard);
-//   const updatedBoard = await em.update(
-//     Board,
-//     { id: currentBoard.id },
-//     {
-//       boardColumnIndex: asc
-//         ? currentBoard.boardColumnIndex - 1
-//         : currentBoard.boardColumnIndex + 1,
-//     }
-//   );
-// await transactionalEntityManager.save(updatedBoard);
-// console.log("------ after", currentBoard);
-// }
