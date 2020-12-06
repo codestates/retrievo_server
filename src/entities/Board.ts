@@ -26,7 +26,7 @@ export default class Board extends BaseEntity {
   title!: string;
 
   @ManyToOne(() => Project, (project) => project.board, {
-    onDelete: "SET NULL",
+    onDelete: "CASCADE",
   })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })

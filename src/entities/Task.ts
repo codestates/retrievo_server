@@ -84,12 +84,12 @@ export default class Task extends BaseEntity {
   )
   taskNotification?: TaskNotification[];
 
-  @ManyToOne(() => Sprint, (sprint) => sprint.task)
+  @ManyToOne(() => Sprint, (sprint) => sprint.task, { onDelete: "CASCADE" })
   @Field(() => Sprint, { nullable: true })
   @JoinColumn({ name: "sprint_id" })
   sprint?: Sprint;
 
-  @ManyToOne(() => Board, (board) => board.task)
+  @ManyToOne(() => Board, (board) => board.task, { onDelete: "SET NULL" })
   @Field(() => String)
   @JoinColumn({ name: "board_id" })
   board!: Board;

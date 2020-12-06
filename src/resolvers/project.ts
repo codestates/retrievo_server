@@ -146,18 +146,18 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkIfGuest,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkIfGuest,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async deleteProject(
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType | undefined> {
     const projectId = prod
       ? context.req.query.projectId
-      : "c3645246-2095-4f34-b848-4d91735f5e7d";
+      : "f79d26af-b391-478c-97c7-59a84a25eb7d";
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
