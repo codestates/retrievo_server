@@ -11,10 +11,12 @@ export class ProjectReturnType {
   @Field(() => Project, { nullable: true })
   project?: Project;
 
-  @Field(() => Boolean, { nullable: true })
-  deleted?: boolean;
-}
+  @Field(() => Project, { nullable: true })
+  projects?: Project[];
 
+  @Field(() => Boolean, { nullable: true })
+  success?: boolean;
+}
 @ObjectType()
 export class ProjectPermissionReturnType extends ProjectReturnType {
   @Field(() => ProjectPermission, { nullable: true })
