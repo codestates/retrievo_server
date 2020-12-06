@@ -44,9 +44,9 @@ export default class Board extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  @Field(() => [Task])
+  @Field(() => [Task], { nullable: true })
   @OneToMany(() => Task, (task) => task.board)
-  task: Task[];
+  task?: Task[];
 
   @OneToMany(
     () => TaskNotification,

@@ -5,7 +5,7 @@ import { FieldError } from "./UserResponse";
 @ObjectType()
 export class BoardResponse {
   @Field(() => Project, { nullable: true })
-  boards?: Project;
+  project?: Project;
 
   @Field(() => FieldError, { nullable: true })
   error?: FieldError;
