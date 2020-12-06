@@ -9,17 +9,17 @@ interface errorIFC {
 }
 
 const errorTypes: errorIFC = {
-  INTERNAL_SERVER_ERROR: {
-    code: "500",
-    message: "Internal Server Error 😵",
+  BAD_REQUEST: {
+    code: "400",
+    message: "Bad Request 😡",
   },
   AUTH_NOT_FOUND: {
     code: "401",
     message: "User Not Found ❗️",
   },
-  AUTH_ALREADY_EXIST: {
-    code: "404",
-    message: "User Already Existed 👀",
+  DATA_NOT_FOUND: {
+    code: "401",
+    message: "No Data 😕",
   },
   AUTH_NOT_MATCH: {
     code: "402",
@@ -29,17 +29,21 @@ const errorTypes: errorIFC = {
     code: "403",
     message: "No Permission 🔫",
   },
-  DATA_NOT_FOUND: {
-    code: "401",
-    message: "No Data 😕",
-  },
   DATA_ALREADY_EXIST: {
     code: "404",
     message: "Data Already Existed 👀",
   },
+  AUTH_ALREADY_EXIST: {
+    code: "404",
+    message: "User Already Existed 👀",
+  },
   AUTH_FAIL_DESERIALIZE: {
     code: "500",
     message: "Failed to deserialize",
+  },
+  INTERNAL_SERVER_ERROR: {
+    code: "500",
+    message: "Internal Server Error 😵",
   },
 };
 
