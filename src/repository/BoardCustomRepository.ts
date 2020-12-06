@@ -81,6 +81,79 @@ export class BoardRepository extends Repository<Board> {
       return false;
     }
   }
+
+  async deleteBoardAndChangeBoardsIndex(
+    boardId: string,
+    newBoardId: string
+  ): Promise<boolean> {
+    // TODO: 인자를 sprintId로 바꾸시오
+    try {
+      const board = await Board.findOne({
+        where: { id: boardId },
+        relations: ["project"],
+      });
+
+      if (!board) return false;
+
+      // NOTE: transaction으로 현재 보드의 이동에 영향을 받는 보드들의 인덱스를 바꾼다
+      await getManager().transaction(async (transactionalEntityManager) => {
+        // NOTE 보드 삭제 전 project의 총 board 수를 보관한다
+
+        // TODO: 삭제 보드의 task들을 다른 보드로 이동
+        console.log(newBoardId);
+        //
+
+        const boardsOfProject = await Board.find({
+          where: { project: board.project },
+        });
+
+        if (!boardsOfProject) return false;
+        const boardsLength = boardsOfProject.length;
+
+        // NOTE Board가 하나만 남았다면 삭제하지 않는다
+        if (boardsLength === 1) return false;
+        // NOTE 보드를 삭제한다
+        const deletedIndex = board.boardColumnIndex;
+        const deleteRes = await transactionalEntityManager.delete(Board, {
+          id: boardId,
+        });
+
+        if (!deleteRes.affected || deleteRes.affected < 1) return false;
+        // NOTE deletedIndex가 가장 마지막 보드였다면 바로 return true;
+        if (boardsLength - 1 === deletedIndex) return true;
+
+        // NOTE: 삭제된 보드의 인덱스에 영향받는 보드 찾기
+        const targetBoards = boardsOfProject.filter((board) => {
+          return board.boardColumnIndex > deletedIndex;
+        });
+
+        // NOTE : 인덱스-1로 업데이트
+        await Promise.all(
+          targetBoards.map(async (currnetBoard) => {
+            // eslint-disable-next-line no-async-promise-executor
+            return new Promise(async (resolve) => {
+              const curIndex = Number(currnetBoard.boardColumnIndex);
+              await transactionalEntityManager.update(
+                Board,
+                { id: currnetBoard.id },
+                {
+                  boardColumnIndex: curIndex - 1,
+                }
+              );
+              resolve(true);
+            });
+          })
+        );
+
+        return true;
+      });
+
+      return false;
+    } catch (err) {
+      console.log("Board Index Update Error:", err);
+      return false;
+    }
+  }
 }
 
 export default BoardRepository;

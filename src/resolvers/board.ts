@@ -144,6 +144,40 @@ export class BoardResolver {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
+
+  @Mutation(() => BoardResponse)
+  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  async deleteBoard(
+    @Arg("id") id: string,
+    @Arg("newBoardId") newBoardId: string,
+    @Ctx() { req }: MyContext
+  ): Promise<BoardResponse> {
+    console.log(req.query.projectId);
+    // FIXME : const { projectId } = req.query;
+    const projectId = "e3512145-cc5b-4e26-825c-f3ad32bf154d";
+
+    try {
+      const boardRepository = getCustomRepository(BoardRepository);
+
+      const res = await boardRepository.deleteBoardAndChangeBoardsIndex(
+        id,
+        newBoardId
+      );
+      if (!res) return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
+
+      console.log("projectId:", projectId);
+      const boards = await Board.find({
+        where: { project: projectId },
+        relations: ["task"],
+      });
+
+      console.log("------boards:", boards);
+      return { boards };
+    } catch (err) {
+      console.log("Board update Mutation error:", err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 }
 
 export default BoardResolver;
