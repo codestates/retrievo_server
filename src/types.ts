@@ -20,6 +20,10 @@ interface QueryParamIFC {
   [key: string]: string;
 }
 
+interface ParamIFC {
+  [key: string]: Buffer;
+}
+
 export type MyContext = Context<UserObject> & {
   req: Request & {
     session: Session &
@@ -28,7 +32,7 @@ export type MyContext = Context<UserObject> & {
         projectId?: string;
       };
     query: QueryParamIFC;
-    params: QueryParamIFC;
+    params: ParamIFC;
   };
   res: Response;
   redis: Redis;

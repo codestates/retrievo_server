@@ -30,11 +30,15 @@ const errorTypes: errorIFC = {
     message: "No Permission 🔫",
   },
   DATA_ALREADY_EXIST: {
-    code: "404",
+    code: "409",
     message: "Data Already Existed 👀",
   },
+  PERMISSION_ALREADY_EXIST: {
+    code: "409",
+    message: "Permission Already Existed 👀",
+  },
   AUTH_ALREADY_EXIST: {
-    code: "404",
+    code: "409",
     message: "User Already Existed 👀",
   },
   AUTH_FAIL_DESERIALIZE: {
