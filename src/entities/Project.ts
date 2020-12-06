@@ -67,6 +67,7 @@ export default class Project extends BaseEntity {
   @OneToMany(() => Sprint, (sprint) => sprint.project)
   sprint?: Sprint[];
 
+  @Field(() => [Board])
   @OneToMany(() => Board, (board) => board.project)
   board?: Board[];
 

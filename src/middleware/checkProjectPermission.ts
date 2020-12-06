@@ -8,7 +8,10 @@ export const checkProjectPermission: MiddlewareFn<MyContext> = async (
   next
 ) => {
   const userId = context.req.session.passport?.user;
-  const projectId = context.req.session?.projectId;
+  const projectId =
+    context.req.query?.projectId || "1ad74f4d-5881-4256-bbdf-3f5a4771cd63";
+  // FIXME: ApolloLinkHttp 연결 후 다시 테스트
+  // const projectId = context.req.session?.projectId;
   try {
     const hasPermission = await ProjectPermission.findOne({
       where: {

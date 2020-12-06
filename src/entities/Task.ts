@@ -95,8 +95,10 @@ export default class Task extends BaseEntity {
   board!: Board;
 
   @OneToMany(() => UserTask, (userTask) => userTask.task)
+  @Field(() => [UserTask])
   userTask?: UserTask[];
 
   @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
+  @Field(() => [TaskLabel])
   taskLabel?: TaskLabel[];
 }
