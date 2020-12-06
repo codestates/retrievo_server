@@ -4,25 +4,34 @@ import {
   Arg,
   Query,
   Mutation,
-  // UseMiddleware,
+  UseMiddleware,
 } from "type-graphql";
 import { getManager } from "typeorm";
-import { ProjectReturnType } from "./types/ProjectResponse";
-import { prod } from "../constants";
-import { MyContext } from "../types";
+
+/* Entities */
 import Project from "../entities/Project";
 import User from "../entities/User";
-import generateError, { errorKeys } from "../utils/ErrorFactory";
-// import checkAuthStatus from "../middleware/checkAuthStatus";
-import { FieldError } from "./types/UserResponse";
 import ProjectPermission from "../entities/ProjectPermission";
-// import checkIfGuest from "../middleware/checkIfGuest";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
-// import { prod } from "../constants";
+
+/* Utils */
+import { prod } from "../constants";
+import generateError, { errorKeys } from "../utils/ErrorFactory";
+
+/* Types */
+import { MyContext } from "../types";
+import { FieldError } from "./types/UserResponse";
+import { ProjectReturnType } from "./types/ProjectResponse";
+
+/* Middleware */
+import checkIfGuest from "../middleware/checkIfGuest";
+import checkAuthStatus from "../middleware/checkAuthStatus";
+import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkAdminPermission from "../middleware/checkAdminPermission";
 
 @Resolver()
 export class ProjectResolver {
   @Query(() => Project)
+  @UseMiddleware(checkAuthStatus)
   async project(
     @Ctx() context: MyContext
   ): Promise<Project | { error: FieldError }> {
@@ -41,6 +50,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => Project)
+  @UseMiddleware([checkAuthStatus, checkIfGuest])
   async createProject(
     @Arg("name") name: string,
     @Ctx() context: MyContext
@@ -70,6 +80,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => Project)
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateProjectName(
     @Ctx() context: MyContext,
     @Arg("name") name: string
@@ -95,6 +111,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectPermission)
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateProjectPermission(
     @Ctx() context: MyContext,
     @Arg("userId") userId: string,
@@ -124,6 +146,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async deleteProject(
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType | undefined> {
