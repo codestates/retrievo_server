@@ -58,7 +58,7 @@ export default class Sprint extends BaseEntity {
   updatedAt: Date;
 
   @ManyToOne(() => Project, (project) => project.sprint, {
-    onDelete: "SET NULL",
+    onDelete: "CASCADE",
   })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
