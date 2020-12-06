@@ -7,8 +7,10 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { getManager } from "typeorm";
+import { v4 as uuidV4 } from "uuid";
 
 /* Entities */
+import mailSender from "../services/mailerService";
 import Project from "../entities/Project";
 import User from "../entities/User";
 import ProjectPermission from "../entities/ProjectPermission";
@@ -164,88 +166,131 @@ export class ProjectResolver {
 
     try {
       await Project.delete(projectId);
-      return { deleted: true };
+      return { success: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
-  // @Mutation(() => ProjectReturnType)
-  // async inviteUser(
-  //   @Ctx() context: MyContext,
-  //   @Arg("email") email: string[]
-  // ): Promise<ProjectReturnType | undefined> {
-  //   const projectId = prod
-  //     ? context.req.query.projectId
-  //     : "c3645246-2095-4f34-b848-4d91735f5e7d";
+  @Mutation(() => ProjectReturnType)
+  async inviteUser(
+    @Ctx() context: MyContext,
+    @Arg("emails", () => [String]) emails: string[]
+  ): Promise<ProjectReturnType | undefined> {
+    if (!emails.length) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
 
-  //   if (!projectId) {
-  //     return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-  //   }
+    const projectId = prod
+      ? context.req.query?.projectId
+      : "ed70f261-311f-444d-85a3-771a576da47d";
 
-  //   // if (email.length > 1) {
-  //   //   for await (const singleEmail of email) {
-  //   //     const userOfUsers = User.findOne({ where: { email: singleEmail } });
+    const { redis } = context;
+    const project = await Project.findOne(projectId);
+    if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    const projectName = project.name;
+    const senderName = "Retrievo Team";
+    const URI = "https://retrievo.io/invitation/";
 
-  //   //     console.log(userOfUsers);
-  //   //     // return { error: generateError.INTERNAL_SERVER_ERROR };
-  //   //     // 1) 존재하는 유저인 지 확인
-  //   //     // 1-1) 존재하는 유저일 경우
-  //   //     // 1-1-1) 이미 초대 받은 유저인지를 확인해야한다.
-  //   //     // 1-1-2) 이미 초대 받은 유저일 경우, 400 Bad Request 반환
-  //   //     // 1-1-3) 이미 초대 받지 않은 경우, project_permission 생성 및 sendEmail
+    try {
+      const data = emails.map(async (email: string) => {
+        const user = await User.findOne({ where: { email } });
 
-  //   //     // 2) 존재하지 않는 유저일 경우
-  //   //   }
-  //   // }
+        if (user) {
+          const projectPermission = await ProjectPermission.findOne({
+            where: { user, project },
+          });
 
-  /*
-  1. 유저가 화면에서 초대를 보낸다. ->
-  2. ProjectId(uri) 와 초대대상의 email를 arg로써 inviteuser resolver 에서 받는다. ->
-  3. email 로 db에 유저가 존재하는지 조회한다.
+          if (projectPermission) {
+            return { error: generateError(errorKeys.PERMISSION_ALREADY_EXIST) };
+          }
+        }
 
-  4. 만약 db에 유저가 존재한다면
-      projectpermission 을 검색해서 userid projectid 의 관계가 존재하는지 중복조회한다
-        if 중복된다면,
-          에러메시지를 날린다.
-        if 중복되지 않았다면
-          project permission을 만든다(arg로 받은 projectid 와 유저를 조회할 때 취득한 userid)
-          해당 유저에게 projectid 를 access uri 에 참조하여 Email 을 보낸다.
+        const keyToken = uuidV4();
+        await redis.set(keyToken, projectId, "ex", 86400);
 
-  5. 만약 db에 유저가 존재하지않는다면;
-  (sets)
-    초대를 보내는이가 초대 버튼을 클릭했을 때 벌어지는 과정들:
+        await mailSender({
+          email,
+          senderName,
+          projectName,
+          invitationLink: URI + keyToken,
+        });
 
-    과정 1 $redis.smembers("email")
-    => ["88bb4bdfef", "73dbfac453"]
+        return project;
+      });
 
-    과정 2 해당 배열에 같은 project값이 있는지 조회
+      return Promise.all(data).then(() => {
+        return { success: true };
+      });
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 
-      if true
-      중복된 초대라는 에러메시지를 보낸다
+  @Mutation(() => ProjectReturnType)
+  async routeInvitation(
+    @Ctx() context: MyContext
+  ): Promise<ProjectReturnType | undefined> {
+    const { redis, res, req } = context;
+    const keyToken = prod
+      ? JSON.stringify(context.req.params)
+      : "45d38e6b-a4b8-44f9-b905-80419e955a3f"; // TODO Key Token을 입력할 것
 
-      if false
-        1. 해당 유저에게 projectid 를 access uri 에 참조하여 Email 을 보낸다.
-        2. $redis.sadd("email", ["projectid1", "project2"])
-        3. 유저가 해당 링크를 클릭했을 때 projectid 와 유저 이메일 session 에 집어넣고
-        4. 만약 이메일 세션에 있는 아이디가 redis set 에 저장된 정보를 조회 (register 로직에 들어가야함)
-            if true
-              유저가 가입할 때 세션에 projectid(invitation) 이 존재한다면 projectPermission 을 동시에 만들어 주어야함
-              소셜 로그인일 경우에도 소셜 콜백에 projectPermission 을 만드는 로직을 포함시켜야함.
-            if false
-              잘못된 초대코드라는 오류메시지를 보여줌
+    try {
+      const projectId = await redis.get(keyToken);
+      let project;
+      if (projectId) {
+        project = await Project.findOne(projectId);
+      }
+      const URI = "https://retrievo.io/project/";
 
+      const currentUser = context.req.session?.passport?.user;
 
+      const user = await User.findOne(currentUser);
 
+      /*
+      ANCHOR 이미 로그인 된 유저인 경우
+      1. 중복된 초대를 걸러준다.
+      2. 처음 받는 초대라면, ProjectPermission 을 만들어준다.
+      3. 해당 프로젝트의 uri 로 전송
+      */
+      if (user && project) {
+        const projectPermission = await ProjectPermission.findOne({
+          where: {
+            user,
+            project,
+          },
+        });
 
+        if (projectPermission) {
+          return { error: generateError(errorKeys.PERMISSION_ALREADY_EXIST) };
+        }
 
+        await ProjectPermission.create({
+          user,
+          project,
+          isAdmin: true,
+        }).save();
 
+        res.redirect(URI + projectId);
+        return { success: true };
+      }
 
-  */
-  //   // if (email.length === 1) {
-  //   // }
-  //   // doesUserExist = User.findOne({ where: { email } });
-  // }
+      /*
+    ANCHOR 존재하는 유저지만 로그인이 안된 경우 || 가입이 안 된 유저
+    1. req.session에 projectId를 저장
+    2. Login 페이지로 이동
+    */
+      if (projectId) {
+        req.session.projectId = projectId;
+        res.redirect("https://retrievo.io/login");
+        return { success: true };
+      }
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+    return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+  }
 }
 
 export default ProjectResolver;
