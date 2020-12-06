@@ -7,18 +7,26 @@ import {
   UseMiddleware,
 } from "type-graphql";
 import { v4 as uuidv4 } from "uuid";
-import ProjectPermission from "../entities/ProjectPermission";
-import checkAuthStatus from "../middleware/checkAuthStatus";
-import { MyContext } from "../types";
-import UserResponse from "./types/UserResponse";
-import UserUpdateOptions from "./types/UserUpdateOptions";
+
+/* Entities */
 import User, { roleTypes } from "../entities/User";
+import ProjectPermission from "../entities/ProjectPermission";
+
+/* Utils */
+import UserUpdateOptions from "./types/UserUpdateOptions";
 import { hashPassword } from "../utils/authUtils";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
-import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
-import checkIfGuest from "../middleware/checkIfGuest";
 import { COOKIE_NAME, prod } from "../constants";
+
+/* Types */
+import { MyContext } from "../types";
+import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
+import UserResponse from "./types/UserResponse";
 import ProjectListResponse from "./types/ProjectListResponse";
+
+/* Middleware */
+import checkAuthStatus from "../middleware/checkAuthStatus";
+import checkIfGuest from "../middleware/checkIfGuest";
 
 @Resolver()
 export class UserResolver {
@@ -136,9 +144,8 @@ export class UserResolver {
     );
   }
 
-  @UseMiddleware(checkAuthStatus)
-  @UseMiddleware(checkIfGuest)
   @Query(() => UserResponse)
+  @UseMiddleware([checkAuthStatus, checkIfGuest])
   async userSetting(@Ctx() context: MyContext): Promise<UserResponse> {
     const userId = context.req.session.passport?.user;
     try {
@@ -153,8 +160,8 @@ export class UserResolver {
     }
   }
 
-  @UseMiddleware(checkAuthStatus)
   @Mutation(() => Boolean)
+  @UseMiddleware(checkAuthStatus)
   async deleteAccount(@Ctx() { req, res }: MyContext): Promise<boolean> {
     const userId = req.session.passport?.user;
     try {
@@ -177,9 +184,8 @@ export class UserResolver {
     }
   }
 
-  @UseMiddleware(checkAuthStatus)
-  @UseMiddleware(checkIfGuest)
   @Mutation(() => UserResponse)
+  @UseMiddleware([checkAuthStatus, checkIfGuest])
   async updateUserSetting(
     @Arg("options") options: UserUpdateOptions,
     @Ctx() context: MyContext
@@ -199,8 +205,8 @@ export class UserResolver {
     }
   }
 
-  @UseMiddleware(checkAuthStatus)
   @Query(() => ProjectListResponse)
+  @UseMiddleware(checkAuthStatus)
   async projectsOfUser(
     @Ctx() context: MyContext
   ): Promise<ProjectListResponse> {
