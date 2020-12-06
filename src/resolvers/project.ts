@@ -19,8 +19,10 @@ import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
 import { MyContext } from "../types";
-import { FieldError } from "./types/UserResponse";
-import { ProjectReturnType } from "./types/ProjectResponse";
+import {
+  ProjectReturnType,
+  ProjectPermissionReturnType,
+} from "./types/ProjectResponse";
 
 /* Middleware */
 import checkIfGuest from "../middleware/checkIfGuest";
@@ -30,11 +32,9 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 
 @Resolver()
 export class ProjectResolver {
-  @Query(() => Project)
+  @Query(() => ProjectReturnType)
   @UseMiddleware(checkAuthStatus)
-  async project(
-    @Ctx() context: MyContext
-  ): Promise<Project | { error: FieldError }> {
+  async project(@Ctx() context: MyContext): Promise<ProjectReturnType> {
     const projectId = prod
       ? context.req.query.projectId
       : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
@@ -43,18 +43,20 @@ export class ProjectResolver {
 
     try {
       const project = await Project.findOne({ where: { id: projectId } });
-      return project || { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      if (project) return { project };
+
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
-  @Mutation(() => Project)
+  @Mutation(() => ProjectReturnType)
   @UseMiddleware([checkAuthStatus, checkIfGuest])
   async createProject(
     @Arg("name") name: string,
     @Ctx() context: MyContext
-  ): Promise<Project | { error: FieldError }> {
+  ): Promise<ProjectReturnType> {
     const userId = prod
       ? context.req.session.passport?.user
       : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
@@ -73,13 +75,13 @@ export class ProjectResolver {
         }).save();
       }
 
-      return project;
+      return { project };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
-  @Mutation(() => Project)
+  @Mutation(() => ProjectReturnType)
   @UseMiddleware([
     checkAuthStatus,
     checkIfGuest,
@@ -89,7 +91,7 @@ export class ProjectResolver {
   async updateProjectName(
     @Ctx() context: MyContext,
     @Arg("name") name: string
-  ): Promise<Project | { error: FieldError }> {
+  ): Promise<ProjectReturnType> {
     const projectId = prod
       ? context.req.query.projectId
       : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
@@ -101,7 +103,7 @@ export class ProjectResolver {
       if (name && project) {
         project.name = name;
         await em.save(project);
-        return project;
+        return { project };
       }
 
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -110,7 +112,7 @@ export class ProjectResolver {
     }
   }
 
-  @Mutation(() => ProjectPermission)
+  @Mutation(() => ProjectPermissionReturnType)
   @UseMiddleware([
     checkAuthStatus,
     checkIfGuest,
@@ -121,7 +123,7 @@ export class ProjectResolver {
     @Ctx() context: MyContext,
     @Arg("userId") userId: string,
     @Arg("isAdmin") isAdmin: boolean
-  ): Promise<ProjectPermission | { error: FieldError }> {
+  ): Promise<ProjectPermissionReturnType> {
     const projectId = prod
       ? context.req.query.projectId
       : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
@@ -152,9 +154,7 @@ export class ProjectResolver {
   //   checkProjectPermission,
   //   checkAdminPermission,
   // ])
-  async deleteProject(
-    @Ctx() context: MyContext
-  ): Promise<ProjectReturnType | undefined> {
+  async deleteProject(@Ctx() context: MyContext): Promise<ProjectReturnType> {
     const projectId = prod
       ? context.req.query.projectId
       : "f79d26af-b391-478c-97c7-59a84a25eb7d";
@@ -164,7 +164,7 @@ export class ProjectResolver {
 
     try {
       await Project.delete(projectId);
-      return { field: true };
+      return { deleted: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
