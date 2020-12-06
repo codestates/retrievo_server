@@ -72,7 +72,7 @@ export default class TaskNotification extends BaseEntity {
   // = "RESTRICT" | "CASCADE" | "SET NULL" | "DEFAULT" | "NO ACTION"
   @Field(() => Project)
   @ManyToOne(() => Project, (project) => project.taskNotification, {
-    onDelete: "SET NULL",
+    onDelete: "CASCADE",
   })
   @JoinColumn({ name: "project_id" })
   project: Project;
