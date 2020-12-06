@@ -15,6 +15,7 @@ import Board from "./Board";
 import SprintNotification from "./SprintNotification";
 import CommentNotification from "./CommentNotification";
 import TaskNotification from "./TaskNotification";
+import Task from "./Task";
 
 @ObjectType()
 @Entity()
@@ -71,6 +72,11 @@ export default class Project extends BaseEntity {
   @OneToMany(() => Board, (board) => board.project)
   board?: Board[];
 
+  @Field(() => [Label])
   @OneToMany(() => Label, (label) => label.project)
   label?: Label[];
+
+  @Field(() => [Task])
+  @OneToMany(() => Task, (task) => task.project)
+  task?: Task[];
 }
