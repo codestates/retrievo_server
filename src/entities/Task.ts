@@ -66,9 +66,11 @@ export default class Task extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.task)
   comment?: Comment[];
 
+  @Field(() => [File])
   @OneToMany(() => File, (file) => file.task)
   file?: File[];
 
@@ -85,20 +87,20 @@ export default class Task extends BaseEntity {
   taskNotification?: TaskNotification[];
 
   @ManyToOne(() => Sprint, (sprint) => sprint.task, { onDelete: "CASCADE" })
-  @Field(() => Sprint, { nullable: true })
+  @Field(() => Sprint)
   @JoinColumn({ name: "sprint_id" })
   sprint?: Sprint;
 
   @ManyToOne(() => Board, (board) => board.task, { onDelete: "SET NULL" })
-  @Field(() => String)
+  @Field(() => Board)
   @JoinColumn({ name: "board_id" })
   board!: Board;
 
   @OneToMany(() => UserTask, (userTask) => userTask.task)
-  @Field(() => [UserTask])
+  @Field(() => [UserTask], { nullable: true })
   userTask?: UserTask[];
 
-  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
-  @Field(() => [TaskLabel])
+  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)
+  @Field(() => [TaskLabel], { nullable: true })
   taskLabel?: TaskLabel[];
 }

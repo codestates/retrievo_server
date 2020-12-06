@@ -33,7 +33,7 @@ export default class Label extends BaseEntity {
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)
+  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
   @Field(() => TaskLabel)
   task?: TaskLabel[];
 }

@@ -33,13 +33,13 @@ export default class Comment extends BaseEntity {
   @JoinColumn({ name: "task_id" })
   task!: Task;
 
-  @Field(() => User)
+  @Field(() => User, { nullable: true })
   @ManyToOne(() => User, (user) => user.comment, {
     onDelete: "SET NULL",
     nullable: true,
   })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user?: User;
 
   @OneToMany(
     () => CommentNotification,
