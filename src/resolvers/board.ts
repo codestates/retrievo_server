@@ -26,8 +26,8 @@ import BoardUpdateInput from "./types/BoardUpdateInput";
 // /* Middleware */
 import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
+import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
 
 @Resolver()
 export class BoardResolver {
@@ -49,7 +49,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
   async createBoard(
     @Arg("title") title: string,
     @Ctx() { req }: MyContext
@@ -96,14 +96,14 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
   async updateBoard(
     @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
     @Ctx() { req }: MyContext
   ): Promise<BoardResponse> {
     console.log(req.query.projectId);
     // FIXME : const { projectId } = req.query;
-    const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
+    const projectId = "f1b19174-5d91-4a97-83b0-893e74c9f7cd";
     try {
       const board = await Board.findOne({
         where: { id },
@@ -146,7 +146,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
   async deleteBoard(
     @Arg("id") id: string,
     @Arg("newBoardId") newBoardId: string,
@@ -154,7 +154,7 @@ export class BoardResolver {
   ): Promise<BoardResponse> {
     console.log(req.query.projectId);
     // FIXME : const { projectId } = req.query;
-    const projectId = "e3512145-cc5b-4e26-825c-f3ad32bf154d";
+    const projectId = "002692aa-f191-43d7-9b95-300226629e77";
 
     try {
       const boardRepository = getCustomRepository(BoardRepository);
@@ -165,13 +165,11 @@ export class BoardResolver {
       );
       if (!res) return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
 
-      console.log("projectId:", projectId);
       const boards = await Board.find({
         where: { project: projectId },
         relations: ["task"],
       });
 
-      console.log("------boards:", boards);
       return { boards };
     } catch (err) {
       console.log("Board update Mutation error:", err);
