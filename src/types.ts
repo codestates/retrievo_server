@@ -30,6 +30,7 @@ export type MyContext = Context<UserObject> & {
       Partial<SessionData> & {
         passport?: { user?: string };
         projectId?: string;
+        invitationToken?: string;
       };
     query: QueryParamIFC;
     params: ParamIFC;

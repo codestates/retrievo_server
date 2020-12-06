@@ -59,9 +59,11 @@ export class ProjectResolver {
     @Arg("name") name: string,
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType> {
-    const userId = prod
-      ? context.req.session.passport?.user
-      : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
+    // const userId = prod
+    //   ? context.req.session.passport?.user
+    //   : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
+
+    const userId = context.req.session.passport?.user;
     const user = await User.findOne(userId);
 
     try {
@@ -183,7 +185,7 @@ export class ProjectResolver {
 
     const projectId = prod
       ? context.req.query?.projectId
-      : "ed70f261-311f-444d-85a3-771a576da47d";
+      : "1e8eeabb-1e14-4881-8d22-6473fdbb4607";
 
     const { redis } = context;
     const project = await Project.findOne(projectId);
@@ -234,7 +236,7 @@ export class ProjectResolver {
     const { redis, res, req } = context;
     const keyToken = prod
       ? JSON.stringify(context.req.params)
-      : "45d38e6b-a4b8-44f9-b905-80419e955a3f"; // TODO Key Token을 입력할 것
+      : "478007b3-7821-4c55-ba5c-867499386639"; // TODO Key Token을 입력할 것
 
     try {
       const projectId = await redis.get(keyToken);
@@ -242,17 +244,23 @@ export class ProjectResolver {
       if (projectId) {
         project = await Project.findOne(projectId);
       }
+
       const URI = "https://retrievo.io/project/";
 
       const currentUser = context.req.session?.passport?.user;
 
-      const user = await User.findOne(currentUser);
+      let user;
+      if (currentUser) {
+        user = await User.findOne(currentUser);
+      }
 
       /*
       ANCHOR 이미 로그인 된 유저인 경우
       1. 중복된 초대를 걸러준다.
       2. 처음 받는 초대라면, ProjectPermission 을 만들어준다.
-      3. 해당 프로젝트의 uri 로 전송
+      3. permission이 만들어지는데 성공한다면 redis 에서 토큰을 지워준다.
+      4. 해당 프로젝트의 uri 로 전송
+
       */
       if (user && project) {
         const projectPermission = await ProjectPermission.findOne({
@@ -271,7 +279,7 @@ export class ProjectResolver {
           project,
           isAdmin: true,
         }).save();
-
+        await redis.del(keyToken);
         res.redirect(URI + projectId);
         return { success: true };
       }
@@ -283,6 +291,8 @@ export class ProjectResolver {
     */
       if (projectId) {
         req.session.projectId = projectId;
+        req.session.invitationToken = keyToken;
+
         res.redirect("https://retrievo.io/login");
         return { success: true };
       }
