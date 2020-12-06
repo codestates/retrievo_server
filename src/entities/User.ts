@@ -110,6 +110,7 @@ export default class User extends BaseEntity {
   )
   commentTarget?: CommentNotification[];
 
+  @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.user)
   comment?: Comment[];
 
