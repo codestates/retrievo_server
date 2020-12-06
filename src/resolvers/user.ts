@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 /* Entities */
 import User, { roleTypes } from "../entities/User";
 import ProjectPermission from "../entities/ProjectPermission";
+import Project from "../entities/Project";
 
 /* Utils */
 import UserUpdateOptions from "./types/UserUpdateOptions";
@@ -73,6 +74,7 @@ export class UserResolver {
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
     @Ctx() context: MyContext
   ): Promise<UserResponse> {
+    const { redis, req } = context;
     try {
       // NOTE 환경변수가 prod 면 hashPassword 작동여부 판단
       let hashed;
@@ -92,6 +94,17 @@ export class UserResolver {
         password: hashed || options.password,
       }).save();
 
+      const { projectId } = req.session;
+
+      if (projectId) {
+        const project = await Project.findOne(projectId);
+        await ProjectPermission.create({
+          user: newUser,
+          project,
+          isAdmin: false,
+        }).save();
+      }
+
       if (newUser) {
         const { user } = await context.authenticate("graphql-local", {
           email: options.email,
@@ -99,6 +112,11 @@ export class UserResolver {
         });
         if (user) await context.login(user);
       }
+
+      if (req.session.invitationToken) {
+        await redis.del(req.session.invitationToken);
+      }
+
       return { user: newUser };
     } catch (error) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -111,6 +129,7 @@ export class UserResolver {
     @Arg("password") password: string,
     @Ctx() context: MyContext
   ): Promise<UserResponse | Error> {
+    const { req, redis } = context;
     try {
       const { user } = await context.authenticate("graphql-local", {
         email,
@@ -119,8 +138,22 @@ export class UserResolver {
 
       if (user) {
         const localUser = await User.findOne({ email });
-        await context.login(user);
-        return { user: localUser };
+        const { projectId } = req.session;
+
+        if (projectId) {
+          const project = await Project.findOne(projectId);
+          await ProjectPermission.create({
+            user: localUser,
+            project,
+            isAdmin: false,
+          }).save();
+
+          if (req.session.invitationToken) {
+            await redis.del(req.session.invitationToken);
+          }
+          await context.login(user);
+          return { user: localUser };
+        }
       }
       return {
         error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
