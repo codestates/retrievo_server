@@ -6,15 +6,16 @@ import {
   Mutation,
   UseMiddleware,
 } from "type-graphql";
+import { getCustomRepository } from "typeorm";
 // import { getManager } from "typeorm";
 
 /* Entities */
 // import Project from "../entities/Project";
 // import User from "../entities/User";
-import checkIfGuest from "../middleware/checkIfGuest";
 import Board from "../entities/Board";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import Project from "../entities/Project";
+import { BoardRepository } from "../repository/BoardCustomRepository";
 
 /* Utils */
 // import { prod } from "../constants";
@@ -23,9 +24,10 @@ import Project from "../entities/Project";
 /* Types */
 import { MyContext } from "../types";
 import BoardResponse from "./types/BoardResponse";
+import BoardUpdateInput from "./types/BoardUpdateInput";
 
 // /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
+import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 // import checkAdminPermission from "../middleware/checkAdminPermission";
@@ -99,54 +101,55 @@ export class BoardResolver {
     }
   }
 
-  // async updateProjectName(
-  //   @Ctx() context: MyContext,
-  //   @Arg("name") name: string
-  //     if (name && project) {
-  //     ? context.req.query.projectId
-  //     : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
-  //   const em = getManager();
-  //   const project = await em.findOne(Project, projectId);
-  //   try {
-  //       project.name = name;
-  //       await em.save(project);
-  //       return project;
-  //     }
-  //     return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-  //   } catch (err) {
-  //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //   }
-  // }
-  // @Mutation(() => ProjectPermission)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkIfGuest,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
-  // async updateProjectPermission(
-  //   @Ctx() context: MyContext,
-  //   @Arg("userId") userId: string,
-  //   @Arg("isAdmin") isAdmin: boolean
-  //       const projectPermission = await em.findOne(ProjectPermission, {
-  //     ? context.req.query.projectId
-  //     : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
-  //   const em = getManager();
-  //   try {
-  //     if (userId && typeof isAdmin === "boolean") {
-  //         where: { user: userId, project: projectId },
-  //       });
-  //       if (projectPermission) {
-  //         projectPermission.isAdmin = isAdmin;
-  //         await em.save(projectPermission);
-  //         return projectPermission;
-  //       }
-  //     }
-  //     return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-  //   } catch (err) {
-  //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //   }
-  // }
+  @Mutation(() => BoardResponse)
+  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  async updateBoard(
+    @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
+    @Ctx() { req }: MyContext
+  ): Promise<BoardResponse> {
+    console.log(req.query.projectId);
+    // FIXME : const { projectId } = req.query;
+    const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
+    try {
+      const board = await Board.findOne({
+        where: { id },
+        relations: ["project"],
+      });
+      if (board?.project.id !== projectId)
+        return {
+          error: generateError(errorKeys.BAD_REQUEST, "project not match"),
+        };
+
+      // NOTE: customRepository를 불러온다
+      const boardRepository = getCustomRepository(BoardRepository);
+
+      // NOTE: 보드 id와 index를 changeBoardIndex 메소드의 인자로 넣는다.
+      // NOTE: response로 true와 false를 받는다.
+      if (newIndex !== undefined) {
+        const res = await boardRepository.changeBoardIndex(id, newIndex);
+        if (!res)
+          return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
+      }
+
+      if (title !== undefined) {
+        const updateRes = await Board.update({ id }, { title });
+        if (!updateRes.affected || updateRes.affected < 1)
+          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      }
+
+      const project = await Project.findOne({
+        where: { id: projectId },
+        relations: ["board", "board.task"],
+      });
+
+      return { project };
+    } catch (err) {
+      console.log("Board update Mutation error:", err);
+      if (err.code === "22P02")
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 }
 
 export default BoardResolver;
