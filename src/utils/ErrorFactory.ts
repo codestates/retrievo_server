@@ -33,6 +33,10 @@ const errorTypes: errorIFC = {
     code: "401",
     message: "No Data 😕",
   },
+  DATA_ALREADY_EXIST: {
+    code: "404",
+    message: "Data Already Existed 👀",
+  },
   AUTH_FAIL_DESERIALIZE: {
     code: "500",
     message: "Failed to deserialize",

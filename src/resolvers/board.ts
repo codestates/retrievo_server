@@ -1,9 +1,9 @@
 import {
   Resolver,
   Ctx,
-  // Arg,
+  Arg,
   Query,
-  // Mutation,
+  Mutation,
   UseMiddleware,
 } from "type-graphql";
 // import { getManager } from "typeorm";
@@ -11,6 +11,8 @@ import {
 /* Entities */
 // import Project from "../entities/Project";
 // import User from "../entities/User";
+import checkIfGuest from "../middleware/checkIfGuest";
+import Board from "../entities/Board";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 import Project from "../entities/Project";
 
@@ -44,30 +46,59 @@ export class BoardResolver {
       });
 
       if (!boards) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-      return { boards };
+      return { project: boards };
     } catch (err) {
-      console.log(err);
+      console.log("Board Read Query Error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
-  // @Query(() => Project)
-  // @UseMiddleware(checkAuthStatus)
-  // async boards(
-  //   @Ctx() context: MyContext
-  //   @Arg("name") name: string,
+  @Mutation(() => BoardResponse)
+  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  async createBoard(
+    @Arg("title") title: string,
+    @Ctx() { req }: MyContext
+  ): Promise<BoardResponse> {
+    console.log("req.query.projectId:", req.query.projectId);
+    // FIXME : const { projectId } = req.query;
+    const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
 
-  // @Mutation(() => Project)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest])
-  // async createProject(
-  //   @Ctx() context: MyContext
-  //   checkAdminPermission,
-  // @Mutation(() => Project)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkIfGuest,
-  //   checkProjectPermission,
-  // ])
+    try {
+      const project = await Project.findOne({
+        where: { id: projectId },
+        relations: ["board"],
+      });
+
+      const duplicated = project?.board?.filter((board) => {
+        return board.title === title;
+      });
+
+      if (duplicated?.length)
+        return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
+
+      const boardColumnIndex = project?.board?.length;
+
+      await Board.create({
+        title,
+        project,
+        boardColumnIndex,
+      }).save();
+
+      const newProject = await Project.findOne({
+        where: { id: projectId },
+        relations: ["board", "board.task"],
+      });
+
+      if (!newProject) {
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      }
+      return { project: newProject };
+    } catch (err) {
+      console.log("Board create Mutation error:", err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
   // async updateProjectName(
   //   @Ctx() context: MyContext,
   //   @Arg("name") name: string
