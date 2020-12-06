@@ -11,6 +11,7 @@ import { ProjectReturnType } from "./types/ProjectResponse";
 import { prod } from "../constants";
 import { MyContext } from "../types";
 import Project from "../entities/Project";
+import User from "../entities/User";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 // import checkAuthStatus from "../middleware/checkAuthStatus";
 import { FieldError } from "./types/UserResponse";
@@ -41,12 +42,26 @@ export class ProjectResolver {
 
   @Mutation(() => Project)
   async createProject(
-    @Arg("name") name: string
+    @Arg("name") name: string,
+    @Ctx() context: MyContext
   ): Promise<Project | { error: FieldError }> {
+    const userId = prod
+      ? context.req.session.passport?.user
+      : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
+    const user = await User.findOne(userId);
+
     try {
       const project = await Project.create({
         name,
       }).save();
+
+      if (user && project) {
+        await ProjectPermission.create({
+          user,
+          project,
+          isAdmin: true,
+        }).save();
+      }
 
       return project;
     } catch (err) {
@@ -126,6 +141,40 @@ export class ProjectResolver {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
+
+  // @Mutation(() => ProjectReturnType)
+  // async inviteUser(
+  //   @Ctx() context: MyContext,
+  //   @Arg("email") email: string[]
+  // ): Promise<ProjectReturnType | undefined> {
+  //   const projectId = prod
+  //     ? context.req.query.projectId
+  //     : "c3645246-2095-4f34-b848-4d91735f5e7d";
+
+  //   if (!projectId) {
+  //     return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+  //   }
+
+  //   // if (email.length > 1) {
+  //   //   for await (const singleEmail of email) {
+  //   //     const userOfUsers = User.findOne({ where: { email: singleEmail } });
+
+  //   //     console.log(userOfUsers);
+  //   //     // return { error: generateError.INTERNAL_SERVER_ERROR };
+  //   //     // 1) 존재하는 유저인 지 확인
+  //   //     // 1-1) 존재하는 유저일 경우
+  //   //     // 1-1-1) 이미 초대 받은 유저인지를 확인해야한다.
+  //   //     // 1-1-2) 이미 초대 받은 유저일 경우, 400 Bad Request 반환
+  //   //     // 1-1-3) 이미 초대 받지 않은 경우, project_permission 생성 및 sendEmail
+
+  //   //     // 2) 존재하지 않는 유저일 경우
+  //   //   }
+  //   // }
+
+  //   // if (email.length === 1) {
+  //   // }
+  //   // doesUserExist = User.findOne({ where: { email } });
+  // }
 }
 
 export default ProjectResolver;
