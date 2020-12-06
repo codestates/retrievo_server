@@ -148,12 +148,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkIfGuest,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async deleteProject(@Ctx() context: MyContext): Promise<ProjectReturnType> {
     const projectId = prod
       ? context.req.query.projectId
@@ -199,6 +199,49 @@ export class ProjectResolver {
   //   //   }
   //   // }
 
+  /*
+  1. 유저가 화면에서 초대를 보낸다. ->
+  2. ProjectId(uri) 와 초대대상의 email를 arg로써 inviteuser resolver 에서 받는다. ->
+  3. email 로 db에 유저가 존재하는지 조회한다.
+
+  4. 만약 db에 유저가 존재한다면
+      projectpermission 을 검색해서 userid projectid 의 관계가 존재하는지 중복조회한다
+        if 중복된다면,
+          에러메시지를 날린다.
+        if 중복되지 않았다면
+          project permission을 만든다(arg로 받은 projectid 와 유저를 조회할 때 취득한 userid)
+          해당 유저에게 projectid 를 access uri 에 참조하여 Email 을 보낸다.
+
+  5. 만약 db에 유저가 존재하지않는다면;
+  (sets)
+    초대를 보내는이가 초대 버튼을 클릭했을 때 벌어지는 과정들:
+
+    과정 1 $redis.smembers("email")
+    => ["88bb4bdfef", "73dbfac453"]
+
+    과정 2 해당 배열에 같은 project값이 있는지 조회
+
+      if true
+      중복된 초대라는 에러메시지를 보낸다
+
+      if false
+        1. 해당 유저에게 projectid 를 access uri 에 참조하여 Email 을 보낸다.
+        2. $redis.sadd("email", ["projectid1", "project2"])
+        3. 유저가 해당 링크를 클릭했을 때 projectid 와 유저 이메일 session 에 집어넣고
+        4. 만약 이메일 세션에 있는 아이디가 redis set 에 저장된 정보를 조회 (register 로직에 들어가야함)
+            if true
+              유저가 가입할 때 세션에 projectid(invitation) 이 존재한다면 projectPermission 을 동시에 만들어 주어야함
+              소셜 로그인일 경우에도 소셜 콜백에 projectPermission 을 만드는 로직을 포함시켜야함.
+            if false
+              잘못된 초대코드라는 오류메시지를 보여줌
+
+
+
+
+
+
+
+  */
   //   // if (email.length === 1) {
   //   // }
   //   // doesUserExist = User.findOne({ where: { email } });
