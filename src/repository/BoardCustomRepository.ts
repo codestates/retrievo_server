@@ -139,7 +139,10 @@ export class BoardRepository extends Repository<Board> {
                   { id: task.id },
                   {
                     board: newBoard,
-                    boardRowIndex: task.boardRowIndex + tasks.length,
+                    boardRowIndex:
+                      task.boardRowIndex !== null
+                        ? task.boardRowIndex + tasks.length
+                        : null,
                   }
                 );
                 resolve(true);
@@ -184,7 +187,7 @@ export class BoardRepository extends Repository<Board> {
         }
       );
     } catch (err) {
-      console.log("Board Index Update Error:", err);
+      console.log("Board Delete Error:", err);
       return false;
     }
   }
