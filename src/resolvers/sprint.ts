@@ -123,7 +123,7 @@ export class SprintResolver {
     try {
       const sprints = await Sprint.find({
         where: { project: projectId },
-        relations: ["project", "task"],
+        relations: ["project"],
       });
 
       const row = sprints.length ? sprints.length - 1 : 0;
