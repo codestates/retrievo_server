@@ -2,7 +2,11 @@ import { EntityRepository, getManager, Repository } from "typeorm";
 import Task from "../entities/Task";
 import Sprint from "../entities/Sprint";
 import Board from "../entities/Board";
+import User from "../entities/User";
 import TaskUpdateInput from "../resolvers/types/TaskUpdateInput";
+import TaskNotification, {
+  taskNotificationType,
+} from "../entities/TaskNotification";
 @EntityRepository(Task)
 export class TaskRepository extends Repository<Task> {
   async updateTaskAndChangeIndex(
@@ -24,7 +28,13 @@ export class TaskRepository extends Repository<Task> {
           /* find current task */
           const task = await Task.findOne({
             where: { id },
-            relations: ["board", "project", "sprint"],
+            relations: [
+              "board",
+              "project",
+              "sprint",
+              "userTask",
+              "userTask.user",
+            ],
           });
           if (!task) return false;
 
@@ -39,13 +49,28 @@ export class TaskRepository extends Repository<Task> {
             relations: ["task"],
           });
 
-          // TODO
-          // BoardId와 RowIndex가 있는 경우
-          // 2. 보드를 이동하고 인덱스도 이동하는 경우
-          // 2-a. 원래 있던 보드:
-          // 원래 위치 인덱스 < task 들의 인덱스 -1해주기;
-          // 2-b. 이동한 보드:
-          // Id 연결, 이동한 보드의 taskIndex>= task들을 +1 해줌
+          // TODO: boardId && task에 assigned된 사람이 있는 경우
+
+          if (boardId && task.userTask && task.userTask.length > 0) {
+            const newBoard = await Board.findOne({ id: boardId });
+            // forEach로 돌면서 TaskNotification 생성
+            await Promise.all(
+              task.userTask.map(async (userTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return await new Promise(async (resolve) => {
+                  const target = await User.findOne({ id: userTask.user.id });
+                  await TaskNotification.create({
+                    target,
+                    status: newBoard,
+                    type: taskNotificationType.STATUS_CHANGED,
+                    project: task.project,
+                    task,
+                  }).save();
+                  resolve(true);
+                });
+              })
+            );
+          }
 
           /* case 1. boardId && RowIndex */
           if (boardId && newBoardRowIndex !== undefined) {
@@ -141,13 +166,12 @@ export class TaskRepository extends Repository<Task> {
           // 1. 보드 내에서 인데스만 변경되는 경우
           // BoardId는 없는데 BoardRowIndex가 있는 경우
           // 1-a. 그냥 하던대로 위치 바꿔주기
+          /* case 2. !boardId && RowIndex */
           if (!boardId && newBoardRowIndex !== undefined) {
             if (!board || !board.task) return false;
-            console.log(3, "task가 속한 보드 찾기 완료");
             const isComplete =
               groupOfBoards.length - 1 === board.boardColumnIndex;
 
-            console.log(6, "같은 보드 내 이동 시작");
             const oldBoardRowIndex = task.boardRowIndex;
             if (!oldBoardRowIndex || oldBoardRowIndex === newBoardRowIndex)
               return false;
