@@ -30,7 +30,7 @@ export default class Task extends BaseEntity {
 
   @Field(() => String)
   @Column({ name: "root_task_id", nullable: true })
-  rootTaskId?: string;
+  rootTaskId: string;
 
   @Field()
   @Column()
@@ -75,11 +75,11 @@ export default class Task extends BaseEntity {
 
   @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.task)
-  comment?: Comment[];
+  comment: Comment[];
 
   @Field(() => [File])
   @OneToMany(() => File, (file) => file.task)
-  file?: File[];
+  file: File[];
 
   @OneToMany(
     () => CommentNotification,
@@ -96,12 +96,15 @@ export default class Task extends BaseEntity {
   @ManyToOne(() => Sprint, (sprint) => sprint.task, { onDelete: "CASCADE" })
   @Field(() => Sprint)
   @JoinColumn({ name: "sprint_id" })
-  sprint?: Sprint;
+  sprint: Sprint;
 
-  @ManyToOne(() => Board, (board) => board.task, { onDelete: "SET NULL" })
-  @Field(() => Board)
+  @ManyToOne(() => Board, (board) => board.task, {
+    onDelete: "SET NULL",
+    nullable: true,
+  })
+  @Field(() => Board, { nullable: true })
   @JoinColumn({ name: "board_id" })
-  board!: Board;
+  board: Board | null | string;
 
   @ManyToOne(() => Project, (project) => project.task, { onDelete: "SET NULL" })
   @Field(() => Project)
@@ -110,9 +113,9 @@ export default class Task extends BaseEntity {
 
   @OneToMany(() => UserTask, (userTask) => userTask.task)
   @Field(() => [UserTask], { nullable: true })
-  userTask?: UserTask[];
+  userTask: UserTask[];
 
   @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)
   @Field(() => [TaskLabel], { nullable: true })
-  taskLabel?: TaskLabel[];
+  taskLabel: TaskLabel[];
 }

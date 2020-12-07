@@ -25,6 +25,10 @@ export default class Sprint extends BaseEntity {
   @Column()
   title!: string;
 
+  @Field()
+  @Column({ nullable: true })
+  description?: string;
+
   @Field(() => Boolean, { defaultValue: false })
   @Column({ name: "did_start", default: false })
   didStart!: boolean;

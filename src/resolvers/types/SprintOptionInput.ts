@@ -5,22 +5,25 @@ export class SprintOptionInput {
   @Field()
   id!: string;
 
-  @Field()
+  @Field({ nullable: true })
   title?: string;
 
-  @Field()
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field({ nullable: true })
   didStart?: boolean;
 
-  @Field()
+  @Field({ nullable: true })
   isCompleted?: boolean;
 
-  @Field()
+  @Field({ nullable: true })
   row?: number;
 
-  @Field()
+  @Field({ nullable: true })
   dueDate?: Date;
 
-  @Field()
+  @Field({ nullable: true })
   startedAt?: Date;
 }
 
