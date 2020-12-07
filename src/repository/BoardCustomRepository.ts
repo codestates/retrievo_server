@@ -1,4 +1,5 @@
 import { EntityRepository, getManager, Repository } from "typeorm";
+import Sprint from "../entities/Sprint";
 import Board from "../entities/Board";
 import Project from "../entities/Project";
 import Task from "../entities/Task";
@@ -29,7 +30,7 @@ export class BoardRepository extends Repository<Board> {
         const start = asc ? oldIndex + 1 : newIndex;
         const end = asc ? newIndex : oldIndex - 1;
 
-        // NOTE 같은 project 내의 모든 board를 찾는다
+        // NOTE 같은 project의 모든 board를 찾는다
         const allBoards = await Project.findOne({
           where: { id: project.id },
           relations: ["board"],
@@ -98,7 +99,6 @@ export class BoardRepository extends Repository<Board> {
       });
 
       if (!board) return false;
-
       // NOTE: transaction으로 현재 보드의 이동에 영향을 받는 보드들의 인덱스를 바꾼다
       return await getManager().transaction(
         async (transactionalEntityManager) => {
@@ -106,20 +106,29 @@ export class BoardRepository extends Repository<Board> {
           const boardsOfProject = await Board.find({
             where: { project: board.project },
           });
-
           if (!boardsOfProject) return false;
           const boardsLength = boardsOfProject.length;
 
           // NOTE Board가 하나만 남았다면 삭제하지 않는다
           if (boardsLength === 1) return false;
 
+          const sprint = await Sprint.findOne({
+            where: { project: board.project, didStart: true },
+          });
+
+          if (!sprint) return false;
+
           // NOTE: 삭제 보드의 task들을 다른 보드로 이동
-          const tasks = await Task.find({ board });
-          const newBoard = await Board.findOne({ id: newBoardId });
+          const tasks = await Task.find({ board, sprint });
+          const newBoard = await Board.findOne({
+            where: { id: newBoardId },
+            relations: ["project"],
+          });
 
           // NOTE Task들을 이동할 보드가 같은 Project의 보드인지 확인
           if (newBoard === undefined) return false;
-          if (newBoard.project !== board.project) return false;
+
+          if (newBoard.project.id !== board.project.id) return false;
 
           await Promise.all(
             tasks.map(async (task) => {

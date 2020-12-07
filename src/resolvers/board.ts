@@ -6,15 +6,16 @@ import {
   Mutation,
   UseMiddleware,
 } from "type-graphql";
-import { getCustomRepository } from "typeorm";
+import { getCustomRepository, getRepository } from "typeorm";
 
 /* Entities */
 import Board from "../entities/Board";
-import generateError, { errorKeys } from "../utils/ErrorFactory";
 import Project from "../entities/Project";
+import Sprint from "../entities/Sprint";
 import { BoardRepository } from "../repository/BoardCustomRepository";
 
 /* Utils */
+import generateError, { errorKeys } from "../utils/ErrorFactory";
 // import { prod } from "../constants";
 // import generateError, { errorKeys } from "../utils/ErrorFactory";
 
@@ -37,18 +38,29 @@ export class BoardResolver {
     try {
       console.log("req.query.projectId:", req.query.projectId);
       // FIXME : const { projectId } = req.query;
-      const projectId = "002692aa-f191-43d7-9b95-300226629e77";
-      const boards = await Board.find({
-        where: { project: projectId },
-        relations: [
-          "task",
-          "task.userTask",
-          "task.userTask.user",
-          "task.taskLabel",
-          "task.taskLabel.label",
-        ],
+      const projectId = "0baf6a7d-a5d1-4148-acc8-3cd053149d25";
+
+      const currentSprint = await Sprint.findOne({
+        project: projectId,
+        didStart: true,
       });
-      console.log("boards", boards);
+
+      if (!currentSprint)
+        return { error: generateError(errorKeys.BAD_REQUEST) };
+
+      const boards = await getRepository(Board)
+        .createQueryBuilder("board")
+        .leftJoinAndSelect("board.task", "task")
+        .leftJoinAndSelect("task.taskLabel", "taskLabel")
+        .leftJoinAndSelect("taskLabel.label", "label")
+        .leftJoinAndSelect("task.userTask", "userTask")
+        .leftJoinAndSelect("userTask.user", "user")
+        .leftJoinAndSelect("task.sprint", "spirnt")
+        .where("task.sprint = :sprintId")
+        .setParameter("sprintId", currentSprint.id)
+        .orderBy("board.boardColumnIndex", "ASC")
+        .addOrderBy("task.boardRowIndex", "ASC")
+        .getMany();
 
       if (!boards) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { boards };
@@ -126,7 +138,6 @@ export class BoardResolver {
 
       // NOTE: customRepository를 불러온다
       const boardRepository = getCustomRepository(BoardRepository);
-
       // NOTE: 보드 id와 index를 changeBoardIndex 메소드의 인자로 넣는다.
       // NOTE: response로 true와 false를 받는다.
       if (newIndex !== undefined) {
@@ -141,10 +152,26 @@ export class BoardResolver {
           return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       }
 
-      const boards = await Board.find({
-        where: { project: projectId },
-        relations: ["task"],
+      const currentSprint = await Sprint.findOne({
+        project: projectId,
+        didStart: true,
       });
+      if (!currentSprint)
+        return { error: generateError(errorKeys.BAD_REQUEST, "Sprint") };
+
+      const boards = await getRepository(Board)
+        .createQueryBuilder("board")
+        .leftJoinAndSelect("board.task", "task")
+        .leftJoinAndSelect("task.taskLabel", "taskLabel")
+        .leftJoinAndSelect("taskLabel.label", "label")
+        .leftJoinAndSelect("task.userTask", "userTask")
+        .leftJoinAndSelect("userTask.user", "user")
+        .leftJoinAndSelect("task.sprint", "spirnt")
+        .where("task.sprint = :sprintId")
+        .setParameter("sprintId", currentSprint.id)
+        .orderBy("board.boardColumnIndex", "ASC")
+        .addOrderBy("task.boardRowIndex", "ASC")
+        .getMany();
 
       return { boards };
     } catch (err) {
@@ -156,7 +183,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus]) // FIXME : , checkIfGuest, checkAdminPermission checkProjectPermission
   async deleteBoard(
     @Arg("id") id: string,
     @Arg("newBoardId") newBoardId: string,
@@ -164,7 +191,7 @@ export class BoardResolver {
   ): Promise<BoardResponse> {
     console.log(req.query.projectId);
     // FIXME : const { projectId } = req.query;
-    const projectId = "002692aa-f191-43d7-9b95-300226629e77";
+    const projectId = "50c97f43-4b30-4a8b-8d57-2cd68e739425";
 
     try {
       const boardRepository = getCustomRepository(BoardRepository);
@@ -175,10 +202,32 @@ export class BoardResolver {
       );
       if (!res) return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
 
-      const boards = await Board.find({
-        where: { project: projectId },
-        relations: ["task"],
+      const currentSprint = await Sprint.findOne({
+        project: projectId,
+        didStart: true,
       });
+
+      if (!currentSprint)
+        return { error: generateError(errorKeys.BAD_REQUEST, "Sprint") };
+
+      const boards = await getRepository(Board)
+        .createQueryBuilder("board")
+        .leftJoinAndSelect("board.task", "task")
+        .leftJoinAndSelect("task.taskLabel", "taskLabel")
+        .leftJoinAndSelect("taskLabel.label", "label")
+        .leftJoinAndSelect("task.userTask", "userTask")
+        .leftJoinAndSelect("userTask.user", "user")
+        .leftJoinAndSelect("task.sprint", "spirnt")
+        .where("task.sprint = :sprintId")
+        .setParameter("sprintId", currentSprint.id)
+        .orderBy("board.boardColumnIndex", "ASC")
+        .addOrderBy("task.boardRowIndex", "ASC")
+        .getMany();
+
+      //   .orderBy({
+      //     "user.name": "ASC",
+      //     "user.id": "DESC"
+      // });
 
       return { boards };
     } catch (err) {
