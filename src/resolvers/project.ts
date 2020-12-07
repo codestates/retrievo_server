@@ -44,7 +44,10 @@ export class ProjectResolver {
     if (!projectId) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
     try {
-      const project = await Project.findOne({ where: { id: projectId } });
+      const project = await Project.findOne({
+        where: { id: projectId },
+        relations: ["projectPermission", "projectPermission.projectId"],
+      });
       if (project) return { project };
 
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -59,11 +62,11 @@ export class ProjectResolver {
     @Arg("name") name: string,
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType> {
-    // const userId = prod
-    //   ? context.req.session.passport?.user
-    //   : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
+    const userId = prod
+      ? context.req.session.passport?.user
+      : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
 
-    const userId = context.req.session.passport?.user;
+    // const userId = context.req.session.passport?.user;
     const user = await User.findOne(userId);
 
     try {
@@ -224,6 +227,39 @@ export class ProjectResolver {
       return Promise.all(data).then(() => {
         return { success: true };
       });
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => ProjectReturnType)
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
+  async deleteMember(
+    @Ctx() context: MyContext,
+    @Arg("userId") userId: string
+  ): Promise<ProjectPermissionReturnType> {
+    const projectId = prod
+      ? context.req.query.projectId
+      : "c77cc15c-739a-4ef4-9e6c-fd43eb0d75a9";
+    if (!projectId) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+
+    try {
+      const projectPermission = await ProjectPermission.findOne({
+        where: { user: userId, project: projectId },
+      });
+
+      if (projectPermission) {
+        await ProjectPermission.delete(projectPermission.id);
+      }
+
+      return { success: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }

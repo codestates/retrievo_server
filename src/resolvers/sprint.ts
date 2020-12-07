@@ -44,7 +44,7 @@ export class SprintResolver {
     try {
       // const projectId = prod
       //   ? req.params
-      //   : "332053e6-45cd-4104-92db-000154a1af32";
+      //   : "332053e6-45cd-4104-92db-000154a1af32";,
 
       const sprint = await Sprint.findOne(id, {
         relations: [
