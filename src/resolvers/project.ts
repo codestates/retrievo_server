@@ -6,7 +6,7 @@ import {
   Mutation,
   UseMiddleware,
 } from "type-graphql";
-import { getManager } from "typeorm";
+import { getConnection, getManager } from "typeorm";
 import { v4 as uuidV4 } from "uuid";
 
 /* Entities */
@@ -14,6 +14,7 @@ import mailSender from "../services/mailerService";
 import Project from "../entities/Project";
 import User from "../entities/User";
 import ProjectPermission from "../entities/ProjectPermission";
+import Board from "../entities/Board";
 
 /* Utils */
 import { prod } from "../constants";
@@ -57,30 +58,59 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([checkAuthStatus, checkIfGuest])
+  // @UseMiddleware([checkAuthStatus, checkIfGuest])
   async createProject(
     @Arg("name") name: string,
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType> {
     const userId = prod
       ? context.req.session.passport?.user
-      : "fd6d4c47-f09d-4ecf-8d30-d4bd39ef7690";
+      : "11908f55-9650-4c52-8605-e56fa35ce4ed";
 
     // const userId = context.req.session.passport?.user;
     const user = await User.findOne(userId);
 
     try {
-      const project = await Project.create({
-        name,
-      }).save();
+      let project;
+      await getConnection().transaction(async (tm) => {
+        project = Project.create({
+          id: uuidV4(),
+          name,
+        });
 
-      if (user && project) {
-        await ProjectPermission.create({
-          user,
+        let projectPermission;
+        if (user && project) {
+          projectPermission = ProjectPermission.create({
+            user: user.id,
+            project: project.id,
+            isAdmin: true,
+          });
+        }
+
+        const todo = Board.create({
+          title: "To Do",
           project,
-          isAdmin: true,
-        }).save();
-      }
+          boardColumnIndex: 0,
+        });
+
+        const inProgress = Board.create({
+          title: "In Progress",
+          project,
+          boardColumnIndex: 1,
+        });
+
+        const done = Board.create({
+          title: "Done",
+          project,
+          boardColumnIndex: 2,
+        });
+
+        await tm.save(project);
+        await tm.save(projectPermission);
+        await tm.save(todo);
+        await tm.save(inProgress);
+        await tm.save(done);
+      });
 
       return { project };
     } catch (err) {
@@ -145,7 +175,7 @@ export class ProjectResolver {
         if (projectPermission) {
           projectPermission.isAdmin = isAdmin;
           await em.save(projectPermission);
-          return projectPermission;
+          return { projectPermission };
         }
       }
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };

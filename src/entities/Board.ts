@@ -21,7 +21,7 @@ export default class Board extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field()
+  @Field(() => String)
   @Column()
   title!: string;
 
@@ -45,12 +45,13 @@ export default class Board extends BaseEntity {
   updatedAt: Date;
 
   @Field(() => [Task], { nullable: true })
-  @OneToMany(() => Task, (task) => task.board)
+  @OneToMany(() => Task, (task) => task.board, { nullable: true })
   task: Task[] | null;
 
   @OneToMany(
     () => TaskNotification,
-    (taskNotificaiton) => taskNotificaiton.status
+    (taskNotificaiton) => taskNotificaiton.status,
+    { nullable: true }
   )
   taskNotification: TaskNotification[];
 }

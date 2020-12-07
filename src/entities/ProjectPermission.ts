@@ -24,10 +24,10 @@ export default class ProjectPermission extends BaseEntity {
   @Field(() => Project)
   @ManyToOne(() => Project, (project) => project.id, { onDelete: "CASCADE" })
   @JoinColumn({ name: "project_id" })
-  project!: Project;
+  project!: Project | string;
 
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.id, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
-  user!: User;
+  user!: User | string;
 }
