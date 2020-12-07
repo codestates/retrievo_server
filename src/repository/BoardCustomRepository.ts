@@ -184,7 +184,7 @@ export class BoardRepository extends Repository<Board> {
         }
       );
     } catch (err) {
-      console.log("Board Index Update Error:", err);
+      console.log("Board Delete Error:", err);
       return false;
     }
   }

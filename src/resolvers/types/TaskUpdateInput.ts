@@ -1,49 +1,46 @@
 import { InputType, Field } from "type-graphql";
-import Board from "../../entities/Board";
-import Sprint from "../../entities/Sprint";
-import UserTask from "../../entities/UserTask";
-import TaskLabel from "../../entities/TaskLabel";
-
 @InputType()
-export class TaskUpdateInput {
-  @Field(() => String)
-  rootTaskId?: string;
-
+export class TaskBasicOption {
   @Field()
   title?: string;
 
   @Field()
   description?: string;
 
-  @Field(() => Boolean, { defaultValue: false })
-  completed?: boolean;
-
   @Field(() => String)
   startDate?: Date;
 
   @Field(() => String)
   endDate?: Date;
+}
+@InputType()
+export class TaskUpdateInput {
+  @Field()
+  id!: string;
 
-  @Field(() => Number)
+  @Field({ nullable: true })
+  rootTaskId?: string;
+
+  @Field(() => Number, { nullable: true })
   boardRowIndex?: number;
 
-  @Field(() => Number)
+  @Field(() => Number, { nullable: true })
   sprintRowIndex?: number;
 
-  @Field(() => [File])
-  file?: File[];
+  @Field(() => String, { nullable: true })
+  sprintId?: string;
 
-  @Field(() => Sprint)
-  sprint?: Sprint;
+  @Field(() => String, { nullable: true })
+  boardId?: string;
 
-  @Field(() => Board)
-  board?: Board;
+  @Field(() => Number, { nullable: true })
+  newBoardRowIndex?: number;
 
-  @Field(() => [UserTask], { nullable: true })
-  userTask?: UserTask[];
+  @Field(() => Number, { nullable: true })
+  newSprintRowIndex?: number;
 
-  @Field(() => [TaskLabel], { nullable: true })
-  taskLabel?: TaskLabel[];
+  @Field(() => TaskBasicOption, { nullable: true })
+  options?: TaskBasicOption;
 }
 
 export default TaskUpdateInput;
