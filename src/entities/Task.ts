@@ -37,8 +37,8 @@ export default class Task extends BaseEntity {
   title!: string;
 
   @Field()
-  @Column()
-  description!: string;
+  @Column({ nullable: true })
+  description?: string;
 
   @Field(() => Number)
   @Column({ name: "task_index" })
@@ -57,13 +57,13 @@ export default class Task extends BaseEntity {
   @Column({ default: false })
   completed!: boolean;
 
-  @Field(() => String)
-  @Column({ type: "timestamp", name: "start_date" })
-  startDate: Date;
+  @Field(() => String, { nullable: true })
+  @Column({ type: "timestamp", name: "start_date", nullable: true })
+  startDate?: Date;
 
-  @Field(() => String)
-  @Column({ type: "timestamp", name: "end_date" })
-  endDate: Date;
+  @Field(() => String, { nullable: true })
+  @Column({ type: "timestamp", name: "end_date", nullable: true })
+  endDate?: Date;
 
   @Field(() => String)
   @CreateDateColumn({ name: "created_at" })
@@ -73,11 +73,11 @@ export default class Task extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  @Field(() => [Comment])
+  @Field(() => [Comment], { nullable: true })
   @OneToMany(() => Comment, (comment) => comment.task)
   comment?: Comment[];
 
-  @Field(() => [File])
+  @Field(() => [File], { nullable: true })
   @OneToMany(() => File, (file) => file.task)
   file?: File[];
 
@@ -96,7 +96,7 @@ export default class Task extends BaseEntity {
   @ManyToOne(() => Sprint, (sprint) => sprint.task, { onDelete: "CASCADE" })
   @Field(() => Sprint)
   @JoinColumn({ name: "sprint_id" })
-  sprint?: Sprint;
+  sprint!: Sprint;
 
   @ManyToOne(() => Board, (board) => board.task, { onDelete: "SET NULL" })
   @Field(() => Board)
