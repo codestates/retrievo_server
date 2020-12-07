@@ -16,6 +16,9 @@ export class SprintResponse {
 
   @Field(() => FieldError, { nullable: true })
   error?: FieldError;
+
+  @Field(() => Boolean, { nullable: true })
+  success?: boolean;
 }
 
 export default SprintResponse;

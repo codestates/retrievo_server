@@ -135,7 +135,29 @@ export class SprintResolver {
         project: projectId,
       }).save();
 
+      // TODO Notification 생성 해줘야함.
+
       return { sprint };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  async deleteSprint(
+    // @Ctx() context: MyContext,
+    @Arg("id") id: string
+  ): Promise<SprintResponse> {
+    const sprint = await Sprint.findOne(id);
+
+    if (!sprint) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+
+    try {
+      await Sprint.delete(sprint);
+      return { success: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
