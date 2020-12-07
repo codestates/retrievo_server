@@ -1,16 +1,16 @@
 import { InputType, Field } from "type-graphql";
 @InputType()
 export class TaskBasicOption {
-  @Field()
+  @Field({ nullable: true })
   title?: string;
 
-  @Field()
+  @Field({ nullable: true })
   description?: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   startDate?: Date;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   endDate?: Date;
 }
 @InputType()
@@ -40,7 +40,7 @@ export class TaskUpdateInput {
   newSprintRowIndex?: number;
 
   @Field(() => TaskBasicOption, { nullable: true })
-  options?: TaskBasicOption;
+  basicOptions?: TaskBasicOption;
 }
 
 export default TaskUpdateInput;

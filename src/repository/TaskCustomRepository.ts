@@ -15,7 +15,7 @@ export class TaskRepository extends Repository<Task> {
       // TODO: 나중에 시간나면 리팩토링
       const {
         id,
-        options,
+        basicOptions,
         boardId,
         sprintId,
         newBoardRowIndex,
@@ -33,17 +33,14 @@ export class TaskRepository extends Repository<Task> {
           if (!task) return false;
           console.log(2, "해당 테스크 찾기 완료");
           const board = await Board.findOne({
-            where: { id: task.board.id },
+            where: { id: task.board?.id },
             relations: ["task"],
           });
-          if (!board || !board.task) return false;
-          console.log(3, "task가 속한 보드 찾기 완료");
 
           const groupOfBoards = await Board.find({
             where: { project: task.project.id },
+            relations: ["task"],
           });
-          const isComplete =
-            groupOfBoards.length - 1 === board.boardColumnIndex;
 
           // TODO
           // BoardId와 RowIndex가 있는 경우
@@ -53,7 +50,13 @@ export class TaskRepository extends Repository<Task> {
           // 2-b. 이동한 보드:
           // Id 연결, 이동한 보드의 taskIndex>= task들을 +1해줌
           if (boardId && newBoardRowIndex !== undefined) {
+            if (!board || !board.task) return false;
+            console.log(3, "task가 속한 보드 찾기 완료");
+            const isComplete =
+              groupOfBoards.length - 1 === board.boardColumnIndex;
+
             const oldBoardRowIndex = task.boardRowIndex;
+            if (!oldBoardRowIndex) return false;
             // 2-a. 원래 있던 보드:
             const originalBoardTasks = await Task.find({
               where: { board: task.board, sprint: task.sprint },
@@ -63,6 +66,7 @@ export class TaskRepository extends Repository<Task> {
 
             const originalBoardTargetTasks = originalBoardTasks.filter(
               (task) => {
+                if (task.boardRowIndex === null) return false;
                 return task.boardRowIndex > oldBoardRowIndex;
               }
             );
@@ -93,6 +97,7 @@ export class TaskRepository extends Repository<Task> {
             console.log(5.1, "newBoardTasks 확인");
 
             const newBoardTargetTasks = newBoardTasks.filter((task) => {
+              if (task.boardRowIndex === null) return false;
               return task.boardRowIndex >= newBoardRowIndex;
             });
 
@@ -130,101 +135,185 @@ export class TaskRepository extends Repository<Task> {
             return true;
           }
 
+          // NOTE
+          // 이동한 보드가 가장 마지막 보드인가? -> completed 변경
+          // TODO -> Test
+          // 1. 보드 내에서 인데스만 변경되는 경우
+          // BoardId는 없는데 BoardRowIndex가 있는 경우
+          // 1-a. 그냥 하던대로 위치 바꿔주기
           if (!boardId && newBoardRowIndex !== undefined) {
-            // NOTE
-            // 이동한 보드가 가장 마지막 보드인가? -> completed 변경
+            if (!board || !board.task) return false;
+            console.log(3, "task가 속한 보드 찾기 완료");
+            const isComplete =
+              groupOfBoards.length - 1 === board.boardColumnIndex;
+
             console.log(6, "같은 보드 내 이동 시작");
-            // TODO -> Test
-            // 1. 보드 내에서 인데스만 변경되는 경우
-            // BoardId는 없는데 BoardRowIndex가 있는 경우
-            // 1-a. 그냥 하던대로 위치 바꿔주기
-            if (newBoardRowIndex !== undefined) {
-              const oldBoardRowIndex = task.boardRowIndex;
-              if (oldBoardRowIndex === newBoardRowIndex) return false;
-              if (newBoardRowIndex < 0) return false;
-              console.log(7, "타겟 인덱스가 유의미하지 않은 경우");
+            const oldBoardRowIndex = task.boardRowIndex;
+            if (!oldBoardRowIndex || oldBoardRowIndex === newBoardRowIndex)
+              return false;
+            if (newBoardRowIndex < 0) return false;
+            console.log(7, "타겟 인덱스가 유의미하지 않은 경우");
 
-              const asc = oldBoardRowIndex < newBoardRowIndex;
-              const start = asc ? oldBoardRowIndex + 1 : newBoardRowIndex;
-              const end = asc ? newBoardRowIndex : oldBoardRowIndex - 1;
+            const asc = oldBoardRowIndex < newBoardRowIndex;
+            const start = asc ? oldBoardRowIndex + 1 : newBoardRowIndex;
+            const end = asc ? newBoardRowIndex : oldBoardRowIndex - 1;
 
-              // NOTE: Task의 Board이동에 영향을 받는 다른 Task들을 이동
-              const groupOfTasks = await Task.find({
+            // NOTE: Task의 Board이동에 영향을 받는 다른 Task들을 이동
+            const groupOfTasks = await Task.find({
+              board,
+              sprint: task.sprint,
+            });
+            const targetTasks = groupOfTasks.filter((task) => {
+              if (task.boardRowIndex === null) return false;
+              return task.boardRowIndex >= start && task.boardRowIndex <= end;
+            });
+
+            await Promise.all(
+              targetTasks.map(async (currnetTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve) => {
+                  const curIndex = Number(currnetTask.boardRowIndex);
+                  await transactionalEntityManager.update(
+                    Task,
+                    { id: currnetTask.id },
+                    {
+                      boardRowIndex: asc ? curIndex - 1 : curIndex + 1,
+                    }
+                  );
+                  resolve(true);
+                });
+              })
+            );
+
+            // TODO Task update해주기
+            await transactionalEntityManager.update(
+              Task,
+              { id },
+              {
+                boardRowIndex: newBoardRowIndex,
                 board,
-                sprint: task.sprint,
-              });
-              const targetTasks = groupOfTasks.filter((task) => {
-                return task.boardRowIndex >= start && task.boardRowIndex <= end;
-              });
-
-              await Promise.all(
-                targetTasks.map(async (currnetTask) => {
-                  // eslint-disable-next-line no-async-promise-executor
-                  return new Promise(async (resolve) => {
-                    const curIndex = Number(currnetTask.boardRowIndex);
-                    await transactionalEntityManager.update(
-                      Task,
-                      { id: currnetTask.id },
-                      {
-                        boardRowIndex: asc ? curIndex - 1 : curIndex + 1,
-                      }
-                    );
-                    resolve(true);
-                  });
-                })
-              );
-
-              // TODO Task update해주기
-              await transactionalEntityManager.update(
-                Task,
-                { id },
-                {
-                  boardRowIndex: newBoardRowIndex,
-                  board,
-                  completed: isComplete,
-                }
-              );
-              console.log(8);
-            }
-
+                completed: isComplete,
+              }
+            );
             console.log("보드 내 인덱스 변경 종료");
             return true;
           }
 
-          // SprintId만 있는 경우
-
-          // SprintId가 없는 경우
+          // TODO
+          // 2. 스프린트를 이동하고 인덱스도 이동하는 경우
+          // 2-a. 원래 있던 스프린트에서 task삭제 후 모든 뒷쪽 task 인덱스 -1해주기
+          // if (didStart으로 이동한 경우){
+          // 2-a. 0번 Board의 마지막 인덱스에 추가
+          // }else if(didStart에서 이동한 경우){
+          // boardId null, boardIndex null
+          // }
+          // 2-b. 이동한 스프린트의 Id 연결, taskIndex도 수정
+          // 2-c. 이동한 스프린트의 taskIndex>= task들을 +1해줌
           if (sprintId && newSprintRowIndex !== undefined) {
             console.log("스프린트를 이동하고 인덱스도 이동하는 경우");
-            // TODO
-            // 2. 스프린트를 이동하고 인덱스도 이동하는 경우
-            // 2-a. 원래 있던 스프린트에서 task삭제 후 모든 뒷쪽 task 인덱스 -1해주기
-            // if (didStart으로 이동한 경우){
-            // 2-a. 0번 Board의 마지막 인덱스에 추가
-            // }else if(didStart에서 이동한 경우){
-            // boardId null, boardIndex null
-            // }
-            // 2-b. 이동한 스프린트의 Id 연결, taskIndex도 수정
-            // 2-c. 이동한 스프린트의 taskIndex>= task들을 +1해줌
 
-            const sprint = await Sprint.findOne({
-              where: { id: sprintId },
-              relations: ["task"],
+            const oldSprintRowIndex = task.sprintRowIndex;
+            // 2-a. 원래 있던 보드:
+            const originalSprintTasks = await Task.find({
+              where: { sprint: task.sprint },
+            });
+            if (!originalSprintTasks) return false;
+            console.log(4, "originalSprintTasks 확인");
+
+            const originalSprintTargetTasks = originalSprintTasks.filter(
+              (task) => {
+                return task.sprintRowIndex > oldSprintRowIndex;
+              }
+            );
+
+            await Promise.all(
+              originalSprintTargetTasks.map(async (currnetTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve) => {
+                  const curIndex = Number(currnetTask.sprintRowIndex);
+                  await transactionalEntityManager.update(
+                    Task,
+                    { id: currnetTask.id },
+                    {
+                      sprintRowIndex: curIndex - 1,
+                    }
+                  );
+                  resolve(true);
+                });
+              })
+            );
+            // 2-b. 이동한 보드:
+            // 새보드와 Id연결, 이동한 보드의 taskIndex>= task들을 +1해줌
+            console.log(5, "이동한 스프린트의 newBoardTasks 찾기");
+            const newSprintTasks = await Task.find({
+              where: { sprint: sprintId },
+            });
+            if (!newSprintTasks) return false;
+            console.log(5.1, "newSprintTasks 확인");
+
+            const newSprintTargetTasks = newSprintTasks.filter((task) => {
+              return task.sprintRowIndex >= newSprintRowIndex;
             });
 
-            if (!sprint || !sprint.task) return false;
+            const newSprint = await Sprint.findOne({ id: sprintId });
+            if (!newSprint) return false;
 
-            // TODO: transaction 처리
-            await Task.update(
-              { id },
-              { sprint, sprintRowIndex: sprint.task.length }
+            await Promise.all(
+              newSprintTargetTasks.map(async (currnetTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve) => {
+                  const curIndex = Number(currnetTask.sprintRowIndex);
+                  await transactionalEntityManager.update(
+                    Task,
+                    { id: currnetTask.id },
+                    {
+                      sprintRowIndex: curIndex + 1,
+                    }
+                  );
+                  resolve(true);
+                });
+              })
             );
+
+            if (newSprint.didStart) {
+              // didStart으로 이동한 경우
+              // 2-a. 0번 Board의 마지막 인덱스에 추가
+              const firstBoard = groupOfBoards.filter((board) => {
+                return board.boardColumnIndex === 0;
+              });
+              if (!firstBoard[0] || !firstBoard[0].task) return false;
+
+              await transactionalEntityManager.update(
+                Task,
+                { id },
+                {
+                  sprint: newSprint,
+                  sprintRowIndex: newSprintRowIndex,
+                  board: firstBoard[0],
+                  boardRowIndex: firstBoard[0].task.length,
+                }
+              );
+              return true;
+            }
+
+            // didStart가 아닌 곳으로 이동한 경우
+            await transactionalEntityManager.update(
+              Task,
+              { id },
+              {
+                board: null,
+                boardRowIndex: null,
+                sprintRowIndex: newSprintRowIndex,
+                sprint: newSprint,
+              }
+            );
+
+            console.log(5.3, "스프린트 이동과 index변경 종료");
+            return true;
           }
 
           if (!sprintId && newSprintRowIndex !== undefined) {
             console.log("스프린트내에서 index 변경시");
-            // 1. 스프린트 내에서 인데스만 변경되는 경우
-            // 1-a. 그냥 하던대로 위치 바꿔주기
             const oldSprintRowIndex = task.sprintRowIndex;
             if (oldSprintRowIndex === newSprintRowIndex) return false;
             if (newSprintRowIndex < 0) return false;
@@ -234,7 +323,6 @@ export class TaskRepository extends Repository<Task> {
             const start = asc ? oldSprintRowIndex + 1 : newSprintRowIndex;
             const end = asc ? newSprintRowIndex : oldSprintRowIndex - 1;
 
-            // NOTE: Task의 sprint 내 이동에 영향을 받는 다른 Task들을 이동
             const groupOfTasks = await Task.find({
               sprint: task.sprint,
             });
@@ -271,9 +359,99 @@ export class TaskRepository extends Repository<Task> {
             return true;
           }
 
-          if (options) {
-            const updateRes = await Task.update({ id }, { ...options });
-            if (!updateRes || !updateRes?.affected) return false;
+          if (sprintId) {
+            if (sprintId === task.sprint.id) return false;
+            // TODO Task update해주기
+            const oldSprintRowIndex = task.sprintRowIndex;
+
+            const originalSprintTasks = await Task.find({
+              where: { sprint: task.sprint },
+            });
+            if (!originalSprintTasks) return false;
+            console.log("~~~originalSprintTasks 확인");
+
+            const originalSprintTargetTasks = originalSprintTasks.filter(
+              (task) => {
+                return task.sprintRowIndex > oldSprintRowIndex;
+              }
+            );
+
+            await Promise.all(
+              originalSprintTargetTasks.map(async (currnetTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve) => {
+                  const curIndex = Number(currnetTask.sprintRowIndex);
+                  await transactionalEntityManager.update(
+                    Task,
+                    { id: currnetTask.id },
+                    {
+                      sprintRowIndex: curIndex - 1,
+                    }
+                  );
+                  resolve(true);
+                });
+              })
+            );
+
+            const newSprint = await Sprint.findOne({
+              where: { id: sprintId },
+              relations: ["task"],
+            });
+            if (!newSprint || newSprint.task === undefined) return false;
+
+            // didstart로 이동한 경우
+            if (newSprint.didStart) {
+              // didStart으로 이동한 경우
+              // 2-a. 0번 Board의 마지막 인덱스에 추가
+
+              const groupOfBoards = await Board.find({
+                where: { project: task.project.id },
+                relations: ["task"],
+              });
+
+              const firstBoard = groupOfBoards.filter((board) => {
+                return board.boardColumnIndex === 0;
+              });
+              if (!firstBoard[0] || !firstBoard[0].task) return false;
+
+              await transactionalEntityManager.update(
+                Task,
+                { id },
+                {
+                  sprint: newSprint,
+                  sprintRowIndex: newSprint.task.length,
+                  board: firstBoard[0],
+                  boardRowIndex: firstBoard[0].task.length,
+                }
+              );
+              return true;
+            }
+
+            // didStart가 아닌 곳으로 이동한 경우
+            await transactionalEntityManager.update(
+              Task,
+              { id },
+              {
+                board: null,
+                boardRowIndex: null,
+                sprintRowIndex: newSprint.task.length,
+                sprint: newSprint,
+              }
+            );
+
+            console.log(5.3, "스프린트 이동과 index변경 종료");
+            return true;
+          }
+
+          if (basicOptions) {
+            await transactionalEntityManager.update(
+              Task,
+              { id },
+              {
+                ...basicOptions,
+              }
+            );
+            return true;
           }
 
           return false; // FIXME

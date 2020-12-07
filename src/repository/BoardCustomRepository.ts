@@ -139,7 +139,10 @@ export class BoardRepository extends Repository<Board> {
                   { id: task.id },
                   {
                     board: newBoard,
-                    boardRowIndex: task.boardRowIndex + tasks.length,
+                    boardRowIndex:
+                      task.boardRowIndex !== null
+                        ? task.boardRowIndex + tasks.length
+                        : null,
                   }
                 );
                 resolve(true);

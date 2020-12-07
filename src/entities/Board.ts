@@ -46,7 +46,7 @@ export default class Board extends BaseEntity {
 
   @Field(() => [Task], { nullable: true })
   @OneToMany(() => Task, (task) => task.board)
-  task?: Task[];
+  task: Task[] | null;
 
   @OneToMany(
     () => TaskNotification,
