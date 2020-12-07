@@ -21,7 +21,7 @@ interface QueryParamIFC {
 }
 
 interface ParamIFC {
-  [key: string]: Buffer;
+  [key: string]: string;
 }
 
 export type MyContext = Context<UserObject> & {

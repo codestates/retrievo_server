@@ -4,7 +4,6 @@ import { BoardResolver } from "./board";
 import { SprintResolver } from "./sprint";
 import { TaskResolver } from "./task";
 
-
 const resolvers = [
   UserResolver,
   ProjectResolver,

@@ -26,7 +26,7 @@ export default class Sprint extends BaseEntity {
   title!: string;
 
   @Field({ nullable: true })
-  @Column()
+  @Column({ nullable: true })
   description?: string;
 
   @Field(() => Boolean, { defaultValue: false })
@@ -42,11 +42,11 @@ export default class Sprint extends BaseEntity {
   row: number;
 
   @Field(() => String, { nullable: true })
-  @Column({ type: "timestamp", name: "due_date" })
+  @Column({ type: "timestamp", name: "due_date", nullable: true })
   dueDate?: Date;
 
   @Field(() => String, { nullable: true })
-  @Column({ type: "timestamp", name: "started_at" })
+  @Column({ type: "timestamp", name: "started_at", nullable: true })
   startedAt?: Date;
 
   @Field(() => String)
@@ -62,7 +62,7 @@ export default class Sprint extends BaseEntity {
   })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
-  project!: Project;
+  project!: Project | string;
 
   @OneToMany(
     () => SprintNotification,
