@@ -4,7 +4,7 @@ import {
   Arg,
   Query,
   Mutation,
-  // UseMiddleware,
+  UseMiddleware,
 } from "type-graphql";
 // import { getCustomRepository } from "typeorm";
 // import { getManager } from "typeorm";
@@ -33,14 +33,13 @@ import { SprintOptionInput } from "./types/SprintOptionInput";
 import sprintRowDnd from "../utils/sprintRowDnd";
 
 // /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
-// import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
+import checkAuthStatus from "../middleware/checkAuthStatus";
+import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
   async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
       // const projectId = prod
@@ -51,14 +50,19 @@ export class SprintResolver {
         relations: [
           "task",
           "task.sprint",
+          "task.userTask",
+          "task.userTask.user",
+          "task.taskLabel",
+          "task.taskLabel.label",
+          "task.board",
           "sprintNotification",
           "sprintNotification.sprint",
           "project",
           "project.sprint",
         ],
       });
+
       if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-      console.log(sprint);
 
       return { sprint };
     } catch (err) {
@@ -67,7 +71,7 @@ export class SprintResolver {
   }
 
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission]) // FIXME : checkProjectPermission
   async getSprints(
     @Ctx() { req }: MyContext
   ): Promise<Sprint[] | SprintResponse> {
@@ -81,6 +85,11 @@ export class SprintResolver {
         relations: [
           "task",
           "task.sprint",
+          "task.userTask",
+          "task.userTask.user",
+          "task.taskLabel",
+          "task.taskLabel.label",
+          "task.board",
           "sprintNotification",
           "sprintNotification.sprint",
           "project",
@@ -97,7 +106,11 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([
+    checkAuthStatus,
+    checkProjectPermission,
+    checkAdminPermission,
+  ]) // FIXME : checkProjectPermission
   async createSprint(
     @Arg("title") title: string,
     @Ctx() context: MyContext
@@ -135,7 +148,11 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([
+    checkAuthStatus,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
     @Ctx() context: MyContext
@@ -256,7 +273,11 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([
+    checkAuthStatus,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async deleteSprint(
     // @Ctx() context: MyContext,
     @Arg("id") id: string
@@ -276,7 +297,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async readSprintNotification(
     // @Ctx() context: MyContext,
     @Arg("id") id: string
