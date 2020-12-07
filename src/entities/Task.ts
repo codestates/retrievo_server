@@ -9,6 +9,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Generated,
 } from "typeorm";
 import Sprint from "./Sprint";
 import Board from "./Board";
@@ -38,6 +39,11 @@ export default class Task extends BaseEntity {
   @Field()
   @Column()
   description!: string;
+
+  @Field(() => Number)
+  @Column({ name: "task_index" })
+  @Generated("increment")
+  taskIndex: number;
 
   @Field(() => Number)
   @Column({ name: "board_row_index", default: 0 })
