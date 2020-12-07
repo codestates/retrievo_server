@@ -15,9 +15,25 @@ declare global {
 type UserObject = {
   userId?: string;
 }; // FIXME
+
+interface QueryParamIFC {
+  [key: string]: string;
+}
+
+interface ParamIFC {
+  [key: string]: Buffer;
+}
+
 export type MyContext = Context<UserObject> & {
   req: Request & {
-    session: Session & Partial<SessionData> & { passport?: { user?: string } };
+    session: Session &
+      Partial<SessionData> & {
+        passport?: { user?: string };
+        projectId?: string;
+        invitationToken?: string;
+      };
+    query: QueryParamIFC;
+    params: ParamIFC;
   };
   res: Response;
   redis: Redis;

@@ -15,6 +15,7 @@ import Board from "./Board";
 import SprintNotification from "./SprintNotification";
 import CommentNotification from "./CommentNotification";
 import TaskNotification from "./TaskNotification";
+import Task from "./Task";
 
 @ObjectType()
 @Entity()
@@ -28,8 +29,8 @@ export default class Project extends BaseEntity {
   name!: string;
 
   @Field()
-  @Column()
-  logo: string;
+  @Column({ nullable: true })
+  logo?: string;
 
   @Field(() => String)
   @CreateDateColumn({ name: "created_at" })
@@ -39,9 +40,10 @@ export default class Project extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [ProjectPermission], { nullable: true })
   @OneToMany(
     () => ProjectPermission,
-    (projectPermission) => projectPermission.id
+    (projectPermission) => projectPermission.project
   )
   projectPermissions?: ProjectPermission[];
 
@@ -66,9 +68,15 @@ export default class Project extends BaseEntity {
   @OneToMany(() => Sprint, (sprint) => sprint.project)
   sprint?: Sprint[];
 
+  @Field(() => [Board])
   @OneToMany(() => Board, (board) => board.project)
   board?: Board[];
 
+  @Field(() => [Label])
   @OneToMany(() => Label, (label) => label.project)
   label?: Label[];
+
+  @Field(() => [Task])
+  @OneToMany(() => Task, (task) => task.project)
+  task?: Task[];
 }

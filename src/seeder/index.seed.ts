@@ -27,13 +27,15 @@ export default class CreateSeeds implements Seeder {
     const projectNum = 10;
 
     // NOTE USER;
-    const groupOfUsers = await factory(User)()
-      .map(async (user: User) => {
-        const socialLogin = await factory(SocialLogin)().create();
-        // NOTE socialLogin created;
-        return Object.assign(user, { socialLogin });
-      })
-      .createMany(userNum);
+    const groupOfSocialLogins = await factory(SocialLogin)().makeMany(userNum);
+    const groupOfUsers = await factory(User)().createMany(userNum);
+    let socialLoginIndex = 0;
+    for await (const socialLogin of groupOfSocialLogins) {
+      const user = groupOfUsers[socialLoginIndex];
+      Object.assign(socialLogin, { user });
+      await factory(SocialLogin)().create(socialLogin);
+      socialLoginIndex++;
+    }
 
     // NOTE Project Relations Created
     const projects = await factory(Project)().createMany(projectNum);
@@ -87,17 +89,16 @@ export default class CreateSeeds implements Seeder {
       let taskIndex = 0;
       for await (const task of groupOfTasks) {
         let boardIndex = taskIndex % boardNum;
+        console.log("boardIndex:", boardIndex);
         let sprintIndex = taskIndex % sprintNum;
         Object.assign(task, {
           sprint: groupOfSprints[sprintIndex],
           board: groupOfBoards[boardIndex],
-          boardRowIndex: boardIndex,
-          sprintRowIndex: sprintIndex,
+          boardRowIndex: Math.floor(taskIndex / boardNum),
+          sprintRowIndex: Math.floor(taskIndex / sprintNum),
         });
-
-        await factory(Task)().create(task);
-
         taskIndex += 1;
+        await factory(Task)().create(task);
       }
 
       // NOTE: tasklabel

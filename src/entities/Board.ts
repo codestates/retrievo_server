@@ -25,7 +25,9 @@ export default class Board extends BaseEntity {
   @Column()
   title!: string;
 
-  @ManyToOne(() => Project, (project) => project.board)
+  @ManyToOne(() => Project, (project) => project.board, {
+    onDelete: "CASCADE",
+  })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project: Project;
@@ -42,8 +44,9 @@ export default class Board extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [Task], { nullable: true })
   @OneToMany(() => Task, (task) => task.board)
-  task: Task[];
+  task?: Task[];
 
   @OneToMany(
     () => TaskNotification,

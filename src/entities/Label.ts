@@ -26,12 +26,14 @@ export default class Label extends BaseEntity {
   @Column()
   color!: string;
 
-  @ManyToOne(() => Project, (project) => project.label)
+  @ManyToOne(() => Project, (project) => project.label, {
+    onDelete: "CASCADE",
+  })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)
+  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
   @Field(() => TaskLabel)
   task?: TaskLabel[];
 }

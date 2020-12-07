@@ -22,7 +22,7 @@ export default class File extends BaseEntity {
   @Column({ name: "file_link" })
   fileLink!: string;
 
-  @ManyToOne(() => Task, (task) => task.file)
+  @ManyToOne(() => Task, (task) => task.file, { onDelete: "CASCADE" })
   @Field(() => Task)
   @JoinColumn({ name: "task_id" })
   task!: string;

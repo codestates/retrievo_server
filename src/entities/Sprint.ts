@@ -57,7 +57,9 @@ export default class Sprint extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
-  @ManyToOne(() => Project, (project) => project.sprint)
+  @ManyToOne(() => Project, (project) => project.sprint, {
+    onDelete: "CASCADE",
+  })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project!: Project;
@@ -68,6 +70,7 @@ export default class Sprint extends BaseEntity {
   )
   sprintNotification?: SprintNotification[];
 
+  @Field(() => [Task])
   @OneToMany(() => Task, (task) => task.sprint)
-  task?: Task;
+  task?: Task[];
 }

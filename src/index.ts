@@ -10,19 +10,17 @@ import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
 import dotenv from "dotenv-safe";
-import { UserResolver } from "./resolvers/user";
+import resolvers from "./resolvers";
 import { COOKIE_NAME, prod } from "./constants";
+
 // local
 // passport need env
 dotenv.config({ example: ".env" });
 /* eslint-disable */
-// import "./services/authService";
 import passport from "./services/authService";
-// import { redis } from "../index";
 
 // redis Setting (before apollo middleware)
 const RedisStore = connectRedis(session);
-// eslint-disable-next-line import/prefer-default-export
 export const redis = new Redis();
 
 const main = async () => {
@@ -61,14 +59,6 @@ const main = async () => {
 
   app.use(passport.initialize());
   app.use(passport.session());
-  //ts-disable
-  // app.post(
-  //   "/auth/local",
-  //   myPassport.authenticate("graphql-local", [
-  //     "testKj@rockpaperqueens.com",
-  //     "123123",
-  //   ])
-  // );
 
   app.get(
     "/auth/google",
@@ -96,12 +86,10 @@ const main = async () => {
     })
   );
 
-  // passport test end
-
   // apollo Setting
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [UserResolver],
+      resolvers,
       validate: false,
     }),
     context: ({ req, res }) => {

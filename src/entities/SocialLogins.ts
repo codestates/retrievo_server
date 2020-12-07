@@ -5,6 +5,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   OneToOne,
+  JoinColumn,
   // JoinColumn,
 } from "typeorm";
 import User from "./User";
@@ -45,28 +46,7 @@ export default class SocialLogin extends BaseEntity {
   })
   socialProvider!: socialProviderType;
 
-  // user의 pk를 참조해야함
   @OneToOne(() => User, (user) => user.socialLogin, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
   user: User;
-  // specify inverse side as a second parameter
 }
-
-// const paul = `
-// 작품명 Cascade가 뭔가요?
-//  --      ---
-// \  \   /   /
-// \    \/   /
-//  \  ()     /
-//   \     /
-//    \  /
-//     \/
-
-// \\\ \\ \
-// \\ \ \\\
-// \\ \\\\\\ \\\\
-
-// \\\\ \\\\\ \\\\
-//  \\\\\ \\\\\ \\\\\
-//  \\\\ \\\\ \\\\\
-//   \ \\ \ \ \\ \ \\
-// `;

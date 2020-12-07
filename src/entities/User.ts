@@ -7,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToOne,
-  JoinColumn,
   OneToMany,
 } from "typeorm";
 import SocialLogin from "./SocialLogins";
@@ -50,10 +49,7 @@ export default class User extends BaseEntity {
   @Column()
   username!: string;
 
-  // owner의 OneToOne은 관계성을 지정함
-  // 이제 확실해졌음 지워질 놈이 cascade 설정해야함
   @OneToOne(() => SocialLogin, (socialLogin) => socialLogin.user)
-  @JoinColumn({ name: "socialLogin_id" }) // 상대편의 id 참조.
   socialLogin?: SocialLogin;
 
   @Field({ nullable: true })
@@ -83,6 +79,7 @@ export default class User extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [ProjectPermission])
   @OneToMany(
     () => ProjectPermission,
     (projectPermission) => projectPermission.user
@@ -113,6 +110,7 @@ export default class User extends BaseEntity {
   )
   commentTarget?: CommentNotification[];
 
+  @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.user)
   comment?: Comment[];
 

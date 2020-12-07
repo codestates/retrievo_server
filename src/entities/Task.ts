@@ -12,6 +12,7 @@ import {
 } from "typeorm";
 import Sprint from "./Sprint";
 import Board from "./Board";
+import Project from "./Project";
 import Comment from "./Comment";
 import File from "./File";
 import UserTask from "./UserTask";
@@ -66,9 +67,11 @@ export default class Task extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
 
+  @Field(() => [Comment])
   @OneToMany(() => Comment, (comment) => comment.task)
   comment?: Comment[];
 
+  @Field(() => [File])
   @OneToMany(() => File, (file) => file.task)
   file?: File[];
 
@@ -84,19 +87,26 @@ export default class Task extends BaseEntity {
   )
   taskNotification?: TaskNotification[];
 
-  @ManyToOne(() => Sprint, (sprint) => sprint.task)
-  @Field(() => Sprint, { nullable: true })
+  @ManyToOne(() => Sprint, (sprint) => sprint.task, { onDelete: "CASCADE" })
+  @Field(() => Sprint)
   @JoinColumn({ name: "sprint_id" })
   sprint?: Sprint;
 
-  @ManyToOne(() => Board, (board) => board.task)
-  @Field(() => String)
+  @ManyToOne(() => Board, (board) => board.task, { onDelete: "SET NULL" })
+  @Field(() => Board)
   @JoinColumn({ name: "board_id" })
   board!: Board;
 
+  @ManyToOne(() => Project, (project) => project.task, { onDelete: "SET NULL" })
+  @Field(() => Project)
+  @JoinColumn({ name: "project_id" })
+  project!: Project;
+
   @OneToMany(() => UserTask, (userTask) => userTask.task)
+  @Field(() => [UserTask], { nullable: true })
   userTask?: UserTask[];
 
-  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
+  @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)
+  @Field(() => [TaskLabel], { nullable: true })
   taskLabel?: TaskLabel[];
 }
