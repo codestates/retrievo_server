@@ -11,6 +11,7 @@ import {
 
 /* Entities */
 // import User from "../entities/User";
+import { getRepository } from "typeorm";
 import Sprint from "../entities/Sprint";
 // import Project from "../entities/Project";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
@@ -22,37 +23,13 @@ import { prod } from "../constants";
 /* Types */
 import { MyContext } from "../types";
 import SprintResponse from "./types/SprintResponse";
+import { SprintOptionInput } from "./types/SprintOptionInput";
 
 // /* Middleware */
 // import checkIfGuest from "../middleware/checkIfGuest";
 // import checkAuthStatus from "../middleware/checkAuthStatus";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 // import checkAdminPermission from "../middleware/checkAdminPermission";
-
-/*
-SPRINT 정보 불러오기 RE-74 (first version)
-
- - 스프린트를 불러온다
-
-- 스프린트 하위에 있는 테스크를 불러온다
-
-스프린트들을 불러온다
-
-각 스프린트들의 하위 테스크를 불러온다
-
-스프린트 삭제 RE 76
-
-해당 스프린트를 삭제한다
-
-cascade 로 스프린트에 의존하고 있는 notification 을 지워야한다.
-
-스프린트 추가 RE 75
-
-스프린트를 생성해준다
-
-이때 참조키로 프로젝트 id를 갖고 있어야한다.
-  */
-
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
@@ -138,6 +115,109 @@ export class SprintResolver {
       // TODO Notification 생성 해줘야함.
 
       return { sprint };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  async updateSprint(
+    @Arg("options") options: SprintOptionInput,
+    @Ctx() context: MyContext
+  ): Promise<SprintResponse> {
+    const {
+      id,
+      title,
+      didStart,
+      isCompleted,
+      row,
+      dueDate,
+      startedAt,
+    } = options;
+
+    try {
+      const sprintRepository = getRepository(Sprint);
+      const sprint = await sprintRepository.findOne(id);
+      const { req } = context;
+      const projectId = prod
+        ? req.params.projectId
+        : "332053e6-45cd-4104-92db-000154a1af32";
+
+      if (!sprint) {
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      }
+
+      if (title) sprint.title = title;
+      if (didStart) sprint.didStart = didStart;
+      // ask의 boardId가 board.findOne(where({boardColumnIndex : 0, projec}))
+      // didStart === true -> 나를 제외한
+      // task 의 입장
+      // didStart를 누르면 task의 boardId가 board.findOne(where({boardColumnIndex : 0, projec})) 0번인 board를 할당 받음
+      //
+      // isCompleted를 누르면 board가 전부 NULL이 됨
+      if (isCompleted) sprint.isCompleted = isCompleted;
+      if (startedAt) sprint.startedAt = startedAt; // 프론트엔드에서 처리
+      if (dueDate) sprint.dueDate = dueDate;
+
+      // 아래는 row 만 수정
+      if (row) {
+        const prevRow = sprint.row;
+        const targetRow = row;
+        const targetSprint = await sprintRepository.findOne({
+          where: { row: targetRow, project: projectId },
+        });
+        const updatedSprints = [];
+
+        if (!targetSprint) {
+          return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+        }
+
+        // NOTE Swap인 경우
+        if (Math.abs(prevRow - targetRow) === 1) {
+          sprint.row = targetRow;
+          targetSprint.row = prevRow;
+          updatedSprints.push(sprint, targetSprint);
+        } else {
+          sprint.row = targetRow;
+          updatedSprints.push(sprint);
+
+          const num = prevRow > targetRow ? 1 : -1;
+          const start = prevRow > targetRow ? targetRow : prevRow + 1; // 위에서 아래
+          const end = prevRow > targetRow ? prevRow - 1 : targetRow; // 아래에서 위
+
+          const sprintsToBeUpdated = await sprintRepository
+            .createQueryBuilder("sprint")
+            .where(`sprint.project = ${projectId}`)
+            .andWhere(`sprint.row BETWEEN '${start}' AND '${end}'`)
+            .getMany();
+
+          console.log(
+            "🚀 ~ file: sprint.ts ~ line 177 ~ SprintResolver ~ sprintsToBeChanged",
+            sprintsToBeUpdated
+          );
+
+          sprintsToBeUpdated.forEach((sprint) => {
+            Object.assign(sprint, { row: sprint.row + num });
+            updatedSprints.push(sprint);
+          });
+
+          console.log(
+            "🚀 ~ file: sprint.ts ~ line 177 ~ SprintResolver ~ sprintsToBeChanged",
+            updatedSprints
+          );
+        }
+
+        if (updatedSprints !== undefined) {
+          updatedSprints.map(async (sprint) => {
+            await sprintRepository.save(sprint);
+          });
+        }
+      }
+      // 위는 row 만 수정
+
+      await sprintRepository.save(sprint);
+      return { success: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }

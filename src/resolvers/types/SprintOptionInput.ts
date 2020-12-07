@@ -1,15 +1,27 @@
 import { InputType, Field } from "type-graphql";
 // test
 @InputType()
-export class UsernamePasswordInput {
+export class SprintOptionInput {
   @Field()
-  title: string;
+  id!: string;
 
   @Field()
-  password: string;
+  title?: string;
 
   @Field()
-  email: string;
+  didStart?: boolean;
+
+  @Field()
+  isCompleted?: boolean;
+
+  @Field()
+  row?: number;
+
+  @Field()
+  dueDate?: Date;
+
+  @Field()
+  startedAt?: Date;
 }
 
-export default UsernamePasswordInput;
+export default SprintOptionInput;
