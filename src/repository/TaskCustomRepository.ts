@@ -19,7 +19,7 @@ export class TaskRepository extends Repository<Task> {
         boardId,
         sprintId,
         newBoardRowIndex,
-        // newSprintRowIndex,
+        newSprintRowIndex,
       } = taskUpdateInput;
 
       return await getManager().transaction(
@@ -194,13 +194,9 @@ export class TaskRepository extends Repository<Task> {
           // SprintId만 있는 경우
 
           // SprintId가 없는 경우
-          if (sprintId) {
+          if (sprintId && newSprintRowIndex !== undefined) {
+            console.log("스프린트를 이동하고 인덱스도 이동하는 경우");
             // TODO
-            // sprintId || boardId가 존재할 때 -> 해당하는 모든 테스크의 index 옮기기
-
-            // 1. 스프린트 내에서 인데스만 변경되는 경우
-            // 1-a. 그냥 하던대로 위치 바꿔주기
-
             // 2. 스프린트를 이동하고 인덱스도 이동하는 경우
             // 2-a. 원래 있던 스프린트에서 task삭제 후 모든 뒷쪽 task 인덱스 -1해주기
             // if (didStart으로 이동한 경우){
@@ -223,6 +219,56 @@ export class TaskRepository extends Repository<Task> {
               { id },
               { sprint, sprintRowIndex: sprint.task.length }
             );
+          }
+
+          if (!sprintId && newSprintRowIndex !== undefined) {
+            console.log("스프린트내에서 index 변경시");
+            // 1. 스프린트 내에서 인데스만 변경되는 경우
+            // 1-a. 그냥 하던대로 위치 바꿔주기
+            const oldSprintRowIndex = task.sprintRowIndex;
+            if (oldSprintRowIndex === newSprintRowIndex) return false;
+            if (newSprintRowIndex < 0) return false;
+            console.log("SA-1", "타겟 인덱스가 유의미하지 않은 경우 확인");
+
+            const asc = oldSprintRowIndex < newSprintRowIndex;
+            const start = asc ? oldSprintRowIndex + 1 : newSprintRowIndex;
+            const end = asc ? newSprintRowIndex : oldSprintRowIndex - 1;
+
+            // NOTE: Task의 sprint 내 이동에 영향을 받는 다른 Task들을 이동
+            const groupOfTasks = await Task.find({
+              sprint: task.sprint,
+            });
+            console.log("groupOfTasks", groupOfTasks);
+            const targetTasks = groupOfTasks.filter((task) => {
+              return task.sprintRowIndex >= start && task.sprintRowIndex <= end;
+            });
+            console.log("targetTasks", targetTasks);
+
+            await Promise.all(
+              targetTasks.map(async (currnetTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve) => {
+                  const curIndex = Number(currnetTask.sprintRowIndex);
+                  await transactionalEntityManager.update(
+                    Task,
+                    { id: currnetTask.id },
+                    {
+                      sprintRowIndex: asc ? curIndex - 1 : curIndex + 1,
+                    }
+                  );
+                  resolve(true);
+                });
+              })
+            );
+
+            // TODO Task update해주기
+            await transactionalEntityManager.update(
+              Task,
+              { id },
+              { sprintRowIndex: newSprintRowIndex }
+            );
+            console.log("같은 스프린트 내 index 변경 완료");
+            return true;
           }
 
           if (options) {
