@@ -11,9 +11,12 @@ import {
 
 /* Entities */
 // import User from "../entities/User";
-import { getRepository } from "typeorm";
+import { getConnection, getRepository } from "typeorm";
 import Board from "../entities/Board";
 import Sprint from "../entities/Sprint";
+import SprintNotification, {
+  sprintNotificationType,
+} from "../entities/SprintNotification";
 import Task from "../entities/Task";
 
 // import Project from "../entities/Project";
@@ -45,9 +48,17 @@ export class SprintResolver {
       //   : "332053e6-45cd-4104-92db-000154a1af32";
 
       const sprint = await Sprint.findOne(id, {
-        relations: ["task", "task.sprint"],
+        relations: [
+          "task",
+          "task.sprint",
+          "sprintNotification",
+          "sprintNotification.sprint",
+          "project",
+          "project.sprint",
+        ],
       });
       if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      console.log(sprint);
 
       return { sprint };
     } catch (err) {
@@ -67,14 +78,15 @@ export class SprintResolver {
 
       const sprints = await Sprint.find({
         where: { project: projectId },
-        relations: ["task", "task.sprint"],
+        relations: [
+          "task",
+          "task.sprint",
+          "sprintNotification",
+          "sprintNotification.sprint",
+          "project",
+          "project.sprint",
+        ],
       });
-
-      // const sprints = await Sprint.createQueryBuilder()
-      //   .leftJoinAndSelect("sprint.task", "task")
-      //   .leftJoinAndSelect("task.taskLabel", "taskLabel")
-      //   .leftJoinAndSelect("taskLabel.label", "label")
-      //   .getMany();
 
       if (!sprints) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
@@ -145,7 +157,7 @@ export class SprintResolver {
       const { req } = context;
       const projectId = prod
         ? req.params.projectId
-        : "332053e6-45cd-4104-92db-000154a1af32";
+        : "c77cc15c-739a-4ef4-9e6c-fd43eb0d75a9";
 
       if (!projectId || !sprint)
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -187,7 +199,17 @@ export class SprintResolver {
             });
 
             sprint.didStart = didStart;
-            await sprintRepository.save(sprint);
+
+            getConnection().transaction(async (tm) => {
+              const sprintNotification = SprintNotification.create({
+                sprint,
+                project: projectId,
+                type: sprintNotificationType.SPRINT_START,
+              });
+              await tm.save(sprintNotification);
+              await sprintRepository.save(sprint);
+            });
+
             return await sprintRowDnd(0, sprint, projectId);
           }
 
@@ -202,7 +224,7 @@ export class SprintResolver {
         }
 
         if (isCompleted) {
-          if (sprint.didStart) {
+          if (!sprint.didStart) {
             return { error: generateError(errorKeys.BAD_REQUEST) };
           }
           sprint.isCompleted = isCompleted;
@@ -213,6 +235,16 @@ export class SprintResolver {
           tasks.map(async (task) => {
             const newTask = Object.assign(task, { board: null });
             await taskRepository.save(newTask);
+          });
+
+          getConnection().transaction(async (tm) => {
+            const sprintNotification = SprintNotification.create({
+              sprint,
+              project: projectId,
+              type: sprintNotificationType.SPRINT_END,
+            });
+            await tm.save(sprintNotification);
+            await sprintRepository.save(sprint);
           });
         }
       }
@@ -237,6 +269,26 @@ export class SprintResolver {
 
     try {
       await Sprint.delete(sprint);
+      return { success: true };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  async readSprintNotification(
+    // @Ctx() context: MyContext,
+    @Arg("id") id: string
+  ): Promise<SprintResponse> {
+    const sprintNotification = await SprintNotification.findOne(id);
+
+    if (!sprintNotification) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+
+    try {
+      await SprintNotification.update(sprintNotification.id, { isRead: true });
       return { success: true };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
