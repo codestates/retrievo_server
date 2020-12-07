@@ -25,21 +25,21 @@ export default class Sprint extends BaseEntity {
   @Column()
   title!: string;
 
-  @Field({ nullable: true })
+  @Field()
   @Column({ nullable: true })
   description?: string;
 
   @Field(() => Boolean, { defaultValue: false })
   @Column({ name: "did_start", default: false })
-  didStart: boolean;
+  didStart!: boolean;
 
   @Field(() => Boolean, { defaultValue: false })
   @Column({ name: "is_completed", default: false })
-  isCompleted: boolean;
+  isCompleted!: boolean;
 
   @Field(() => Number)
   @Column({ name: "row" })
-  row: number;
+  row!: number;
 
   @Field(() => String, { nullable: true })
   @Column({ type: "timestamp", name: "due_date", nullable: true })
@@ -51,11 +51,11 @@ export default class Sprint extends BaseEntity {
 
   @Field(() => String)
   @CreateDateColumn({ name: "created_at" })
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => String)
   @UpdateDateColumn({ name: "updated_at" })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ManyToOne(() => Project, (project) => project.sprint, {
     onDelete: "CASCADE",
