@@ -62,7 +62,7 @@ export default class Sprint extends BaseEntity {
   })
   @Field(() => Project)
   @JoinColumn({ name: "project_id" })
-  project!: Project;
+  project!: Project | string;
 
   @OneToMany(
     () => SprintNotification,

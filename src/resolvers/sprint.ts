@@ -3,7 +3,7 @@ import {
   Ctx,
   Arg,
   Query,
-  // Mutation,
+  Mutation,
   // UseMiddleware,
 } from "type-graphql";
 // import { getCustomRepository } from "typeorm";
@@ -57,10 +57,7 @@ cascade 로 스프린트에 의존하고 있는 notification 을 지워야한다
 export class SprintResolver {
   @Query(() => SprintResponse)
   // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async getSprint(
-    // @Ctx() { _ }: MyContext,
-    @Arg("id") id: string
-  ): Promise<SprintResponse> {
+  async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
       // const projectId = prod
       //   ? req.params
@@ -106,50 +103,43 @@ export class SprintResolver {
     }
   }
 
-  // @Mutation(() => SprintResponse)
+  @Mutation(() => SprintResponse)
   // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
-  // async createSprint(
-  //   @Arg("title") title: string,
-  //   @Ctx() { req }: MyContext
-  // ): Promise<SprintResponse> {
-  //   // FIXME : const { projectId } = req.query;
-  //   const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
+  async createSprint(
+    @Arg("title") title: string,
+    @Ctx() context: MyContext
+  ): Promise<SprintResponse> {
+    const { req } = context;
 
-  //   try {
-  //     const project = await Project.findOne({
-  //       where: { id: projectId },
-  //       relations: ["board"],
-  //     });
+    const projectId = prod
+      ? req.params.projectId
+      : "332053e6-45cd-4104-92db-000154a1af32";
 
-  //     const duplicated = project?.board?.filter((board) => {
-  //       return board.title === title;
-  //     });
+    if (!projectId) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+    // 전체 스프린트의 개수를 불러오고 (count)
+    // row = spinrts.length-1
+    try {
+      const sprints = await Sprint.find({
+        where: { project: projectId },
+        relations: ["project", "task"],
+      });
 
-  //     if (duplicated?.length)
-  //       return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
+      const row = sprints.length ? sprints.length - 1 : 0;
+      // const project = await Project.findOne(projectId);
 
-  //     const boardColumnIndex = project?.board?.length;
+      const sprint = await Sprint.create({
+        title,
+        row,
+        project: projectId,
+      }).save();
 
-  //     await Board.create({
-  //       title,
-  //       project,
-  //       boardColumnIndex,
-  //     }).save();
-
-  //     const newProject = await Project.findOne({
-  //       where: { id: projectId },
-  //       relations: ["sprint", "sprint.task"],
-  //     });
-
-  //     if (!newProject) {
-  //       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //     }
-  //     return { project: newProject };
-  //   } catch (err) {
-  //     console.log("Board create Mutation error:", err);
-  //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //   }
-  // }
+      return { sprint };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 
   // @Mutation(() => SprintResponse)
   // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
