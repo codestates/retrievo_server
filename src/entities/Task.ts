@@ -112,8 +112,11 @@ export default class Task extends BaseEntity {
   @JoinColumn({ name: "board_id" })
   board: Board | null;
 
-  @ManyToOne(() => Project, (project) => project.task, { onDelete: "SET NULL" })
-  @Field(() => Project)
+  @ManyToOne(() => Project, (project) => project.task, {
+    onDelete: "SET NULL",
+    nullable: true,
+  })
+  @Field(() => Project, { nullable: true })
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
