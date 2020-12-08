@@ -73,22 +73,18 @@ export class LabelResolver {
     }
   }
 
-  // @Mutation(() => LabelResponse)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : , checkIfGuest, checkAdminPermission checkProjectPermission
-  // async deleteLabel(
-  //   @Arg("id") id: string,
-  //   @Arg("newBoardId") newBoardId: string,
-  //   @Ctx() { req }: MyContext
-  // ): Promise<LabelResponse> {
-  //   console.log(req.query.projectId);
-  //   // FIXME : const { projectId } = req.query;
-  //   const projectId = "50c97f43-4b30-4a8b-8d57-2cd68e739425";
-  //   try {
-  //     return true;
-  //   } catch (err) {
-  //     return false;
-  //   }
-  // }
+  @Mutation(() => Boolean)
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  async deleteLabel(@Arg("id") id: string): Promise<boolean> {
+    try {
+      const deleteRes = await Label.delete({ id });
+      if (!deleteRes.affected) return false;
+      return true;
+    } catch (err) {
+      console.log("Label delete Mutation error:", err);
+      return false;
+    }
+  }
 }
 
 export default LabelResolver;
