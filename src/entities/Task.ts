@@ -116,12 +116,12 @@ export default class Task extends BaseEntity {
     onDelete: "SET NULL",
     nullable: true,
   })
-  @Field(() => Project, { nullable: true })
+  @Field(() => Project)
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  @OneToMany(() => UserTask, (userTask) => userTask.task)
   @Field(() => [UserTask], { nullable: true })
+  @OneToMany(() => UserTask, (userTask) => userTask.task, { nullable: true })
   userTask: UserTask[] | null;
 
   @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.task)

@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-return-assign */
 import {
   Resolver,
   Ctx,
@@ -21,7 +23,7 @@ import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-import { MyContext } from "../types";
+import { MyContext, ParamIFC } from "../types";
 import {
   ProjectReturnType,
   ProjectPermissionReturnType,
@@ -49,10 +51,112 @@ export class ProjectResolver {
         where: { id: projectId },
         relations: ["projectPermission", "projectPermission.projectId"],
       });
+
       if (project) return { project };
 
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Query(() => ProjectReturnType)
+  // @UseMiddleware(checkAuthStatus)
+  async taskSummary(@Ctx() context: MyContext): Promise<ProjectReturnType> {
+    const projectId = prod
+      ? context.req.query.projectId
+      : "d951d041-4297-4d6f-adb3-c932880fe83f";
+
+    if (!projectId) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+    try {
+      const project = await Project.findOne(projectId, {
+        relations: [
+          "projectPermissions",
+          "projectPermissions.project",
+          "projectPermissions.user",
+          "projectPermissions.user.userTask",
+          "projectPermissions.user.userTask.task",
+          "task",
+          "task.board",
+          "task.project",
+          "task.userTask",
+          "task.userTask.user",
+        ],
+      });
+
+      // project.projectPmierssions.user (프로젝트에 속한 모든 사람의 숫자)
+      // if (project?.projectPermissions) {
+      //   console.log(
+      //     "------project.projectPermissions",
+      //     project.projectPermissions
+      //   );
+      // }
+
+      if (project?.task) {
+        const totalTasks = project?.task;
+        const totalTasksCount = totalTasks.length;
+        const completedTasks = project?.task?.filter(
+          (task) => task.completed === true
+        );
+        const completedTasksCount = completedTasks.length;
+        const incompleteTasks = project?.task?.filter(
+          (task) => task.completed === false
+        );
+        const incompleteTasksCount = incompleteTasks.length;
+
+        const overdueTasks = project?.task?.filter((task) => {
+          if (task.endDate && !task.completed) {
+            return task.endDate.getTime() < new Date().getTime();
+          }
+          return false;
+        });
+        const overdueTasksCount = overdueTasks.length;
+
+        const honey: ParamIFC[] = [];
+        if (project?.projectPermissions) {
+          project.projectPermissions.forEach((projectPermission) => {
+            const object: ParamIFC = {
+              userId: projectPermission.user.id,
+              username: projectPermission.user.username,
+              avatar: projectPermission.user.avatar,
+              totalNumberOfTasks: projectPermission.user.userTask.length,
+              completedTasks: projectPermission.user.userTask.filter(
+                (userTask) => (userTask.task.completed = true)
+              ),
+              incompletedTasks: projectPermission.user.userTask.filter(
+                (userTask) => (userTask.task.completed = false)
+              ),
+              overdueTasks: projectPermission.user.userTask.filter(
+                (userTask) => {
+                  if (userTask.task.endDate && !userTask.task.completed) {
+                    return (
+                      userTask.task.endDate.getTime() < new Date().getTime()
+                    );
+                  }
+                  return false;
+                }
+              ),
+            };
+            honey.push(object);
+          });
+        }
+
+        const taskCountSummary = {
+          totalTasksCount,
+          completedTasksCount,
+          incompleteTasksCount,
+          overdueTasksCount,
+        };
+
+        const taskByAssignee = honey;
+
+        if (project) return { project, taskCountSummary, taskByAssignee };
+      }
+
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    } catch (err) {
+      console.log(err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -81,7 +185,7 @@ export class ProjectResolver {
         let projectPermission;
         if (user && project) {
           projectPermission = ProjectPermission.create({
-            user: user.id,
+            user,
             project: project.id,
             isAdmin: true,
           });

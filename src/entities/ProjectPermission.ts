@@ -22,12 +22,16 @@ export default class ProjectPermission extends BaseEntity {
   isAdmin: boolean;
 
   @Field(() => Project)
-  @ManyToOne(() => Project, (project) => project.id, { onDelete: "CASCADE" })
+  @ManyToOne(() => Project, (project) => project.projectPermissions, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "project_id" })
   project!: Project | string;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.id, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, (user) => user.projectPermissions, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "user_id" })
-  user!: User | string;
+  user!: User; // NOTE: type을 string으로 지정해야 할 수도 있음(user.id인 경우)
 }
