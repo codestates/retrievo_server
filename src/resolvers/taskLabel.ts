@@ -79,22 +79,18 @@ export class TaskLabelResolver {
     }
   }
 
-  // @Mutation(() => TaskResponse)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  // async createTask(
-  //   @Arg("options") options: TaskCreateInput,
-  //   @Ctx() { req }: MyContext
-  // ): Promise<TaskResponse> {
-  //   const projectId =
-  //     req.query.projectId || "7bc19d32-c4b4-404f-8cd1-b77379c29fa0";
-  //   console.log("projectId:", projectId);
-  //   try {
-  //     return { task: [task] };
-  //   } catch (err) {
-  //     console.log("Task create Mutation error:", err);
-  //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //   }
-  // }
+  @Mutation(() => Boolean)
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  async deleteTaskLabel(@Arg("id") id: string): Promise<boolean> {
+    try {
+      const deleteRes = await TaskLabel.delete({ id });
+      if (!deleteRes.affected || deleteRes.affected < 1) return false;
+      return true;
+    } catch (err) {
+      console.log("Task create Mutation error:", err);
+      return false;
+    }
+  }
 }
 
 export default TaskLabelResolver;
