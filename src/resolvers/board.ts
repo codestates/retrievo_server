@@ -6,7 +6,7 @@ import {
   Mutation,
   UseMiddleware,
 } from "type-graphql";
-import { getCustomRepository, getRepository } from "typeorm";
+import { getCustomRepository, getManager, getRepository } from "typeorm";
 
 /* Entities */
 import Board from "../entities/Board";
@@ -69,14 +69,14 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
   async createBoard(
     @Arg("title") title: string,
     @Ctx() { req }: MyContext
   ): Promise<BoardResponse> {
     console.log("req.query.projectId:", req.query.projectId);
     // FIXME : const { projectId } = req.query;
-    const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
+    const projectId = "04f025f8-234c-49b7-b9bf-7b7f94415569";
 
     try {
       const boards = await Board.find({
@@ -90,15 +90,37 @@ export class BoardResolver {
       if (duplicated?.length)
         return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
 
-      const boardColumnIndex = boards?.length;
-
+      const boardColumnIndex = boards?.length - 1;
+      // 마지막 보드의 인덱스 + 1
       const project = await Project.findOne({ id: projectId });
 
-      await Board.create({
-        title,
-        project,
-        boardColumnIndex,
-      }).save();
+      const em = getManager();
+      const transactionResult = await em.transaction(
+        async (transactionalEntityManager) => {
+          const updateRes = await transactionalEntityManager.update(
+            Board,
+            { project, boardColumnIndex: boards.length - 1 },
+            { boardColumnIndex: boards.length }
+          );
+
+          if (!updateRes.affected)
+            return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+          const tempNewBoard = await em.create(Board, {
+            title,
+            project,
+            boardColumnIndex,
+          });
+
+          const newBoard = await transactionalEntityManager.save(tempNewBoard);
+          if (!newBoard)
+            return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+
+          return { success: true };
+        }
+      );
+
+      if (transactionResult.error) return transactionResult;
 
       const newBoards = await Board.find({
         where: { project: projectId },
@@ -108,6 +130,7 @@ export class BoardResolver {
       if (!newBoards) {
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       }
+
       return { boards: newBoards };
     } catch (err) {
       console.log("Board create Mutation error:", err);
