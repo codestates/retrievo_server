@@ -33,5 +33,5 @@ export default class ProjectPermission extends BaseEntity {
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "user_id" })
-  user!: User; // NOTE: type을 string으로 지정해야 할 수도 있음(user.id인 경우)
+  user!: User | string; // NOTE: type을 string으로 지정해야 할 수도 있음(user.id인 경우)
 }

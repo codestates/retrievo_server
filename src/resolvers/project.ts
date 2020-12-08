@@ -10,6 +10,12 @@ import {
 } from "type-graphql";
 import { getConnection, getManager } from "typeorm";
 import { v4 as uuidV4 } from "uuid";
+import {
+  ReportSummaryType,
+  ProjectReturnType,
+  ProjectPermissionReturnType,
+  TasksByAssignee,
+} from "./types/ProjectResponse";
 
 /* Entities */
 import mailSender from "../services/mailerService";
@@ -23,11 +29,7 @@ import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-import { MyContext, ParamIFC } from "../types";
-import {
-  ProjectReturnType,
-  ProjectPermissionReturnType,
-} from "./types/ProjectResponse";
+import { MyContext } from "../types";
 
 /* Middleware */
 import checkIfGuest from "../middleware/checkIfGuest";
@@ -60,12 +62,12 @@ export class ProjectResolver {
     }
   }
 
-  @Query(() => ProjectReturnType)
+  @Query(() => ReportSummaryType)
   // @UseMiddleware(checkAuthStatus)
-  async taskSummary(@Ctx() context: MyContext): Promise<ProjectReturnType> {
+  async reportSummary(@Ctx() context: MyContext): Promise<ReportSummaryType> {
     const projectId = prod
       ? context.req.query.projectId
-      : "d951d041-4297-4d6f-adb3-c932880fe83f";
+      : "c77cc15c-739a-4ef4-9e6c-fd43eb0d75a9";
 
     if (!projectId) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
@@ -113,34 +115,62 @@ export class ProjectResolver {
         });
         const overdueTasksCount = overdueTasks.length;
 
-        const honey: ParamIFC[] = [];
+        const tasksByAssignee: TasksByAssignee[] = [];
+
         if (project?.projectPermissions) {
           project.projectPermissions.forEach((projectPermission) => {
-            const object: ParamIFC = {
-              userId: projectPermission.user.id,
-              username: projectPermission.user.username,
-              avatar: projectPermission.user.avatar,
-              totalNumberOfTasks: projectPermission.user.userTask.length,
-              completedTasks: projectPermission.user.userTask.filter(
-                (userTask) => (userTask.task.completed = true)
-              ),
-              incompletedTasks: projectPermission.user.userTask.filter(
-                (userTask) => (userTask.task.completed = false)
-              ),
-              overdueTasks: projectPermission.user.userTask.filter(
-                (userTask) => {
-                  if (userTask.task.endDate && !userTask.task.completed) {
-                    return (
-                      userTask.task.endDate.getTime() < new Date().getTime()
-                    );
+            if (typeof projectPermission.user !== "string") {
+              const object: TasksByAssignee = {
+                userId: projectPermission.user.id,
+                username: projectPermission.user.username,
+                avatar: projectPermission.user.avatar,
+                totalTasksCount: projectPermission.user.userTask.length,
+                completedTasksCount: projectPermission.user.userTask.filter(
+                  (userTask) => (userTask.task.completed = true)
+                ).length,
+                incompleteTasksCount: projectPermission.user.userTask.filter(
+                  (userTask) => (userTask.task.completed = false)
+                ).length,
+                overdueTasksCount: projectPermission.user.userTask.filter(
+                  (userTask) => {
+                    if (userTask.task.endDate && !userTask.task.completed) {
+                      return (
+                        userTask.task.endDate.getTime() < new Date().getTime()
+                      );
+                    }
+                    return false;
                   }
-                  return false;
-                }
-              ),
-            };
-            honey.push(object);
+                ).length,
+              };
+              tasksByAssignee.push(object);
+            }
           });
         }
+        /*
+        incompleteTasksByStatus
+        project.task
+          todo: taskcount
+          doing: taskcount
+          done : taskcount
+
+          filter -> countTodo
+          filter -> task.count === task.board.status todo
+
+          */
+
+        // NOTE 광주/판교 시민의 피가 뭍혀진 것이니 절대 지우지 마시오 O/<-<
+        // const incompleteTaskStatus: {
+        //   [key: string]: number;
+        // } = {};
+        // if (project.task) {
+        //   project.task.forEach((task) => {
+        //     if (task.board && !incompleteTaskStatus[task.board.title]) {
+        //       incompleteTaskStatus[task.board.title] = 1;
+        //     } else if (task.board && incompleteTaskStatus[task.board.title]) {
+        //       incompleteTaskStatus[task.board.title] += 1;
+        //     }
+        //   });
+        // }
 
         const taskCountSummary = {
           totalTasksCount,
@@ -149,14 +179,13 @@ export class ProjectResolver {
           overdueTasksCount,
         };
 
-        const taskByAssignee = honey;
+        // const taskByAssignee = honey;
 
-        if (project) return { project, taskCountSummary, taskByAssignee };
+        if (project) return { taskCountSummary, tasksByAssignee };
       }
 
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     } catch (err) {
-      console.log(err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }

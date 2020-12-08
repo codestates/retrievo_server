@@ -119,7 +119,7 @@ export class SprintResolver {
 
     const projectId = prod
       ? req.params.projectId
-      : "332053e6-45cd-4104-92db-000154a1af32"; // 332053e6-45cd-4104-92db-000154a1af32 //379fde06-2c64-4550-94ec-19d783dc9726
+      : "332053e6-45cd-4104-92db-000154a1af32";
 
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -139,8 +139,6 @@ export class SprintResolver {
         project: projectId,
       }).save();
 
-      // TODO Notification 생성 해줘야함.
-
       return { sprint };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -148,11 +146,11 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
     @Ctx() context: MyContext
@@ -206,8 +204,11 @@ export class SprintResolver {
 
           const taskRepository = getRepository(Task);
           if (didStart) {
-            tasks.map(async (task) => {
-              const newTask = Object.assign(task, { board: board?.id });
+            tasks.map(async (task, index) => {
+              const newTask = Object.assign(task, {
+                board: board?.id,
+                boardRowIndex: index,
+              });
               await taskRepository.save(newTask);
             });
 
@@ -230,9 +231,11 @@ export class SprintResolver {
             return await sprintRowDnd(0, sprint, projectId);
           }
 
+          /* didStart 가 false */
           tasks.map(async (task) => {
             const newTask = Object.assign(task, {
               board: null,
+              boardRowIndex: null,
             });
             await taskRepository.save(newTask);
           });
@@ -250,7 +253,10 @@ export class SprintResolver {
             where: { sprint: sprint.id },
           });
           tasks.map(async (task) => {
-            const newTask = Object.assign(task, { board: null });
+            const newTask = Object.assign(task, {
+              board: null,
+              boardRowIndex: null,
+            });
             await taskRepository.save(newTask);
           });
 

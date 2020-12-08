@@ -24,6 +24,7 @@ import { MyContext } from "../types";
 import { UsernamePasswordInput } from "./types/UsernamePasswordInput";
 import UserResponse from "./types/UserResponse";
 import ProjectListResponse from "./types/ProjectListResponse";
+import DeleteResponse from "./types/DeleteResponse";
 
 /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
@@ -33,7 +34,7 @@ import checkIfGuest from "../middleware/checkIfGuest";
 export class UserResolver {
   @Query(() => UserResponse)
   @UseMiddleware(checkAuthStatus)
-  async user(@Arg("id") id: string): Promise<UserResponse> {
+  async getUser(@Arg("id") id: string): Promise<UserResponse> {
     try {
       const user = await User.findOne({ id });
       if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
@@ -76,7 +77,6 @@ export class UserResolver {
   ): Promise<UserResponse> {
     const { redis, req } = context;
     try {
-      // NOTE 환경변수가 prod 면 hashPassword 작동여부 판단
       let hashed;
       if (prod) {
         hashed = await hashPassword(options.password);
@@ -135,6 +135,7 @@ export class UserResolver {
         email,
         password,
       });
+      console.log("user", user);
 
       if (user) {
         const localUser = await User.findOne({ email });
@@ -151,9 +152,9 @@ export class UserResolver {
           if (req.session.invitationToken) {
             await redis.del(req.session.invitationToken);
           }
-          await context.login(user);
-          return { user: localUser };
         }
+        await context.login(user);
+        return { user: localUser };
       }
       return {
         error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
@@ -193,27 +194,29 @@ export class UserResolver {
     }
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => DeleteResponse)
   @UseMiddleware(checkAuthStatus)
-  async deleteAccount(@Ctx() { req, res }: MyContext): Promise<boolean> {
+  async deleteAccount(@Ctx() { req, res }: MyContext): Promise<DeleteResponse> {
     const userId = req.session.passport?.user;
     try {
       const deleteRes = await User.delete({ id: userId });
-      if (!deleteRes.affected || deleteRes.affected < 1) return false;
+      if (!deleteRes.affected) {
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      }
 
       return new Promise((resolve) =>
         req.session.destroy((err) => {
           res.clearCookie(COOKIE_NAME);
           if (err) {
-            console.log(err);
-            resolve(false);
+            resolve({ error: generateError(errorKeys.INTERNAL_SERVER_ERROR) });
             return;
           }
-          resolve(true);
+          resolve({ success: true });
         })
       );
-    } catch (_) {
-      return false;
+    } catch (err) {
+      console.log("User Delete Mutation Error : ", err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
