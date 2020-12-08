@@ -89,6 +89,45 @@ export class CommentResolver {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
+
+  @Mutation(() => CommentResponse)
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission,
+  async updateComment(
+    @Arg("id") id: string,
+    @Arg("content") content: string,
+    @Ctx() { req }: MyContext
+  ): Promise<CommentResponse> {
+    try {
+      const comment = await Comment.findOne({
+        where: { id },
+        relations: ["user"],
+      });
+      if (!comment) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+      const userId = req.session.passport?.user;
+      const user = await User.findOne({ id: userId });
+      if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+      if (comment.user?.id !== userId)
+        return { error: generateError(errorKeys.AUTH_NO_PERMISSION) };
+
+      const updateRes = await Comment.update({ id }, { content });
+      if (!updateRes.affected)
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+
+      const updatedComment = await Comment.findOne({
+        where: { id },
+        relations: ["user", "task"],
+      });
+      if (!updatedComment)
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+
+      return { comment: [updatedComment] };
+    } catch (err) {
+      if (err.code === "22P02")
+        return { error: generateError(errorKeys.BAD_REQUEST) };
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 }
 
 export default CommentResolver;

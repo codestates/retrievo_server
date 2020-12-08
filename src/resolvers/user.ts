@@ -135,6 +135,7 @@ export class UserResolver {
         email,
         password,
       });
+      console.log("user", user);
 
       if (user) {
         const localUser = await User.findOne({ email });
