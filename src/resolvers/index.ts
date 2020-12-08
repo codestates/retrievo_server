@@ -6,6 +6,7 @@ import { TaskResolver } from "./task";
 import { TaskLabelResolver } from "./taskLabel";
 import { LabelResolver } from "./label";
 import { UserTaskResolver } from "./userTask";
+import { CommentResolver } from "./comment";
 
 const resolvers = [
   UserResolver,
@@ -16,5 +17,6 @@ const resolvers = [
   TaskLabelResolver,
   LabelResolver,
   UserTaskResolver,
+  CommentResolver,
 ] as const;
 export default resolvers;
