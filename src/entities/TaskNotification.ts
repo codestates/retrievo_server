@@ -47,10 +47,9 @@ export default class TaskNotification extends BaseEntity {
   @JoinColumn({ name: "target_id" })
   target?: User;
 
-  @Field(() => Board, { nullable: true })
+  @Field(() => Board)
   @ManyToOne(() => Board, (board) => board.taskNotification, {
     onDelete: "CASCADE",
-    nullable: true,
   })
   @JoinColumn({ name: "status_id" })
   status: Board;

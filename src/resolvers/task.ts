@@ -6,7 +6,7 @@ import {
   Mutation,
   UseMiddleware,
 } from "type-graphql";
-import { getCustomRepository } from "typeorm";
+import { getCustomRepository, getRepository } from "typeorm";
 
 /* Entities */
 import Task from "../entities/Task";
@@ -36,22 +36,39 @@ import checkAuthStatus from "../middleware/checkAuthStatus";
 export class TaskResolver {
   @Query(() => TaskResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async task(@Arg("id") id: string): Promise<TaskResponse> {
+  async getTask(@Arg("id") id: string): Promise<TaskResponse> {
     try {
-      const task = await Task.findOne({
-        where: { id },
-        relations: [
-          "board",
-          "sprint",
-          "userTask",
-          "userTask.user",
-          "taskLabel",
-          "taskLabel.label",
-          "file",
-          "comment",
-          "comment.user",
-        ],
-      });
+      // const task = await Task.findOne({
+      //   where: { id },
+      //   relations: [
+      //     "board",
+      //     "sprint",
+      //     "userTask",
+      //     "userTask.user",
+      //     "taskLabel",
+      //     "taskLabel.label",
+      //     "file",
+      //     "comment",
+      //     "comment.user",
+      //   ],
+      // });
+
+      const task = await getRepository(Task)
+        .createQueryBuilder("task")
+        .leftJoinAndSelect("task.board", "board")
+        .leftJoinAndSelect("task.sprint", "sprint")
+        .leftJoinAndSelect("task.userTask", "userTask")
+        .leftJoinAndSelect("userTask.user", "taskUser")
+        .leftJoinAndSelect("task.taskLabel", "taskLabel")
+        .leftJoinAndSelect("taskLabel.label", "label")
+        .leftJoinAndSelect("task.file", "file")
+        .leftJoinAndSelect("task.comment", "comment")
+        .leftJoinAndSelect("comment.user", "commentUser")
+        .where("task.id = :taskId")
+        .setParameter("taskId", id)
+        .orderBy("comment.createdAt", "ASC")
+        .getOne();
+
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { task: [task] };
     } catch (err) {
@@ -144,20 +161,22 @@ export class TaskResolver {
       const res = await taskRepository.updateTaskAndChangeIndex(options);
       if (!res) return { error: generateError(errorKeys.BAD_REQUEST) };
 
-      const task = await Task.findOne({
-        where: { id: options.id },
-        relations: [
-          "board",
-          "sprint",
-          "userTask",
-          "userTask.user",
-          "taskLabel",
-          "taskLabel.label",
-          "file",
-          "comment",
-          "comment.user",
-        ],
-      });
+      const task = await getRepository(Task)
+        .createQueryBuilder("task")
+        .leftJoinAndSelect("task.board", "board")
+        .leftJoinAndSelect("task.sprint", "sprint")
+        .leftJoinAndSelect("task.userTask", "userTask")
+        .leftJoinAndSelect("userTask.user", "taskUser")
+        .leftJoinAndSelect("task.taskLabel", "taskLabel")
+        .leftJoinAndSelect("taskLabel.label", "label")
+        .leftJoinAndSelect("task.file", "file")
+        .leftJoinAndSelect("task.comment", "comment")
+        .leftJoinAndSelect("comment.user", "commentUser")
+        .where("task.id = :taskId")
+        .setParameter("taskId", options.id)
+        .orderBy("comment.createdAt", "ASC")
+        .getOne();
+
       console.log("task:", task);
       console.log("taskId", options.id);
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
