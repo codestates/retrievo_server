@@ -21,8 +21,8 @@ export default class Comment extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field(() => String)
-  @Column({ name: "root_comment_id" })
+  @Field(() => String, { nullable: true })
+  @Column({ name: "root_comment_id", nullable: true })
   rootCommentId?: string;
 
   @Field(() => Task)
