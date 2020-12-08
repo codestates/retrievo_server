@@ -541,7 +541,7 @@ export class TaskRepository extends Repository<Task> {
             return true;
           }
 
-          return false; // FIXME
+          return false;
         }
       );
     } catch (err) {
@@ -549,16 +549,84 @@ export class TaskRepository extends Repository<Task> {
       return false;
     }
   }
-  // async updateTaskAndChangeBoardsIndex(
-  //   boardId: string,
-  //   newBoardId: string
-  // ): Promise<boolean> {
-  //   try {
-  //   } catch (err) {
-  //     console.log("Board Index Update Error:", err);
-  //     return false;
-  //   }
-  // }
+
+  async deleteTaskAndChangeIndice(taskId: string): Promise<boolean> {
+    console.log("Task 삭제 시작");
+    try {
+      const task = await Task.findOne({
+        where: { id: taskId },
+        relations: ["sprint", "board"],
+      });
+      if (!task) return false;
+
+      const originalBoardTasks = await Task.find({ board: task.board });
+      if (!originalBoardTasks) return false;
+
+      const sprintBoardTasks = originalBoardTasks.filter((currentTask) => {
+        if (currentTask.boardRowIndex !== null && task.boardRowIndex !== null)
+          return currentTask.boardRowIndex > task.boardRowIndex;
+        return false;
+      });
+
+      return await getManager().transaction(
+        async (transactionalEntityManager) => {
+          if (task.sprint.didStart) {
+            console.log("Board 인덱스 수정 시작");
+            await Promise.all(
+              sprintBoardTasks.map(async (currentTask) => {
+                // eslint-disable-next-line no-async-promise-executor
+                return new Promise(async (resolve) => {
+                  const curIndex = Number(currentTask.boardRowIndex);
+                  await transactionalEntityManager.update(
+                    Task,
+                    { id: currentTask.id },
+                    {
+                      boardRowIndex: curIndex - 1,
+                    }
+                  );
+                  resolve(true);
+                });
+              })
+            );
+          }
+
+          const originalSprintTasks = await Task.find({ sprint: task.sprint });
+          if (!originalSprintTasks) return false;
+
+          const sprintTargetTasks = originalSprintTasks.filter(
+            (currentTask) => {
+              return currentTask.sprintRowIndex > task.sprintRowIndex;
+            }
+          );
+
+          console.log("Sprint 인덱스 수정 시작");
+          await Promise.all(
+            sprintTargetTasks.map(async (targetTask, index) => {
+              console.log("------targetTask", index, targetTask);
+              // eslint-disable-next-line no-async-promise-executor
+              return new Promise(async (resolve) => {
+                const curIndex = Number(targetTask.sprintRowIndex);
+                await transactionalEntityManager.update(
+                  Task,
+                  { id: targetTask.id },
+                  { sprintRowIndex: curIndex - 1 }
+                );
+                resolve(true);
+              });
+            })
+          );
+
+          await transactionalEntityManager.delete(Task, { id: task.id });
+
+          console.log("task 지우기 완료");
+          return true;
+        }
+      );
+    } catch (err) {
+      console.log("Task delete repository Error:", err);
+      return false;
+    }
+  }
 }
 
 export default TaskRepository;
