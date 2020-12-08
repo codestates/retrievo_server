@@ -69,7 +69,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
   async createBoard(
     @Arg("title") title: string,
     @Ctx() { req }: MyContext
