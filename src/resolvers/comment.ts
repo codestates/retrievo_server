@@ -15,6 +15,7 @@ import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
 import { MyContext } from "../types";
+import CommentDeleteResponse from "./types/CommentDeleteResponse";
 
 // /* Middleware */
 // import checkIfGuest from "../middleware/checkIfGuest";
@@ -125,6 +126,36 @@ export class CommentResolver {
     } catch (err) {
       if (err.code === "22P02")
         return { error: generateError(errorKeys.BAD_REQUEST) };
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => CommentDeleteResponse)
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission,
+  async deleteComment(
+    @Arg("id") id: string,
+    @Ctx() { req }: MyContext
+  ): Promise<CommentDeleteResponse> {
+    try {
+      const comment = await Comment.findOne({
+        where: { id },
+        relations: ["user"],
+      });
+
+      if (!comment)
+        return { error: generateError(errorKeys.DATA_NOT_FOUND, "commentId") };
+
+      if (comment.user?.id !== req.session.passport?.user) {
+        return { error: generateError(errorKeys.AUTH_NO_PERMISSION, "userId") };
+      }
+
+      const deleteRes = await Comment.delete({ id });
+      if (!deleteRes.affected)
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+
+      return { success: true };
+    } catch (err) {
+      console.log("delete Comment error", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
