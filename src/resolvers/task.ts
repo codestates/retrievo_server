@@ -24,35 +24,19 @@ import { MyContext } from "../types";
 import TaskResponse from "./types/TaskResponse";
 import TaskCreateInput from "./types/TaskCreateInput";
 import TaskUpdateInput from "./types/TaskUpdateInput";
+import TaskDeleteResponse from "./types/TaskDeleteRespons";
 
 // /* Middleware */
 // import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 // import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
-
-// TODO : notification
 @Resolver()
 export class TaskResolver {
   @Query(() => TaskResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
   async getTask(@Arg("id") id: string): Promise<TaskResponse> {
     try {
-      // const task = await Task.findOne({
-      //   where: { id },
-      //   relations: [
-      //     "board",
-      //     "sprint",
-      //     "userTask",
-      //     "userTask.user",
-      //     "taskLabel",
-      //     "taskLabel.label",
-      //     "file",
-      //     "comment",
-      //     "comment.user",
-      //   ],
-      // });
-
       const task = await getRepository(Task)
         .createQueryBuilder("task")
         .leftJoinAndSelect("task.board", "board")
@@ -187,15 +171,15 @@ export class TaskResolver {
     }
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => TaskDeleteResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteTask(@Arg("id") id: string): Promise<boolean> {
+  async deleteTask(@Arg("id") id: string): Promise<TaskDeleteResponse> {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
       return await taskRepository.deleteTaskAndChangeIndice(id);
     } catch (err) {
       console.log("Board delete Mutation error catch:", err);
-      return false;
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 }

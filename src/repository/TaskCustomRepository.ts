@@ -7,6 +7,8 @@ import TaskUpdateInput from "../resolvers/types/TaskUpdateInput";
 import TaskNotification, {
   taskNotificationType,
 } from "../entities/TaskNotification";
+import TaskDeleteResponse from "../resolvers/types/TaskDeleteRespons";
+import generateError, { errorKeys } from "../utils/ErrorFactory";
 @EntityRepository(Task)
 export class TaskRepository extends Repository<Task> {
   async updateTaskAndChangeIndex(
@@ -546,17 +548,20 @@ export class TaskRepository extends Repository<Task> {
     }
   }
 
-  async deleteTaskAndChangeIndice(taskId: string): Promise<boolean> {
+  async deleteTaskAndChangeIndice(taskId: string): Promise<TaskDeleteResponse> {
     console.log("Task 삭제 시작");
     try {
       const task = await Task.findOne({
         where: { id: taskId },
         relations: ["sprint", "board"],
       });
-      if (!task) return false;
+      if (!task) {
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      }
 
       const originalBoardTasks = await Task.find({ board: task.board });
-      if (!originalBoardTasks) return false;
+      if (!originalBoardTasks)
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
       const sprintBoardTasks = originalBoardTasks.filter((currentTask) => {
         if (currentTask.boardRowIndex !== null && task.boardRowIndex !== null)
@@ -587,7 +592,8 @@ export class TaskRepository extends Repository<Task> {
           }
 
           const originalSprintTasks = await Task.find({ sprint: task.sprint });
-          if (!originalSprintTasks) return false;
+          if (!originalSprintTasks)
+            return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
           const sprintTargetTasks = originalSprintTasks.filter(
             (currentTask) => {
@@ -615,12 +621,12 @@ export class TaskRepository extends Repository<Task> {
           await transactionalEntityManager.delete(Task, { id: task.id });
 
           console.log("task 지우기 완료");
-          return true;
+          return { success: true };
         }
       );
     } catch (err) {
       console.log("Task delete repository Error:", err);
-      return false;
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 }

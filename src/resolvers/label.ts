@@ -17,6 +17,7 @@ import Project from "../entities/Project";
 /* Types */
 import { MyContext } from "../types";
 import LabelResponse from "./types/LabelResponse";
+import LabelDeleteResponse from "./types/LabelDeleteRespons";
 
 import LabelUpdateInput from "./types/LabelUpdateInput";
 // /* Middleware */
@@ -29,7 +30,7 @@ import checkAuthStatus from "../middleware/checkAuthStatus";
 export class LabelResolver {
   @Query(() => LabelResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async labels(@Ctx() { req }: MyContext): Promise<LabelResponse> {
+  async getlabels(@Ctx() { req }: MyContext): Promise<LabelResponse> {
     try {
       const projectId =
         req.params.projectId || "2654a702-a252-419f-a8b9-66fc3341b4d7";
@@ -73,16 +74,23 @@ export class LabelResolver {
     }
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => LabelDeleteResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteLabel(@Arg("id") id: string): Promise<boolean> {
+  async deleteLabel(@Arg("id") id: string): Promise<LabelDeleteResponse> {
     try {
       const deleteRes = await Label.delete({ id });
-      if (!deleteRes.affected) return false;
-      return true;
+      if (!deleteRes.affected)
+        return {
+          error: generateError(
+            errorKeys.INTERNAL_SERVER_ERROR,
+            "delete failed"
+          ),
+        };
+
+      return { success: true };
     } catch (err) {
       console.log("Label delete Mutation error:", err);
-      return false;
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 }
