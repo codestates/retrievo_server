@@ -170,7 +170,7 @@ export class TaskResolver {
 
   @Mutation(() => Boolean)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deletaTask(@Arg("id") id: string): Promise<boolean> {
+  async deleteTask(@Arg("id") id: string): Promise<boolean> {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
       return await taskRepository.deleteTaskAndChangeIndice(id);
