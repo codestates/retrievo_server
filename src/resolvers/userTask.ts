@@ -1,35 +1,20 @@
-import {
-  Resolver,
-  // Ctx,
-  Arg,
-  // Query,
-  Mutation,
-  UseMiddleware,
-} from "type-graphql";
+import { Resolver, Arg, Mutation, UseMiddleware } from "type-graphql";
 import { getCustomRepository } from "typeorm";
 
 /* Entities */
-// import Task from "../entities/Task";
 import UserTask from "../entities/UserTask";
-// import ProjectPermission from "../entities/ProjectPermission";
-// import User from "../entities/User";
+import { UserTaskRepository } from "../repository/UserTaskRepository";
 
 /* Utils */
-// import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-// import { MyContext } from "../types";
 import UserTaskResponse from "./types/UserTaskResponse";
 
 // /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
-import { UserTaskRepository } from "../repository/UserTaskRepository";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 
-// TODO : notification
 @Resolver()
 export class UserTaskResolver {
   @Mutation(() => UserTaskResponse)

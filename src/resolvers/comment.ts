@@ -10,7 +10,6 @@ import Comment from "../entities/Comment";
 import CommentNotification from "../entities/CommentNotification";
 
 /* Utils */
-// import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
@@ -18,14 +17,11 @@ import { MyContext } from "../types";
 import CommentDeleteResponse from "./types/CommentDeleteResponse";
 
 // /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import CommentResponse from "./types/CommentResponse";
 import CommentCreateInput from "./types/CommentCreateInput";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 
-// TODO : notification
 @Resolver()
 export class CommentResolver {
   @Mutation(() => CommentResponse)
