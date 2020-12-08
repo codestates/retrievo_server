@@ -68,10 +68,12 @@ export default class TaskNotification extends BaseEntity {
   @JoinColumn({ name: "project_id" })
   project: Project;
 
-  @Field(() => Task, { nullable: true })
-  @ManyToOne(() => Task, (task: Task) => task.taskNotification)
+  @Field(() => Task)
+  @ManyToOne(() => Task, (task: Task) => task.taskNotification, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "task_id" })
-  task?: Task;
+  task: Task;
 
   @Field(() => String)
   @CreateDateColumn({ name: "created_at" })
