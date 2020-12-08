@@ -148,11 +148,11 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
     @Ctx() context: MyContext
@@ -206,8 +206,11 @@ export class SprintResolver {
 
           const taskRepository = getRepository(Task);
           if (didStart) {
-            tasks.map(async (task) => {
-              const newTask = Object.assign(task, { board: board?.id });
+            tasks.map(async (task, index) => {
+              const newTask = Object.assign(task, {
+                board: board?.id,
+                boardRowIndex: index,
+              });
               await taskRepository.save(newTask);
             });
 
@@ -230,9 +233,11 @@ export class SprintResolver {
             return await sprintRowDnd(0, sprint, projectId);
           }
 
+          /* didStart 가 false */
           tasks.map(async (task) => {
             const newTask = Object.assign(task, {
               board: null,
+              boardRowIndex: null,
             });
             await taskRepository.save(newTask);
           });
@@ -250,7 +255,10 @@ export class SprintResolver {
             where: { sprint: sprint.id },
           });
           tasks.map(async (task) => {
-            const newTask = Object.assign(task, { board: null });
+            const newTask = Object.assign(task, {
+              board: null,
+              boardRowIndex: null,
+            });
             await taskRepository.save(newTask);
           });
 
