@@ -8,18 +8,16 @@ import TaskLabel from "../entities/TaskLabel";
 import Project from "../entities/Project";
 
 /* Utils */
-// import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
 import { MyContext } from "../types";
 import TaskLabelResponse from "./types/TaskLabelResponse";
+import DeleteResponse from "./types/DeleteResponse";
 
 // /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
-
-// TODO : notification
 @Resolver()
 export class TaskLabelResolver {
   @Mutation(() => TaskLabelResponse)
@@ -36,11 +34,8 @@ export class TaskLabelResolver {
     const em = getManager();
 
     try {
-      // 1. 프로젝트에 이미 존재하는 label이 있는지 확인
       let label = await Label.findOne({ where: { name, project: projectId } });
-      console.log("label: ", label);
       const task = await Task.findOne({ id: taskId });
-      console.log("task: ", task);
 
       const isCreated = await em.transaction(
         async (transactionalEntityManager) => {
@@ -48,47 +43,43 @@ export class TaskLabelResolver {
             const taskLabel = await TaskLabel.findOne({
               where: { label, task },
             });
-            console.log("taskLabel: ", taskLabel);
             if (taskLabel) {
               return false;
             }
           } else {
             const tempLabel = await em.create(Label, { project, color, name });
             label = await transactionalEntityManager.save(tempLabel);
-            console.log("label: ", label);
           }
 
           const tempTaskLabel = await em.create(TaskLabel, { task, label });
-          console.log("tempTaskLabel: ", tempTaskLabel);
           return await transactionalEntityManager.save(tempTaskLabel);
         }
       );
 
-      console.log("isCreated: ", isCreated);
       if (!isCreated) return { error: generateError(errorKeys.BAD_REQUEST) };
       const groupOfTaskLabels = await TaskLabel.find({
         where: { task: taskId },
         relations: ["label", "task"],
       });
 
-      console.log("groupOfTaskLabels: ", groupOfTaskLabels);
       return { taskLabel: groupOfTaskLabels };
     } catch (err) {
-      console.log("taskLabelCreateError catch:", err);
+      console.log("TaskLabel Create Mutation Error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => DeleteResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteTaskLabel(@Arg("id") id: string): Promise<boolean> {
+  async deleteTaskLabel(@Arg("id") id: string): Promise<DeleteResponse> {
     try {
       const deleteRes = await TaskLabel.delete({ id });
-      if (!deleteRes.affected || deleteRes.affected < 1) return false;
-      return true;
+      if (!deleteRes.affected)
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { success: true };
     } catch (err) {
-      console.log("Task create Mutation error:", err);
-      return false;
+      console.log("TaskLabel Delete Mutation error:", err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 }

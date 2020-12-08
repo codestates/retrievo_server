@@ -16,7 +16,6 @@ import Sprint from "../entities/Sprint";
 import TaskRepository from "../repository/TaskCustomRepository";
 
 /* Utils */
-// import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
@@ -27,9 +26,7 @@ import TaskUpdateInput from "./types/TaskUpdateInput";
 import TaskDeleteResponse from "./types/TaskDeleteRespons";
 
 // /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 @Resolver()
 export class TaskResolver {
@@ -69,7 +66,6 @@ export class TaskResolver {
   ): Promise<TaskResponse> {
     const projectId =
       req.query.projectId || "7bc19d32-c4b4-404f-8cd1-b77379c29fa0";
-    console.log("projectId:", projectId);
     try {
       const { title, boardId, sprintId } = options;
 
@@ -87,7 +83,6 @@ export class TaskResolver {
       let board;
       let boardRowIndex;
       if (sprint.didStart) {
-        // spirnt가 didstart이면
         if (boardId) {
           board = await Board.findOne({
             where: { id: boardId },
@@ -143,7 +138,7 @@ export class TaskResolver {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
       const res = await taskRepository.updateTaskAndChangeIndex(options);
-      if (!res) return { error: generateError(errorKeys.BAD_REQUEST) };
+      if (res.error) return res;
 
       const task = await getRepository(Task)
         .createQueryBuilder("task")
@@ -161,8 +156,6 @@ export class TaskResolver {
         .orderBy("comment.createdAt", "ASC")
         .getOne();
 
-      console.log("task:", task);
-      console.log("taskId", options.id);
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { task: [task] };
     } catch (err) {

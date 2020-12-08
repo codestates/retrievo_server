@@ -16,8 +16,6 @@ import { BoardRepository } from "../repository/BoardCustomRepository";
 
 /* Utils */
 import generateError, { errorKeys } from "../utils/ErrorFactory";
-// import { prod } from "../constants";
-// import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
 import { MyContext } from "../types";
@@ -34,7 +32,7 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 export class BoardResolver {
   @Query(() => BoardResponse)
   @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async boards(@Ctx() { req }: MyContext): Promise<BoardResponse> {
+  async getBoards(@Ctx() { req }: MyContext): Promise<BoardResponse> {
     try {
       console.log("req.query.projectId:", req.query.projectId);
       // FIXME : const { projectId } = req.query;
@@ -136,10 +134,8 @@ export class BoardResolver {
           error: generateError(errorKeys.BAD_REQUEST, "project not match"),
         };
 
-      // NOTE: customRepository를 불러온다
       const boardRepository = getCustomRepository(BoardRepository);
-      // NOTE: 보드 id와 index를 changeBoardIndex 메소드의 인자로 넣는다.
-      // NOTE: response로 true와 false를 받는다.
+
       if (newIndex !== undefined) {
         const res = await boardRepository.changeBoardIndex(id, newIndex);
         if (!res)
@@ -223,11 +219,6 @@ export class BoardResolver {
         .orderBy("board.boardColumnIndex", "ASC")
         .addOrderBy("task.boardRowIndex", "ASC")
         .getMany();
-
-      //   .orderBy({
-      //     "user.name": "ASC",
-      //     "user.id": "DESC"
-      // });
 
       return { boards };
     } catch (err) {

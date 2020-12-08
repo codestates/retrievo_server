@@ -18,12 +18,10 @@ import Project from "../entities/Project";
 import { MyContext } from "../types";
 import LabelResponse from "./types/LabelResponse";
 import LabelDeleteResponse from "./types/LabelDeleteRespons";
-
 import LabelUpdateInput from "./types/LabelUpdateInput";
+
 // /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
