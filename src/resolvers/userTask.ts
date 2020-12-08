@@ -10,7 +10,7 @@ import { getCustomRepository } from "typeorm";
 
 /* Entities */
 // import Task from "../entities/Task";
-// import UserTask from "../entities/UserTask";
+import UserTask from "../entities/UserTask";
 // import ProjectPermission from "../entities/ProjectPermission";
 // import User from "../entities/User";
 
@@ -56,17 +56,18 @@ export class UserTaskResolver {
     }
   }
 
-  // @Mutation(() => Boolean)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  // async deletaTask(@Arg("id") id: string): Promise<boolean> {
-  //   try {
-  //     const taskRepository = getCustomRepository(TaskRepository);
-  //     return await taskRepository.deleteTaskAndChangeIndice(id);
-  //   } catch (err) {
-  //     console.log("Board delete Mutation error catch:", err);
-  //     return false;
-  //   }
-  // }
+  @Mutation(() => Boolean)
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  async deleteUserTask(@Arg("id") id: string): Promise<boolean> {
+    try {
+      const deletedRes = await UserTask.delete(id);
+      if (!deletedRes.affected) return false;
+      return true;
+    } catch (err) {
+      console.log("UserTask delete Mutation error catch:", err);
+      return false;
+    }
+  }
 }
 
 export default UserTaskResolver;
