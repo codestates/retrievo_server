@@ -27,8 +27,7 @@ export default class Comment extends BaseEntity {
 
   @Field(() => Task)
   @ManyToOne(() => Task, (task) => task.comment, {
-    onDelete: "SET NULL",
-    nullable: true,
+    onDelete: "CASCADE",
   })
   @JoinColumn({ name: "task_id" })
   task!: Task;

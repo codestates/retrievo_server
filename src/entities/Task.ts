@@ -48,7 +48,6 @@ export default class Task extends BaseEntity {
   @Field(() => Number, { nullable: true })
   @Column({
     name: "board_row_index",
-    default: 0,
     nullable: true,
     type: "integer",
   })

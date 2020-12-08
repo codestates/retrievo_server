@@ -67,7 +67,7 @@ export class TaskResolver {
     @Ctx() { req }: MyContext
   ): Promise<TaskResponse> {
     const projectId =
-      req.query.projectId || "7103343d-a542-49b8-b126-10c72f4aa08d";
+      req.query.projectId || "7bc19d32-c4b4-404f-8cd1-b77379c29fa0";
     console.log("projectId:", projectId);
     try {
       const { title, boardId, sprintId } = options;
@@ -75,43 +75,54 @@ export class TaskResolver {
       const project = await Project.findOne({ where: { id: projectId } });
       if (!project) return { error: generateError(errorKeys.BAD_REQUEST) };
 
-      let board;
-      if (boardId) {
-        board = await Board.findOne({
-          where: { id: boardId },
-          relations: ["task"],
-        });
-      } else {
-        board = await Board.findOne({
-          where: {
-            project,
-            boardColumnIndex: 0,
-          },
-          relations: ["task"],
-        });
-      }
-
-      if (!board) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-      const boardRowIndex = board.task?.length;
-
       const sprint = await Sprint.findOne({
         where: { id: sprintId },
         relations: ["task"],
       });
 
       if (!sprint) return { error: generateError(errorKeys.BAD_REQUEST) };
-
       const sprintRowIndex = sprint.task?.length;
 
-      const task = await Task.create({
-        title,
-        sprint,
-        project,
-        board,
-        boardRowIndex,
-        sprintRowIndex,
-      }).save();
-      console.log("task", task);
+      let board;
+      let boardRowIndex;
+      if (sprint.didStart) {
+        // spirnt가 didstart이면
+        if (boardId) {
+          board = await Board.findOne({
+            where: { id: boardId },
+            relations: ["task"],
+          });
+        } else {
+          board = await Board.findOne({
+            where: {
+              project,
+              boardColumnIndex: 0,
+            },
+            relations: ["task"],
+          });
+        }
+        if (!board) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+        boardRowIndex = board.task?.length;
+      }
+      let task;
+      if (board) {
+        task = await Task.create({
+          title,
+          sprint,
+          project,
+          board,
+          boardRowIndex,
+          sprintRowIndex,
+        }).save();
+        console.log("task", task);
+      } else {
+        task = await Task.create({
+          title,
+          sprint,
+          project,
+          sprintRowIndex,
+        }).save();
+      }
 
       if (!task)
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -154,6 +165,18 @@ export class TaskResolver {
     } catch (err) {
       console.log("Board create Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  async deletaTask(@Arg("id") id: string): Promise<boolean> {
+    try {
+      const taskRepository = getCustomRepository(TaskRepository);
+      return await taskRepository.deleteTaskAndChangeIndice(id);
+    } catch (err) {
+      console.log("Board delete Mutation error catch:", err);
+      return false;
     }
   }
 }
