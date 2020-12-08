@@ -3,6 +3,7 @@ import { ProjectResolver } from "./project";
 import { BoardResolver } from "./board";
 import { SprintResolver } from "./sprint";
 import { TaskResolver } from "./task";
+import { TaskLabelResolver } from "./taskLabel";
 
 const resolvers = [
   UserResolver,
@@ -10,5 +11,6 @@ const resolvers = [
   BoardResolver,
   SprintResolver,
   TaskResolver,
+  TaskLabelResolver,
 ] as const;
 export default resolvers;
