@@ -5,6 +5,7 @@ import { SprintResolver } from "./sprint";
 import { TaskResolver } from "./task";
 import { TaskLabelResolver } from "./taskLabel";
 import { LabelResolver } from "./label";
+import { UserTaskResolver } from "./userTask";
 
 const resolvers = [
   UserResolver,
@@ -14,5 +15,6 @@ const resolvers = [
   TaskResolver,
   TaskLabelResolver,
   LabelResolver,
+  UserTaskResolver,
 ] as const;
 export default resolvers;
