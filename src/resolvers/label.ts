@@ -59,7 +59,7 @@ export class LabelResolver {
       if (!updateRes.affected)
         return { error: generateError(errorKeys.BAD_REQUEST) };
 
-      const project = await Project.findOne({ id: projectId });
+      const project = await Project.findOne({ where: { id: projectId } });
       const labels = await Label.find({ project });
       if (!labels)
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };

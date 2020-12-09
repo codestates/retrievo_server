@@ -119,7 +119,7 @@ export class SprintResolver {
 
     const projectId = prod
       ? req.params.projectId
-      : "332053e6-45cd-4104-92db-000154a1af32"; // 332053e6-45cd-4104-92db-000154a1af32 //379fde06-2c64-4550-94ec-19d783dc9726
+      : "332053e6-45cd-4104-92db-000154a1af32";
 
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -138,8 +138,6 @@ export class SprintResolver {
         row,
         project: projectId,
       }).save();
-
-      // TODO Notification 생성 해줘야함.
 
       return { sprint };
     } catch (err) {
