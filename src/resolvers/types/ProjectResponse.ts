@@ -1,8 +1,14 @@
 import { ObjectType, Field, Int } from "type-graphql";
+import { GraphQLJSONObject } from "graphql-type-json";
 import { FieldError } from "./UserResponse";
 import Project from "../../entities/Project";
 import ProjectPermission from "../../entities/ProjectPermission";
 import UserTask from "../../entities/UserTask";
+
+export interface ObjectIFC {
+  [key: string]: number;
+}
+
 @ObjectType()
 export class TaskSummary {
   @Field(() => Int, { nullable: true })
@@ -52,9 +58,6 @@ export class ProjectReturnType {
 
   @Field(() => Boolean, { nullable: true })
   success?: boolean;
-
-  // @Field(() => IncompleteTasksByStatusSummary, { nullable: true })
-  // incompleteTasksByStatusSummary?: IncompleteTasksByStatusSummary;
 }
 @ObjectType()
 export class ProjectPermissionReturnType extends ProjectReturnType {
@@ -70,14 +73,11 @@ export class ReportSummaryType {
   @Field(() => [TasksByAssignee], { nullable: true })
   tasksByAssignee?: TasksByAssignee[];
 
-  // @Field()
-  // incompleteTaskStatus?: hello[];
+  @Field(() => GraphQLJSONObject)
+  incompleteTaskStatus?: ObjectIFC;
 
   @Field(() => FieldError, { nullable: true })
   error?: FieldError;
-
-  // @Field(() => IncompleteTasksByStatusSummary, { nullable: true })
-  // incompleteTasksByStatusSummary?: IncompleteTasksByStatusSummary;
 }
 
 export default ProjectReturnType;

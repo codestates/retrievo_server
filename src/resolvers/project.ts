@@ -15,6 +15,7 @@ import {
   ProjectReturnType,
   ProjectPermissionReturnType,
   TasksByAssignee,
+  ObjectIFC,
 } from "./types/ProjectResponse";
 
 /* Entities */
@@ -63,7 +64,7 @@ export class ProjectResolver {
   }
 
   @Query(() => ReportSummaryType)
-  // @UseMiddleware(checkAuthStatus)
+  @UseMiddleware(checkAuthStatus)
   async reportSummary(@Ctx() context: MyContext): Promise<ReportSummaryType> {
     const projectId = prod
       ? context.req.query.projectId
@@ -159,18 +160,17 @@ export class ProjectResolver {
           */
 
         // NOTE 광주/판교 시민의 피가 뭍혀진 것이니 절대 지우지 마시오 O/<-<
-        // const incompleteTaskStatus: {
-        //   [key: string]: number;
-        // } = {};
-        // if (project.task) {
-        //   project.task.forEach((task) => {
-        //     if (task.board && !incompleteTaskStatus[task.board.title]) {
-        //       incompleteTaskStatus[task.board.title] = 1;
-        //     } else if (task.board && incompleteTaskStatus[task.board.title]) {
-        //       incompleteTaskStatus[task.board.title] += 1;
-        //     }
-        //   });
-        // }
+        const incompleteTaskStatus: ObjectIFC = {};
+
+        if (project.task) {
+          project.task.forEach((task) => {
+            if (task.board && !incompleteTaskStatus[task.board.title]) {
+              incompleteTaskStatus[task.board.title] = 1;
+            } else if (task.board && incompleteTaskStatus[task.board.title]) {
+              incompleteTaskStatus[task.board.title] += 1;
+            }
+          });
+        }
 
         const taskCountSummary = {
           totalTasksCount,
@@ -181,7 +181,8 @@ export class ProjectResolver {
 
         // const taskByAssignee = honey;
 
-        if (project) return { taskCountSummary, tasksByAssignee };
+        if (project)
+          return { taskCountSummary, tasksByAssignee, incompleteTaskStatus };
       }
 
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
