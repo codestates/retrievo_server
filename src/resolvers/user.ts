@@ -33,10 +33,20 @@ import checkIfGuest from "../middleware/checkIfGuest";
 @Resolver()
 export class UserResolver {
   @Query(() => UserResponse)
-  @UseMiddleware(checkAuthStatus)
+  // @UseMiddleware(checkAuthStatus)
   async getUser(@Arg("id") id: string): Promise<UserResponse> {
     try {
-      const user = await User.findOne({ id });
+      const user = await User.findOne(
+        { id },
+        {
+          relations: [
+            "userTask",
+            "userTask.user",
+            "userTask.task",
+            "userTask.task.project",
+          ],
+        }
+      );
       if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
       return { user };
     } catch (err) {
