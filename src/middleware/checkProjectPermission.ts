@@ -22,6 +22,7 @@ export const checkProjectPermission: MiddlewareFn<MyContext> = async (
   } catch (err) {
     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
   }
+  console.log("!!!project permission pass!!!");
   return await next();
 };
 

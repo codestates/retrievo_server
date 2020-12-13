@@ -17,6 +17,7 @@ export const checkIfGuest: MiddlewareFn<MyContext> = async (
   } catch (err) {
     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
   }
+  console.log("!!!guest permission pass!!!");
   return await next();
 };
 

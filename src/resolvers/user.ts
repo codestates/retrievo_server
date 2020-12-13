@@ -33,7 +33,7 @@ import checkIfGuest from "../middleware/checkIfGuest";
 @Resolver()
 export class UserResolver {
   @Query(() => UserResponse)
-  // @UseMiddleware(checkAuthStatus)
+  @UseMiddleware([checkAuthStatus])
   async getUser(@Arg("id") id: string): Promise<UserResponse> {
     try {
       const user = await User.findOne(
@@ -83,6 +83,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
+    @Arg("projectId") projectId: string,
     @Ctx() context: MyContext
   ): Promise<UserResponse> {
     const { redis, req } = context;
@@ -103,8 +104,6 @@ export class UserResolver {
         email: options.email,
         password: hashed || options.password,
       }).save();
-
-      const { projectId } = req.session;
 
       if (projectId) {
         const project = await Project.findOne(projectId);
@@ -137,6 +136,7 @@ export class UserResolver {
   async login(
     @Arg("email") email: string,
     @Arg("password") password: string,
+    @Arg("projectId") projectId: string,
     @Ctx() context: MyContext
   ): Promise<UserResponse | Error> {
     const { req, redis } = context;
@@ -145,11 +145,9 @@ export class UserResolver {
         email,
         password,
       });
-      console.log("user", user);
 
       if (user) {
         const localUser = await User.findOne({ email });
-        const { projectId } = req.session;
 
         if (projectId) {
           const project = await Project.findOne(projectId);

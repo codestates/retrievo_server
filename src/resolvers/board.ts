@@ -1,11 +1,4 @@
-import {
-  Resolver,
-  Ctx,
-  Arg,
-  Query,
-  Mutation,
-  UseMiddleware,
-} from "type-graphql";
+import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 import { getCustomRepository, getManager, getRepository } from "typeorm";
 
 /* Entities */
@@ -18,44 +11,41 @@ import { BoardRepository } from "../repository/BoardCustomRepository";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-import { MyContext } from "../types";
 import BoardResponse from "./types/BoardResponse";
 import BoardUpdateInput from "./types/BoardUpdateInput";
 
 // /* Middleware */
-import checkIfGuest from "../middleware/checkIfGuest";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkAdminPermission from "../middleware/checkAdminPermission";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class BoardResolver {
   @Query(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async getBoards(@Ctx() { req }: MyContext): Promise<BoardResponse> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getBoards(@Arg("projectId") projectId: string): Promise<BoardResponse> {
     try {
-      console.log("req.query.projectId:", req.query.projectId);
-      // FIXME : const { projectId } = req.query;
-      const projectId = "0baf6a7d-a5d1-4148-acc8-3cd053149d25";
-
       const currentSprint = await Sprint.findOne({
         project: projectId,
         didStart: true,
       });
 
       if (!currentSprint)
-        return { error: generateError(errorKeys.BAD_REQUEST) };
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
       const boards = await getRepository(Board)
         .createQueryBuilder("board")
+        .leftJoinAndSelect("board.project", "project")
         .leftJoinAndSelect("board.task", "task")
         .leftJoinAndSelect("task.taskLabel", "taskLabel")
         .leftJoinAndSelect("taskLabel.label", "label")
         .leftJoinAndSelect("task.userTask", "userTask")
         .leftJoinAndSelect("userTask.user", "user")
-        .leftJoinAndSelect("task.sprint", "spirnt")
-        .where("task.sprint = :sprintId")
-        .setParameter("sprintId", currentSprint.id)
+        .where("board.project = :projectId")
+        .setParameter("projectId", projectId)
+        // .leftJoinAndSelect("task.sprint", "spirnt")
+        // .where("task.sprint = :sprintId")
+        // .setParameter("sprintId", currentSprint.id)
         .orderBy("board.boardColumnIndex", "ASC")
         .addOrderBy("task.boardRowIndex", "ASC")
         .getMany();
@@ -69,15 +59,11 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createBoard(
     @Arg("title") title: string,
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<BoardResponse> {
-    console.log("req.query.projectId:", req.query.projectId);
-    // FIXME : const { projectId } = req.query;
-    const projectId = "04f025f8-234c-49b7-b9bf-7b7f94415569";
-
     try {
       const boards = await Board.find({
         where: { project: projectId },
@@ -91,7 +77,6 @@ export class BoardResolver {
         return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
 
       const boardColumnIndex = boards?.length - 1;
-      // 마지막 보드의 인덱스 + 1
       const project = await Project.findOne({ id: projectId });
 
       const em = getManager();
@@ -139,14 +124,11 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async updateBoard(
     @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<BoardResponse> {
-    console.log(req.query.projectId);
-    // FIXME : const { projectId } = req.query;
-    const projectId = "f1b19174-5d91-4a97-83b0-893e74c9f7cd";
     try {
       const board = await Board.findOne({
         where: { id },
@@ -185,9 +167,11 @@ export class BoardResolver {
         .leftJoinAndSelect("taskLabel.label", "label")
         .leftJoinAndSelect("task.userTask", "userTask")
         .leftJoinAndSelect("userTask.user", "user")
-        .leftJoinAndSelect("task.sprint", "spirnt")
-        .where("task.sprint = :sprintId")
-        .setParameter("sprintId", currentSprint.id)
+        .where("board.project = :projectId")
+        .setParameter("projectId", projectId)
+        // .leftJoinAndSelect("task.sprint", "spirnt")
+        // .where("task.sprint = :sprintId")
+        // .setParameter("sprintId", currentSprint.id)
         .orderBy("board.boardColumnIndex", "ASC")
         .addOrderBy("task.boardRowIndex", "ASC")
         .getMany();
@@ -202,16 +186,12 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : , checkIfGuest, checkAdminPermission checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteBoard(
     @Arg("id") id: string,
     @Arg("newBoardId") newBoardId: string,
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<BoardResponse> {
-    console.log(req.query.projectId);
-    // FIXME : const { projectId } = req.query;
-    const projectId = "50c97f43-4b30-4a8b-8d57-2cd68e739425";
-
     try {
       const boardRepository = getCustomRepository(BoardRepository);
 
@@ -231,14 +211,17 @@ export class BoardResolver {
 
       const boards = await getRepository(Board)
         .createQueryBuilder("board")
+        .leftJoinAndSelect("board.project", "project")
         .leftJoinAndSelect("board.task", "task")
         .leftJoinAndSelect("task.taskLabel", "taskLabel")
         .leftJoinAndSelect("taskLabel.label", "label")
         .leftJoinAndSelect("task.userTask", "userTask")
         .leftJoinAndSelect("userTask.user", "user")
-        .leftJoinAndSelect("task.sprint", "spirnt")
-        .where("task.sprint = :sprintId")
-        .setParameter("sprintId", currentSprint.id)
+        .where("board.project = :projectId")
+        .setParameter("projectId", projectId)
+        // .leftJoinAndSelect("task.sprint", "spirnt")
+        // .where("task.sprint = :sprintId")
+        // .setParameter("sprintId", currentSprint.id)
         .orderBy("board.boardColumnIndex", "ASC")
         .addOrderBy("task.boardRowIndex", "ASC")
         .getMany();

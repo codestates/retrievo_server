@@ -4,11 +4,11 @@ import generateError, { errorKeys } from "../utils/ErrorFactory";
 import ProjectPermission from "../entities/ProjectPermission";
 
 export const checkAdminPermission: MiddlewareFn<MyContext> = async (
-  { context },
+  { context, args },
   next
 ) => {
   const userId = context.req.session.passport?.user;
-  const projectId = context.req.session?.projectId;
+  const { projectId } = args;
   try {
     const userPermission = await ProjectPermission.findOne({
       where: {
@@ -22,6 +22,7 @@ export const checkAdminPermission: MiddlewareFn<MyContext> = async (
   } catch (_) {
     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
   }
+  console.log("!!!admin permission pass!!!");
   return await next();
 };
 
