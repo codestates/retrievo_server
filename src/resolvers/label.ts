@@ -1,11 +1,4 @@
-import {
-  Resolver,
-  Ctx,
-  Arg,
-  Query,
-  UseMiddleware,
-  Mutation,
-} from "type-graphql";
+import { Resolver, Arg, Query, UseMiddleware, Mutation } from "type-graphql";
 
 /* Entities */
 import Label from "../entities/Label";
@@ -15,23 +8,20 @@ import generateError, { errorKeys } from "../utils/ErrorFactory";
 import Project from "../entities/Project";
 
 /* Types */
-import { MyContext } from "../types";
 import LabelResponse from "./types/LabelResponse";
 import LabelDeleteResponse from "./types/LabelDeleteRespons";
 import LabelUpdateInput from "./types/LabelUpdateInput";
 
-// /* Middleware */
+/* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class LabelResolver {
   @Query(() => LabelResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async getlabels(@Ctx() { req }: MyContext): Promise<LabelResponse> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getLabels(@Arg("projectId") projectId: string): Promise<LabelResponse> {
     try {
-      const projectId =
-        req.params.projectId || "2654a702-a252-419f-a8b9-66fc3341b4d7";
       const labels = await Label.find({ where: { project: projectId } });
       if (!labels) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { label: labels };
@@ -42,15 +32,12 @@ export class LabelResolver {
   }
 
   @Mutation(() => LabelResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async updateLabel(
     @Arg("id") id: string,
     @Arg("options") options: LabelUpdateInput,
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<LabelResponse> {
-    // FIXME : const { projectId } = req.query;
-    const projectId =
-      req.params.projectId || "2654a702-a252-419f-a8b9-66fc3341b4d7";
     try {
       const label = await Label.findOne({ where: { name: options.name } });
       if (label) return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
@@ -65,6 +52,7 @@ export class LabelResolver {
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
       return { label: labels };
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("Label update Mutation error:", err);
       if (err.code === "22P02")
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -73,8 +61,11 @@ export class LabelResolver {
   }
 
   @Mutation(() => LabelDeleteResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteLabel(@Arg("id") id: string): Promise<LabelDeleteResponse> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async deleteLabel(
+    @Arg("id") id: string,
+    @Arg("projectId") projectId: string
+  ): Promise<LabelDeleteResponse> {
     try {
       const deleteRes = await Label.delete({ id });
       if (!deleteRes.affected)
@@ -87,6 +78,7 @@ export class LabelResolver {
 
       return { success: true };
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("Label delete Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }

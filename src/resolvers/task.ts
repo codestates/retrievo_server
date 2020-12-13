@@ -1,11 +1,4 @@
-import {
-  Resolver,
-  Ctx,
-  Arg,
-  Query,
-  Mutation,
-  UseMiddleware,
-} from "type-graphql";
+import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 import { getCustomRepository, getRepository } from "typeorm";
 
 /* Entities */
@@ -19,7 +12,6 @@ import TaskRepository from "../repository/TaskCustomRepository";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-import { MyContext } from "../types";
 import TaskResponse from "./types/TaskResponse";
 import TaskCreateInput from "./types/TaskCreateInput";
 import TaskUpdateInput from "./types/TaskUpdateInput";
@@ -27,12 +19,15 @@ import TaskDeleteResponse from "./types/TaskDeleteRespons";
 
 // /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 @Resolver()
 export class TaskResolver {
   @Query(() => TaskResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async getTask(@Arg("id") id: string): Promise<TaskResponse> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getTask(
+    @Arg("id") id: string,
+    @Arg("projectId") projectId: string
+  ): Promise<TaskResponse> {
     try {
       const task = await getRepository(Task)
         .createQueryBuilder("task")
@@ -53,19 +48,18 @@ export class TaskResolver {
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { task: [task] };
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("Task Read Query Error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
   @Mutation(() => TaskResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async createTask(
     @Arg("options") options: TaskCreateInput,
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<TaskResponse> {
-    const projectId =
-      req.query.projectId || "7bc19d32-c4b4-404f-8cd1-b77379c29fa0";
     try {
       const { title, boardId, sprintId } = options;
 
@@ -131,9 +125,10 @@ export class TaskResolver {
   }
 
   @Mutation(() => TaskResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async updateTask(
-    @Arg("options") options: TaskUpdateInput
+    @Arg("options") options: TaskUpdateInput,
+    @Arg("projectId") projectId: string
   ): Promise<TaskResponse> {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
@@ -159,18 +154,23 @@ export class TaskResolver {
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { task: [task] };
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("Board create Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
   @Mutation(() => TaskDeleteResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteTask(@Arg("id") id: string): Promise<TaskDeleteResponse> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async deleteTask(
+    @Arg("id") id: string,
+    @Arg("projectId") projectId: string
+  ): Promise<TaskDeleteResponse> {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
       return await taskRepository.deleteTaskAndChangeIndice(id);
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("Board delete Mutation error catch:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }

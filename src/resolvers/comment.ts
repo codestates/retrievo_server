@@ -20,21 +20,19 @@ import CommentDeleteResponse from "./types/CommentDeleteResponse";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import CommentResponse from "./types/CommentResponse";
 import CommentCreateInput from "./types/CommentCreateInput";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class CommentResolver {
   @Mutation(() => CommentResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async createComment(
     @Arg("taskId") taskId: string,
     @Arg("options") options: CommentCreateInput,
+    @Arg("projectId") projectId: string,
     @Ctx() { req }: MyContext
   ): Promise<CommentResponse> {
     try {
-      const projectId =
-        req.query.projectId || "5149897e-04b8-4f12-881c-2e612152e078";
-
       const userId = req.session.passport?.user;
       const user = await User.findOne({ id: userId });
       if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
@@ -50,7 +48,6 @@ export class CommentResolver {
           const task = await Task.findOne({ id: taskId });
           if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
-          // comment 생성
           const tempComment = await em.create(Comment, {
             task,
             user,
@@ -88,10 +85,11 @@ export class CommentResolver {
   }
 
   @Mutation(() => CommentResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission,
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async updateComment(
     @Arg("id") id: string,
     @Arg("content") content: string,
+    @Arg("projectId") projectId: string,
     @Ctx() { req }: MyContext
   ): Promise<CommentResponse> {
     try {
@@ -120,6 +118,7 @@ export class CommentResolver {
 
       return { comment: [updatedComment] };
     } catch (err) {
+      console.log("projectId", projectId);
       if (err.code === "22P02")
         return { error: generateError(errorKeys.BAD_REQUEST) };
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -127,9 +126,10 @@ export class CommentResolver {
   }
 
   @Mutation(() => CommentDeleteResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission,
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async deleteComment(
     @Arg("id") id: string,
+    @Arg("projectId") projectId: string,
     @Ctx() { req }: MyContext
   ): Promise<CommentDeleteResponse> {
     try {
@@ -151,6 +151,7 @@ export class CommentResolver {
 
       return { success: true };
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("delete Comment error", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }

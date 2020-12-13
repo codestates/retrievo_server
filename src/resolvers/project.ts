@@ -41,11 +41,13 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class ProjectResolver {
   @Query(() => ProjectReturnType)
-  @UseMiddleware(checkAuthStatus)
-  async project(@Ctx() context: MyContext): Promise<ProjectReturnType> {
-    const projectId = prod
-      ? context.req.query.projectId
-      : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async project(
+    @Arg("projectId") projectId: string
+  ): Promise<ProjectReturnType> {
+    // const projectId = prod
+    //   ? context.req.query.projectId
+    //   : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
 
     if (!projectId) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
@@ -64,12 +66,10 @@ export class ProjectResolver {
   }
 
   @Query(() => ReportSummaryType)
-  @UseMiddleware(checkAuthStatus)
-  async reportSummary(@Ctx() context: MyContext): Promise<ReportSummaryType> {
-    const projectId = prod
-      ? context.req.query.projectId
-      : "c77cc15c-739a-4ef4-9e6c-fd43eb0d75a9";
-
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async reportSummary(
+    @Arg("projectId") projectId: string
+  ): Promise<ReportSummaryType> {
     if (!projectId) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
     try {
@@ -192,7 +192,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest])
+  @UseMiddleware([checkAuthStatus, checkIfGuest])
   async createProject(
     @Arg("name") name: string,
     @Ctx() context: MyContext
@@ -201,7 +201,6 @@ export class ProjectResolver {
       ? context.req.session.passport?.user
       : "11908f55-9650-4c52-8605-e56fa35ce4ed";
 
-    // const userId = context.req.session.passport?.user;
     const user = await User.findOne(userId);
 
     try {
@@ -255,18 +254,13 @@ export class ProjectResolver {
   @Mutation(() => ProjectReturnType)
   @UseMiddleware([
     checkAuthStatus,
-    checkIfGuest,
     checkProjectPermission,
     checkAdminPermission,
   ])
   async updateProjectName(
-    @Ctx() context: MyContext,
-    @Arg("name") name: string
+    @Arg("name") name: string,
+    @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
-    const projectId = prod
-      ? context.req.query.projectId
-      : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
-
     const em = getManager();
     const project = await em.findOne(Project, projectId);
 
@@ -291,13 +285,10 @@ export class ProjectResolver {
     checkAdminPermission,
   ])
   async updateProjectPermission(
-    @Ctx() context: MyContext,
     @Arg("userId") userId: string,
-    @Arg("isAdmin") isAdmin: boolean
+    @Arg("isAdmin") isAdmin: boolean,
+    @Arg("projectId") projectId: string
   ): Promise<ProjectPermissionReturnType> {
-    const projectId = prod
-      ? context.req.query.projectId
-      : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
     const em = getManager();
 
     try {
@@ -319,16 +310,10 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkIfGuest,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
-  async deleteProject(@Ctx() context: MyContext): Promise<ProjectReturnType> {
-    const projectId = prod
-      ? context.req.query.projectId
-      : "f79d26af-b391-478c-97c7-59a84a25eb7d";
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  async deleteProject(
+    @Arg("projectId") projectId: string
+  ): Promise<ProjectReturnType> {
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
@@ -344,15 +329,12 @@ export class ProjectResolver {
   @Mutation(() => ProjectReturnType)
   async inviteUser(
     @Ctx() context: MyContext,
-    @Arg("emails", () => [String]) emails: string[]
+    @Arg("emails", () => [String]) emails: string[],
+    @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType | undefined> {
     if (!emails.length) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
-
-    const projectId = prod
-      ? context.req.query?.projectId
-      : "1e8eeabb-1e14-4881-8d22-6473fdbb4607";
 
     const { redis } = context;
     const project = await Project.findOne(projectId);
@@ -397,19 +379,11 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkIfGuest,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteMember(
-    @Ctx() context: MyContext,
-    @Arg("userId") userId: string
+    @Arg("userId") userId: string,
+    @Arg("projectId") projectId: string
   ): Promise<ProjectPermissionReturnType> {
-    const projectId = prod
-      ? context.req.query.projectId
-      : "c77cc15c-739a-4ef4-9e6c-fd43eb0d75a9";
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
