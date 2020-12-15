@@ -9,6 +9,7 @@ export const checkAuthStatus: MiddlewareFn<MyContext> = async (
   const currentUser = context.req.session.passport?.user;
   if (!currentUser)
     throw new AuthenticationError("Please login to access to the service 😱");
+  console.log("!!!auth permission pass!!!");
   return await next();
 };
 

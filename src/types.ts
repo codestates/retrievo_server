@@ -20,7 +20,7 @@ interface QueryParamIFC {
   [key: string]: string;
 }
 
-interface ParamIFC {
+export interface ParamIFC {
   [key: string]: string;
 }
 

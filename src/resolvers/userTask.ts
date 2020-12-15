@@ -13,15 +13,16 @@ import UserTaskResponse from "./types/UserTaskResponse";
 
 // /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class UserTaskResolver {
   @Mutation(() => UserTaskResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async createUserTask(
     @Arg("userId") userId: string,
-    @Arg("taskId") taskId: string
+    @Arg("taskId") taskId: string,
+    @Arg("projectId") projectId: string
   ): Promise<UserTaskResponse> {
     try {
       const userTaskRepository = getCustomRepository(UserTaskRepository);
@@ -36,19 +37,24 @@ export class UserTaskResolver {
       console.log("res", res);
       return res;
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("UserTask create Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteUserTask(@Arg("id") id: string): Promise<boolean> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async deleteUserTask(
+    @Arg("id") id: string,
+    @Arg("projectId") projectId: string
+  ): Promise<boolean> {
     try {
       const deletedRes = await UserTask.delete(id);
       if (!deletedRes.affected) return false;
       return true;
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("UserTask delete Mutation error catch:", err);
       return false;
     }

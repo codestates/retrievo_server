@@ -1,4 +1,4 @@
-import { Resolver, Ctx, Arg, Mutation, UseMiddleware } from "type-graphql";
+import { Resolver, Arg, Mutation, UseMiddleware } from "type-graphql";
 import { getManager } from "typeorm";
 
 /* Entities */
@@ -11,25 +11,26 @@ import Project from "../entities/Project";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-import { MyContext } from "../types";
+// import { MyContext } from "../types";
 import TaskLabelResponse from "./types/TaskLabelResponse";
 import DeleteResponse from "./types/DeleteResponse";
 
-// /* Middleware */
+/* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 @Resolver()
 export class TaskLabelResolver {
   @Mutation(() => TaskLabelResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async createTaskLabel(
     @Arg("taskId") taskId: string,
     @Arg("name") name: string,
     @Arg("color") color: string,
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
+    // @Ctx() { req }: MyContext
   ): Promise<TaskLabelResponse> {
-    const projectId =
-      req.query.projectId || "6e523cc7-da7a-4014-b3ac-dfe9261c892c";
+    // const projectId =
+    //   req.query.projectId || "6e523cc7-da7a-4014-b3ac-dfe9261c892c";
     const project = await Project.findOne({ id: projectId });
     const em = getManager();
 
@@ -70,14 +71,18 @@ export class TaskLabelResolver {
   }
 
   @Mutation(() => DeleteResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async deleteTaskLabel(@Arg("id") id: string): Promise<DeleteResponse> {
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async deleteTaskLabel(
+    @Arg("id") id: string,
+    @Arg("projectId") projectId: string
+  ): Promise<DeleteResponse> {
     try {
       const deleteRes = await TaskLabel.delete({ id });
       if (!deleteRes.affected)
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { success: true };
     } catch (err) {
+      console.log("projectId", projectId);
       console.log("TaskLabel Delete Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }

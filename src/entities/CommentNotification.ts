@@ -14,15 +14,6 @@ import Project from "./Project";
 import Task from "./Task";
 import Comment from "./Comment";
 
-// comment_notification
-// - id
-// - project_id
-// - target_id
-// - is_read
-// -- comment_id
-// -- task_id
-// -- author_id
-
 @ObjectType()
 @Entity()
 export default class CommentNotification extends BaseEntity {

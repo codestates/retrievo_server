@@ -1,16 +1,6 @@
-import {
-  Resolver,
-  Ctx,
-  Arg,
-  Query,
-  Mutation,
-  UseMiddleware,
-} from "type-graphql";
-// import { getCustomRepository } from "typeorm";
-// import { getManager } from "typeorm";
+import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 
 /* Entities */
-// import User from "../entities/User";
 import { getConnection, getRepository } from "typeorm";
 import Board from "../entities/Board";
 import Sprint from "../entities/Sprint";
@@ -18,34 +8,23 @@ import SprintNotification, {
   sprintNotificationType,
 } from "../entities/SprintNotification";
 import Task from "../entities/Task";
-
-// import Project from "../entities/Project";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
-// import { BoardRepository } from "../repository/BoardCustomRepository";
-
-/* Utils */
-import { prod } from "../constants";
 
 /* Types */
-import { MyContext } from "../types";
 import SprintResponse from "./types/SprintResponse";
 import { SprintOptionInput } from "./types/SprintOptionInput";
 import sprintRowDnd from "../utils/sprintRowDnd";
 
-// /* Middleware */
+/* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
 import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
-      // const projectId = prod
-      //   ? req.params
-      //   : "332053e6-45cd-4104-92db-000154a1af32";,
-
       const sprint = await Sprint.findOne(id, {
         relations: [
           "task",
@@ -71,15 +50,11 @@ export class SprintResolver {
   }
 
   @Query(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprints(
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<Sprint[] | SprintResponse> {
     try {
-      const projectId = prod
-        ? req.params
-        : "332053e6-45cd-4104-92db-000154a1af32";
-
       const sprints = await Sprint.find({
         where: { project: projectId },
         relations: [
@@ -106,21 +81,11 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkProjectPermission,
-    checkAdminPermission,
-  ]) // FIXME : checkProjectPermission
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createSprint(
     @Arg("title") title: string,
-    @Ctx() context: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<SprintResponse> {
-    const { req } = context;
-
-    const projectId = prod
-      ? req.params.projectId
-      : "332053e6-45cd-4104-92db-000154a1af32"; // 332053e6-45cd-4104-92db-000154a1af32 //379fde06-2c64-4550-94ec-19d783dc9726
-
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
@@ -139,8 +104,6 @@ export class SprintResolver {
         project: projectId,
       }).save();
 
-      // TODO Notification 생성 해줘야함.
-
       return { sprint };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -148,14 +111,10 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
-    @Ctx() context: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<SprintResponse | undefined> {
     const {
       id,
@@ -171,10 +130,6 @@ export class SprintResolver {
     try {
       const sprintRepository = getRepository(Sprint);
       const sprint = await sprintRepository.findOne(id);
-      const { req } = context;
-      const projectId = prod
-        ? req.params.projectId
-        : "c77cc15c-739a-4ef4-9e6c-fd43eb0d75a9";
 
       if (!projectId || !sprint)
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -281,13 +236,9 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteSprint(
-    // @Ctx() context: MyContext,
+    @Arg("projectId") projectId: string,
     @Arg("id") id: string
   ): Promise<SprintResponse> {
     const sprint = await Sprint.findOne(id);
@@ -300,6 +251,7 @@ export class SprintResolver {
       await Sprint.delete(sprint);
       return { success: true };
     } catch (err) {
+      console.log("projectId", projectId);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -307,7 +259,7 @@ export class SprintResolver {
   @Mutation(() => SprintResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async readSprintNotification(
-    // @Ctx() context: MyContext,
+    @Arg("projectId") projectId: string,
     @Arg("id") id: string
   ): Promise<SprintResponse> {
     const sprintNotification = await SprintNotification.findOne(id);
@@ -320,6 +272,7 @@ export class SprintResolver {
       await SprintNotification.update(sprintNotification.id, { isRead: true });
       return { success: true };
     } catch (err) {
+      console.log("projectId", projectId);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
