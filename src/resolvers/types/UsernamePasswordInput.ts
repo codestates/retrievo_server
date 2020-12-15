@@ -10,6 +10,8 @@ export class UsernamePasswordInput {
 
   @Field()
   email: string;
-}
 
+  @Field({ nullable: true })
+  projectId?: string;
+}
 export default UsernamePasswordInput;
