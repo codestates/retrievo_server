@@ -35,6 +35,33 @@ import LoginInput from "./types/LoginInput";
 export class UserResolver {
   @Query(() => UserResponse)
   @UseMiddleware([checkAuthStatus])
+  async getMe(@Ctx() context: MyContext): Promise<UserResponse> {
+    const id = context.req.session.passport?.user;
+    try {
+      const user = await User.findOne(
+        { id },
+        {
+          relations: [
+            "userTask",
+            "userTask.user",
+            "userTask.task",
+            "userTask.task.project",
+            "projectPermissions",
+            "projectPermissions.project",
+          ],
+        }
+      );
+      if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
+      console.log("----------user:", user);
+      return { user };
+    } catch (err) {
+      console.log("getMe Query Error:", err.message);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Query(() => UserResponse)
+  @UseMiddleware([checkAuthStatus])
   async getUser(@Arg("id") id: string): Promise<UserResponse> {
     try {
       const user = await User.findOne(
