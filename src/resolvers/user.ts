@@ -29,6 +29,7 @@ import DeleteResponse from "./types/DeleteResponse";
 /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkIfGuest from "../middleware/checkIfGuest";
+import LoginInput from "./types/LoginInput";
 
 @Resolver()
 export class UserResolver {
@@ -83,10 +84,10 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Arg("projectId") projectId: string,
     @Ctx() context: MyContext
   ): Promise<UserResponse> {
     const { redis, req } = context;
+    const { projectId } = options;
     try {
       let hashed;
       if (prod) {
@@ -134,13 +135,12 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("email") email: string,
-    @Arg("password") password: string,
-    @Arg("projectId") projectId: string,
+    @Arg("options") options: LoginInput,
     @Ctx() context: MyContext
   ): Promise<UserResponse | Error> {
     const { req, redis } = context;
     try {
+      const { email, password, projectId } = options;
       const { user } = await context.authenticate("graphql-local", {
         email,
         password,
