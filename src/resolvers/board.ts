@@ -17,12 +17,12 @@ import BoardUpdateInput from "./types/BoardUpdateInput";
 // /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkAdminPermission from "../middleware/checkAdminPermission";
-import checkProjectPermission from "../middleware/checkProjectPermission";
+// import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class BoardResolver {
   @Query(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getBoards(@Arg("projectId") projectId: string): Promise<BoardResponse> {
     try {
       const currentSprint = await Sprint.findOne({
