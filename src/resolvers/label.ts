@@ -27,11 +27,11 @@ import checkAuthStatus from "../middleware/checkAuthStatus";
 @Resolver()
 export class LabelResolver {
   @Query(() => LabelResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async getlabels(@Ctx() { req }: MyContext): Promise<LabelResponse> {
+  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  async getLabels(@Ctx() { req }: MyContext): Promise<LabelResponse> {
     try {
       const projectId =
-        req.params.projectId || "2654a702-a252-419f-a8b9-66fc3341b4d7";
+        req.params.projectId || "04f025f8-234c-49b7-b9bf-7b7f94415569";
       const labels = await Label.find({ where: { project: projectId } });
       if (!labels) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { label: labels };

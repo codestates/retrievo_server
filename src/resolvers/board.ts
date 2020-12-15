@@ -31,12 +31,12 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class BoardResolver {
   @Query(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
   async getBoards(@Ctx() { req }: MyContext): Promise<BoardResponse> {
     try {
       console.log("req.query.projectId:", req.query.projectId);
       // FIXME : const { projectId } = req.query;
-      const projectId = "0baf6a7d-a5d1-4148-acc8-3cd053149d25";
+      const projectId = "04f025f8-234c-49b7-b9bf-7b7f94415569";
 
       const currentSprint = await Sprint.findOne({
         project: projectId,
