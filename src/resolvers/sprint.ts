@@ -287,7 +287,6 @@ export class SprintResolver {
       const sprint = await Sprint.find({
         where: { project: projectId, didStart: true },
       });
-      console.log("sprint", sprint);
       if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { sprint: sprint[0] };
     } catch (err) {

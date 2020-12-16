@@ -117,6 +117,7 @@ export class TaskResolver {
       if (!task)
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
 
+      console.log("task", task);
       return { task: [task] };
     } catch (err) {
       console.log("Task create Mutation error:", err);
