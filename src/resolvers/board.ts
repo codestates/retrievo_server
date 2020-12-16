@@ -1,4 +1,10 @@
-import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
+import {
+  Resolver,
+  Arg,
+  Query,
+  Mutation,
+  // UseMiddleware,
+} from "type-graphql";
 import { getCustomRepository, getManager, getRepository } from "typeorm";
 
 /* Entities */
@@ -15,8 +21,8 @@ import BoardResponse from "./types/BoardResponse";
 import BoardUpdateInput from "./types/BoardUpdateInput";
 
 // /* Middleware */
-import checkAuthStatus from "../middleware/checkAuthStatus";
-import checkAdminPermission from "../middleware/checkAdminPermission";
+// import checkAuthStatus from "../middleware/checkAuthStatus";
+// import checkAdminPermission from "../middleware/checkAdminPermission";
 // import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
@@ -59,7 +65,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createBoard(
     @Arg("title") title: string,
     @Arg("projectId") projectId: string
@@ -87,6 +93,7 @@ export class BoardResolver {
             { project, boardColumnIndex: boards.length - 1 },
             { boardColumnIndex: boards.length }
           );
+          console.log("updateRes", updateRes);
 
           if (!updateRes.affected)
             return { error: generateError(errorKeys.DATA_NOT_FOUND) };
@@ -107,61 +114,14 @@ export class BoardResolver {
 
       if (transactionResult.error) return transactionResult;
 
-      const newBoards = await Board.find({
-        where: { project: projectId },
-        relations: ["task"],
-      });
+      // const newBoards = await Board.find({
+      //   where: { project: projectId },
+      //   relations: ["task"],
+      // });
 
-      if (!newBoards) {
-        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-      }
-
-      return { boards: newBoards };
-    } catch (err) {
-      console.log("Board create Mutation error:", err);
-      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-    }
-  }
-
-  @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
-  async updateBoard(
-    @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
-    @Arg("projectId") projectId: string
-  ): Promise<BoardResponse> {
-    try {
-      const board = await Board.findOne({
-        where: { id },
-        relations: ["project"],
-      });
-      if (board?.project.id !== projectId)
-        return {
-          error: generateError(errorKeys.BAD_REQUEST, "project not match"),
-        };
-
-      const boardRepository = getCustomRepository(BoardRepository);
-
-      if (newIndex !== undefined) {
-        const res = await boardRepository.changeBoardIndex(id, newIndex);
-        if (!res)
-          return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
-      }
-
-      if (title !== undefined) {
-        const updateRes = await Board.update({ id }, { title });
-        if (!updateRes.affected || updateRes.affected < 1)
-          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-      }
-
-      const currentSprint = await Sprint.findOne({
-        project: projectId,
-        didStart: true,
-      });
-      if (!currentSprint)
-        return { error: generateError(errorKeys.BAD_REQUEST, "Sprint") };
-
-      const boards = await getRepository(Board)
+      const newBoards = await getRepository(Board)
         .createQueryBuilder("board")
+        .leftJoinAndSelect("board.project", "project")
         .leftJoinAndSelect("board.task", "task")
         .leftJoinAndSelect("task.taskLabel", "taskLabel")
         .leftJoinAndSelect("taskLabel.label", "label")
@@ -175,8 +135,88 @@ export class BoardResolver {
         .orderBy("board.boardColumnIndex", "ASC")
         .addOrderBy("task.boardRowIndex", "ASC")
         .getMany();
+      console.log("newBoards", newBoards);
 
-      return { boards };
+      if (!newBoards) {
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      }
+
+      return { boards: newBoards };
+    } catch (err) {
+      console.log("Board create Mutation error:", err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => BoardResponse)
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  async updateBoard(
+    @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
+    @Arg("projectId") projectId: string
+  ): Promise<BoardResponse> {
+    try {
+      const board = await Board.findOne({
+        where: { id },
+        relations: ["project"],
+      });
+      if (board?.project.id !== projectId)
+        return {
+          error: generateError(errorKeys.BAD_REQUEST, "board"),
+        };
+
+      const boardRepository = getCustomRepository(BoardRepository);
+
+      if (newIndex !== undefined) {
+        const res = await boardRepository.changeBoardIndex(id, newIndex);
+        if (!res)
+          return { error: generateError(errorKeys.BAD_REQUEST, "board") };
+      }
+
+      if (title !== undefined) {
+        const updateRes = await Board.update({ id }, { title });
+        if (!updateRes.affected || updateRes.affected < 1)
+          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+      }
+
+      const currentSprint = await Sprint.findOne({
+        project: projectId,
+        didStart: true,
+      });
+      if (!currentSprint)
+        return { error: generateError(errorKeys.BAD_REQUEST, "board") };
+
+      // FIXME
+      // const boards = await getRepository(Board)
+      //   .createQueryBuilder("board")
+      //   .leftJoinAndSelect("board.task", "task")
+      //   .leftJoinAndSelect("task.taskLabel", "taskLabel")
+      //   .leftJoinAndSelect("taskLabel.label", "label")
+      //   .leftJoinAndSelect("task.userTask", "userTask")
+      //   .leftJoinAndSelect("userTask.user", "user")
+      //   .where("board.project = :projectId")
+      //   .setParameter("projectId", projectId)
+      //   // .leftJoinAndSelect("task.sprint", "spirnt")
+      //   // .where("task.sprint = :sprintId")
+      //   // .setParameter("sprintId", currentSprint.id)
+      //   .orderBy("board.boardColumnIndex", "ASC")
+      //   .addOrderBy("task.boardRowIndex", "ASC")
+      //   .getMany();
+      const updatedBoard = await Board.findOne({
+        where: { id },
+        relations: [
+          "project",
+          "task",
+          "task.userTask",
+          "task.userTask.user",
+          "task.taskLabel",
+          "task.taskLabel.label",
+        ],
+      });
+
+      if (!updatedBoard)
+        return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+
+      return { boards: [updatedBoard] };
     } catch (err) {
       console.log("Board update Mutation error:", err);
       if (err.code === "22P02")
@@ -186,7 +226,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteBoard(
     @Arg("id") id: string,
     @Arg("newBoardId") newBoardId: string,
@@ -199,7 +239,7 @@ export class BoardResolver {
         id,
         newBoardId
       );
-      if (!res) return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
+      if (!res) return { error: generateError(errorKeys.BAD_REQUEST, "board") };
 
       const currentSprint = await Sprint.findOne({
         project: projectId,
@@ -207,7 +247,7 @@ export class BoardResolver {
       });
 
       if (!currentSprint)
-        return { error: generateError(errorKeys.BAD_REQUEST, "Sprint") };
+        return { error: generateError(errorKeys.BAD_REQUEST, "board") };
 
       const boards = await getRepository(Board)
         .createQueryBuilder("board")
