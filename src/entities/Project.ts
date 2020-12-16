@@ -65,18 +65,19 @@ export default class Project extends BaseEntity {
   )
   commentNotification?: CommentNotification[];
 
+  @Field(() => [Sprint], { nullable: true })
   @OneToMany(() => Sprint, (sprint) => sprint.project)
   sprint?: Sprint[];
 
-  @Field(() => [Board])
+  @Field(() => [Board], { nullable: true })
   @OneToMany(() => Board, (board) => board.project)
   board?: Board[];
 
-  @Field(() => [Label])
+  @Field(() => [Label], { nullable: true })
   @OneToMany(() => Label, (label) => label.project)
   label?: Label[];
 
-  @Field(() => [Task])
+  @Field(() => [Task], { nullable: true })
   @OneToMany(() => Task, (task) => task.project)
   task?: Task[];
 }

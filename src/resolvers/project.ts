@@ -45,22 +45,25 @@ export class ProjectResolver {
   async project(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
-    // const projectId = prod
-    //   ? context.req.query.projectId
-    //   : "5af3ad9f-69f4-4d73-894e-0e865c39712c";
-
     if (!projectId) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
     try {
       const project = await Project.findOne({
         where: { id: projectId },
-        relations: ["projectPermissions", "projectPermissions.user"],
+        relations: [
+          "projectPermissions",
+          "projectPermissions.user",
+          "sprint",
+          "board",
+          "label",
+        ],
       });
 
       if (project) return { project };
 
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     } catch (err) {
+      console.log("get Project Error:", err.message);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -311,7 +314,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteProject(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {

@@ -18,7 +18,7 @@ import sprintRowDnd from "../utils/sprintRowDnd";
 /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
-import checkAdminPermission from "../middleware/checkAdminPermission";
+// import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
@@ -81,9 +81,10 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createSprint(
     @Arg("title") title: string,
+    @Arg("description") description: string,
     @Arg("projectId") projectId: string
   ): Promise<SprintResponse> {
     if (!projectId) {
@@ -100,6 +101,7 @@ export class SprintResolver {
 
       const sprint = await Sprint.create({
         title,
+        description,
         row,
         project: projectId,
       }).save();

@@ -10,6 +10,7 @@ import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
 import UserTaskResponse from "./types/UserTaskResponse";
+import UserTaskDeleteResponse from "./types/DeleteUserTaskResponse";
 
 // /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
@@ -43,20 +44,21 @@ export class UserTaskResolver {
     }
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => UserTaskDeleteResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async deleteUserTask(
     @Arg("id") id: string,
     @Arg("projectId") projectId: string
-  ): Promise<boolean> {
+  ): Promise<UserTaskDeleteResponse> {
     try {
       const deletedRes = await UserTask.delete(id);
-      if (!deletedRes.affected) return false;
-      return true;
+      if (!deletedRes.affected)
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { success: true };
     } catch (err) {
       console.log("projectId", projectId);
       console.log("UserTask delete Mutation error catch:", err);
-      return false;
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 }
