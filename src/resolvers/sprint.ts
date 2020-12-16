@@ -19,6 +19,7 @@ import sprintRowDnd from "../utils/sprintRowDnd";
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
 import checkAdminPermission from "../middleware/checkAdminPermission";
+// import StartedSprintResonse from "./types/StartedSprintResponse";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
@@ -273,6 +274,23 @@ export class SprintResolver {
       return { success: true };
     } catch (err) {
       console.log("projectId", projectId);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Query(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getStartedSprint(
+    @Arg("projectId") projectId: string
+  ): Promise<SprintResponse> {
+    try {
+      const sprint = await Sprint.find({
+        where: { project: projectId, didStart: true },
+      });
+      console.log("sprint", sprint);
+      if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { sprint: sprint[0] };
+    } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }

@@ -23,7 +23,7 @@ import checkProjectPermission from "../middleware/checkProjectPermission";
 @Resolver()
 export class TaskResolver {
   @Query(() => TaskResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getTask(
     @Arg("id") id: string,
     @Arg("projectId") projectId: string
@@ -55,7 +55,7 @@ export class TaskResolver {
   }
 
   @Mutation(() => TaskResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async createTask(
     @Arg("options") options: TaskCreateInput,
     @Arg("projectId") projectId: string
@@ -161,7 +161,7 @@ export class TaskResolver {
   }
 
   @Mutation(() => TaskDeleteResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async deleteTask(
     @Arg("id") id: string,
     @Arg("projectId") projectId: string

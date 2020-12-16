@@ -41,7 +41,7 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class ProjectResolver {
   @Query(() => ProjectReturnType)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async project(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
