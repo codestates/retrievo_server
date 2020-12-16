@@ -41,7 +41,7 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class ProjectResolver {
   @Query(() => ProjectReturnType)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async project(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
@@ -54,7 +54,7 @@ export class ProjectResolver {
     try {
       const project = await Project.findOne({
         where: { id: projectId },
-        relations: ["projectPermission", "projectPermission.projectId"],
+        relations: ["projectPermissions", "projectPermissions.user"],
       });
 
       if (project) return { project };
@@ -252,11 +252,11 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async updateProjectName(
     @Arg("name") name: string,
     @Arg("projectId") projectId: string
@@ -278,12 +278,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectPermissionReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkIfGuest,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkIfGuest,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async updateProjectPermission(
     @Arg("userId") userId: string,
     @Arg("isAdmin") isAdmin: boolean,
@@ -295,6 +295,7 @@ export class ProjectResolver {
       if (userId && typeof isAdmin === "boolean") {
         const projectPermission = await em.findOne(ProjectPermission, {
           where: { user: userId, project: projectId },
+          relations: ["project", "project.projectPermissions"],
         });
 
         if (projectPermission) {
