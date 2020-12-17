@@ -74,6 +74,10 @@ export class SprintResolver {
 
       if (!sprints) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
+      sprints.sort((a, b) => {
+        return a.row - b.row;
+      });
+
       return { sprints };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
