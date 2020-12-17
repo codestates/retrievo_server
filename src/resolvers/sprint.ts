@@ -18,12 +18,11 @@ import sprintRowDnd from "../utils/sprintRowDnd";
 /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
-import checkAdminPermission from "../middleware/checkAdminPermission";
-// import StartedSprintResonse from "./types/StartedSprintResponse";
+// import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
       const sprint = await Sprint.findOne(id, {
@@ -51,7 +50,7 @@ export class SprintResolver {
   }
 
   @Query(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprints(
     @Arg("projectId") projectId: string
   ): Promise<Sprint[] | SprintResponse> {
@@ -82,9 +81,10 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createSprint(
     @Arg("title") title: string,
+    @Arg("description") description: string,
     @Arg("projectId") projectId: string
   ): Promise<SprintResponse> {
     if (!projectId) {
@@ -101,6 +101,7 @@ export class SprintResolver {
 
       const sprint = await Sprint.create({
         title,
+        description,
         row,
         project: projectId,
       }).save();
@@ -112,7 +113,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
     @Arg("projectId") projectId: string
@@ -237,7 +238,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteSprint(
     @Arg("projectId") projectId: string,
     @Arg("id") id: string

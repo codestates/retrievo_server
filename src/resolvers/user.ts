@@ -46,6 +46,7 @@ export class UserResolver {
             "userTask.user",
             "userTask.task",
             "userTask.task.project",
+            "userTask.task.board",
             "projectPermissions",
             "projectPermissions.project",
           ],

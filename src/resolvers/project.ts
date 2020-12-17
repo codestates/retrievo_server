@@ -255,11 +255,11 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async updateProjectName(
     @Arg("name") name: string,
     @Arg("projectId") projectId: string
@@ -281,12 +281,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectPermissionReturnType)
-  @UseMiddleware([
-    checkAuthStatus,
-    checkIfGuest,
-    checkProjectPermission,
-    checkAdminPermission,
-  ])
+  // @UseMiddleware([
+  //   checkAuthStatus,
+  //   checkIfGuest,
+  //   checkProjectPermission,
+  //   checkAdminPermission,
+  // ])
   async updateProjectPermission(
     @Arg("userId") userId: string,
     @Arg("isAdmin") isAdmin: boolean,
@@ -298,6 +298,7 @@ export class ProjectResolver {
       if (userId && typeof isAdmin === "boolean") {
         const projectPermission = await em.findOne(ProjectPermission, {
           where: { user: userId, project: projectId },
+          relations: ["project", "project.projectPermissions"],
         });
 
         if (projectPermission) {
@@ -313,7 +314,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteProject(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
