@@ -524,7 +524,11 @@ export class TaskRepository extends Repository<Task> {
             return { success: true };
           }
 
+          /// ////////////////////////////
+          /// /////그 외 업데이트/////////
+          /// ///////////////////////////
           if (basicOptions) {
+            console.log("------------", basicOptions);
             await transactionalEntityManager.update(
               Task,
               { id },
@@ -545,6 +549,7 @@ export class TaskRepository extends Repository<Task> {
     }
   }
 
+  /* delete Task */
   async deleteTaskAndChangeIndice(taskId: string): Promise<TaskDeleteResponse> {
     try {
       const task = await Task.findOne({
