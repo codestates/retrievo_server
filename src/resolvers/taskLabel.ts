@@ -27,10 +27,7 @@ export class TaskLabelResolver {
     @Arg("name") name: string,
     @Arg("color") color: string,
     @Arg("projectId") projectId: string
-    // @Ctx() { req }: MyContext
   ): Promise<TaskLabelResponse> {
-    // const projectId =
-    //   req.query.projectId || "6e523cc7-da7a-4014-b3ac-dfe9261c892c";
     const project = await Project.findOne({ id: projectId });
     const em = getManager();
 
