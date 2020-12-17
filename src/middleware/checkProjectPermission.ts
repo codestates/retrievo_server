@@ -7,6 +7,7 @@ export const checkProjectPermission: MiddlewareFn<MyContext> = async (
   { context, args },
   next
 ) => {
+  console.log("---project permission start---");
   const userId = context.req.session.passport?.user;
   const { projectId } = args;
   try {

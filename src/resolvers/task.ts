@@ -134,6 +134,7 @@ export class TaskResolver {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
       const res = await taskRepository.updateTaskAndChangeIndex(options);
+      console.log(res);
       if (res.error) return res;
 
       const task = await getRepository(Task)

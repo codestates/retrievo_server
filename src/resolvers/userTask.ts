@@ -2,6 +2,8 @@ import { Resolver, Arg, Mutation, UseMiddleware } from "type-graphql";
 import { getCustomRepository } from "typeorm";
 
 /* Entities */
+import User from "../entities/User";
+import Task from "../entities/Task";
 import UserTask from "../entities/UserTask";
 import { UserTaskRepository } from "../repository/UserTaskRepository";
 
@@ -47,11 +49,14 @@ export class UserTaskResolver {
   @Mutation(() => UserTaskDeleteResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async deleteUserTask(
-    @Arg("id") id: string,
+    @Arg("taskId") taskId: string,
+    @Arg("userId") userId: string,
     @Arg("projectId") projectId: string
   ): Promise<UserTaskDeleteResponse> {
     try {
-      const deletedRes = await UserTask.delete(id);
+      const user = await User.findOne({ id: userId });
+      const task = await Task.findOne({ id: taskId });
+      const deletedRes = await UserTask.delete({ user, task });
       if (!deletedRes.affected)
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { success: true };
