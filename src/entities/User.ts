@@ -61,7 +61,7 @@ export default class User extends BaseEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  avatar?: string;
+  avatar: string;
 
   @Field(() => roleTypes, { defaultValue: "member" })
   @Column({
@@ -114,6 +114,11 @@ export default class User extends BaseEntity {
   @OneToMany(() => Comment, (comment) => comment.user)
   comment?: Comment[];
 
-  @OneToMany(() => UserTask, (userTask) => userTask.task)
-  userTask!: UserTask[];
+  @Field(() => [UserTask], { nullable: true })
+  @OneToMany(() => UserTask, (userTask) => userTask.user, { nullable: true })
+  userTask: UserTask[]; // 된다
+
+  // @OneToMany(() => UserTask, (userTask) => userTask.user, { nullable: true })
+  // @Field(() => [UserTask], { nullable: true })
+  // userTask: UserTask[] | null; //널을 리턴을 할 수 없다고 나오니꺄ㅏ 안된다.
 }

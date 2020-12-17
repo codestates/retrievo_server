@@ -61,17 +61,6 @@ export default class TaskNotification extends BaseEntity {
   })
   type: taskNotificationType;
 
-  //    */
-  // cascade?: boolean | ("insert" | "update" | "remove" | "soft-remove" | "recover")[];
-  // /**
-  //  * Indicates if relation column value can be nullable or not.
-  //  */
-  // nullable?: boolean;
-  // /**
-  //  * Database cascade action on delete.
-  //  */
-  // // onDelete?: OnDeleteType;
-  // = "RESTRICT" | "CASCADE" | "SET NULL" | "DEFAULT" | "NO ACTION"
   @Field(() => Project)
   @ManyToOne(() => Project, (project) => project.taskNotification, {
     onDelete: "CASCADE",
@@ -79,10 +68,12 @@ export default class TaskNotification extends BaseEntity {
   @JoinColumn({ name: "project_id" })
   project: Project;
 
-  @Field(() => Task, { nullable: true })
-  @ManyToOne(() => Task, (task: Task) => task.taskNotification)
+  @Field(() => Task)
+  @ManyToOne(() => Task, (task: Task) => task.taskNotification, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "task_id" })
-  task?: Task;
+  task: Task;
 
   @Field(() => String)
   @CreateDateColumn({ name: "created_at" })

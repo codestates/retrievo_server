@@ -17,7 +17,10 @@ export default class UserTask extends BaseEntity {
   id!: string;
 
   @Field(() => Task)
-  @ManyToOne(() => Task, (task) => task.userTask, { onDelete: "CASCADE" })
+  @ManyToOne(() => Task, (task) => task.userTask, {
+    onDelete: "CASCADE",
+    nullable: true,
+  })
   @JoinColumn({ name: "task_id" })
   task!: Task;
 

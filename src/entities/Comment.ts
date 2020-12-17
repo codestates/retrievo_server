@@ -21,14 +21,13 @@ export default class Comment extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field(() => String)
-  @Column({ name: "root_comment_id" })
+  @Field(() => String, { nullable: true })
+  @Column({ name: "root_comment_id", nullable: true })
   rootCommentId?: string;
 
   @Field(() => Task)
   @ManyToOne(() => Task, (task) => task.comment, {
-    onDelete: "SET NULL",
-    nullable: true,
+    onDelete: "CASCADE",
   })
   @JoinColumn({ name: "task_id" })
   task!: Task;

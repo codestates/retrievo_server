@@ -18,7 +18,7 @@ export default class Label extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Field()
+  @Field(() => String)
   @Column()
   name!: string;
 
@@ -34,6 +34,6 @@ export default class Label extends BaseEntity {
   project!: Project;
 
   @OneToMany(() => TaskLabel, (taskLabel) => taskLabel.label)
-  @Field(() => TaskLabel)
-  task?: TaskLabel[];
+  @Field(() => [TaskLabel])
+  taskLabel?: TaskLabel[];
 }

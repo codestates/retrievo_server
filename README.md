@@ -1,5 +1,5 @@
 <h1 align="center">Hi 👋, We are RPQ</h1>
-<h3 align="center">A passionate full-stack developers from Korea</h3>
+<h3 align="center">Passionative full-stack developers from Korea</h3>
 
 
 <h3 align="left">Languages and Tools:</h3>

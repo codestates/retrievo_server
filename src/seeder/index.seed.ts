@@ -92,9 +92,10 @@ export default class CreateSeeds implements Seeder {
         console.log("boardIndex:", boardIndex);
         let sprintIndex = taskIndex % sprintNum;
         Object.assign(task, {
+          project,
           sprint: groupOfSprints[sprintIndex],
-          board: groupOfBoards[boardIndex],
-          boardRowIndex: Math.floor(taskIndex / boardNum),
+          // board: groupOfBoards[boardIndex],
+          // boardRowIndex: Math.floor(taskIndex / boardNum),
           sprintRowIndex: Math.floor(taskIndex / sprintNum),
         });
         taskIndex += 1;

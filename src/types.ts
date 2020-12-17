@@ -20,8 +20,8 @@ interface QueryParamIFC {
   [key: string]: string;
 }
 
-interface ParamIFC {
-  [key: string]: Buffer;
+export interface ParamIFC {
+  [key: string]: string;
 }
 
 export type MyContext = Context<UserObject> & {

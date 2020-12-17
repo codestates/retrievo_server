@@ -1,74 +1,46 @@
-import {
-  Resolver,
-  Ctx,
-  Arg,
-  Query,
-  // Mutation,
-  // UseMiddleware,
-} from "type-graphql";
-// import { getCustomRepository } from "typeorm";
-// import { getManager } from "typeorm";
+import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 
 /* Entities */
-// import User from "../entities/User";
+import { getConnection, getRepository } from "typeorm";
+import Board from "../entities/Board";
 import Sprint from "../entities/Sprint";
-// import Project from "../entities/Project";
+import SprintNotification, {
+  sprintNotificationType,
+} from "../entities/SprintNotification";
+import Task from "../entities/Task";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
-// import { BoardRepository } from "../repository/BoardCustomRepository";
-
-/* Utils */
-import { prod } from "../constants";
 
 /* Types */
-import { MyContext } from "../types";
 import SprintResponse from "./types/SprintResponse";
+import { SprintOptionInput } from "./types/SprintOptionInput";
+import sprintRowDnd from "../utils/sprintRowDnd";
 
-// /* Middleware */
-// import checkIfGuest from "../middleware/checkIfGuest";
-// import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+/* Middleware */
+import checkAuthStatus from "../middleware/checkAuthStatus";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 // import checkAdminPermission from "../middleware/checkAdminPermission";
-
-/*
-SPRINT 정보 불러오기 RE-74 (first version)
-
- - 스프린트를 불러온다
-
-- 스프린트 하위에 있는 테스크를 불러온다
-
-스프린트들을 불러온다
-
-각 스프린트들의 하위 테스크를 불러온다
-
-스프린트 삭제 RE 76
-
-해당 스프린트를 삭제한다
-
-cascade 로 스프린트에 의존하고 있는 notification 을 지워야한다.
-
-스프린트 추가 RE 75
-
-스프린트를 생성해준다
-
-이때 참조키로 프로젝트 id를 갖고 있어야한다.
-  */
-
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
-  async getSprint(
-    // @Ctx() { _ }: MyContext,
-    @Arg("id") id: string
-  ): Promise<SprintResponse> {
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
-      // const projectId = prod
-      //   ? req.params
-      //   : "332053e6-45cd-4104-92db-000154a1af32";
-
       const sprint = await Sprint.findOne(id, {
-        relations: ["task", "task.sprint"],
+        relations: [
+          "task",
+          "task.sprint",
+          "task.userTask",
+          "task.userTask.user",
+          "task.taskLabel",
+          "task.taskLabel.label",
+          "task.board",
+          "sprintNotification",
+          "sprintNotification.sprint",
+          "project",
+          "project.sprint",
+        ],
       });
+
       if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
       return { sprint };
@@ -78,27 +50,33 @@ export class SprintResolver {
   }
 
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus]) // FIXME : checkProjectPermission
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprints(
-    @Ctx() { req }: MyContext
+    @Arg("projectId") projectId: string
   ): Promise<Sprint[] | SprintResponse> {
     try {
-      const projectId = prod
-        ? req.params
-        : "379fde06-2c64-4550-94ec-19d783dc9726";
-
       const sprints = await Sprint.find({
         where: { project: projectId },
-        relations: ["task", "task.sprint"],
+        relations: [
+          "task",
+          "task.sprint",
+          "task.userTask",
+          "task.userTask.user",
+          "task.taskLabel",
+          "task.taskLabel.label",
+          "task.board",
+          "sprintNotification",
+          "sprintNotification.sprint",
+          "project",
+          "project.sprint",
+        ],
       });
 
-      // const sprints = await Sprint.createQueryBuilder()
-      //   .leftJoinAndSelect("sprint.task", "task")
-      //   .leftJoinAndSelect("task.taskLabel", "taskLabel")
-      //   .leftJoinAndSelect("taskLabel.label", "label")
-      //   .getMany();
-
       if (!sprints) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+      sprints.sort((a, b) => {
+        return a.row - b.row;
+      });
 
       return { sprints };
     } catch (err) {
@@ -106,99 +84,221 @@ export class SprintResolver {
     }
   }
 
-  // @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
-  // async createSprint(
-  //   @Arg("title") title: string,
-  //   @Ctx() { req }: MyContext
-  // ): Promise<SprintResponse> {
-  //   // FIXME : const { projectId } = req.query;
-  //   const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
+  @Mutation(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  async createSprint(
+    @Arg("title") title: string,
+    @Arg("description") description: string,
+    @Arg("projectId") projectId: string
+  ): Promise<SprintResponse> {
+    if (!projectId) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
 
-  //   try {
-  //     const project = await Project.findOne({
-  //       where: { id: projectId },
-  //       relations: ["board"],
-  //     });
+    try {
+      const sprints = await Sprint.find({
+        where: { project: projectId },
+        relations: ["project"],
+      });
 
-  //     const duplicated = project?.board?.filter((board) => {
-  //       return board.title === title;
-  //     });
+      const row = sprints.length ? sprints.length - 1 : 0;
 
-  //     if (duplicated?.length)
-  //       return { error: generateError(errorKeys.DATA_ALREADY_EXIST) };
+      const sprint = await Sprint.create({
+        title,
+        description,
+        row,
+        project: projectId,
+      }).save();
 
-  //     const boardColumnIndex = project?.board?.length;
+      return { sprint };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 
-  //     await Board.create({
-  //       title,
-  //       project,
-  //       boardColumnIndex,
-  //     }).save();
+  @Mutation(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  async updateSprint(
+    @Arg("options") options: SprintOptionInput,
+    @Arg("projectId") projectId: string
+  ): Promise<SprintResponse | undefined> {
+    const {
+      id,
+      title,
+      description,
+      didStart,
+      isCompleted,
+      row,
+      dueDate,
+      startedAt,
+    } = options;
 
-  //     const newProject = await Project.findOne({
-  //       where: { id: projectId },
-  //       relations: ["sprint", "sprint.task"],
-  //     });
+    try {
+      const sprintRepository = getRepository(Sprint);
+      const sprint = await sprintRepository.findOne(id);
 
-  //     if (!newProject) {
-  //       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //     }
-  //     return { project: newProject };
-  //   } catch (err) {
-  //     console.log("Board create Mutation error:", err);
-  //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //   }
-  // }
+      if (!projectId || !sprint)
+        return { error: generateError(errorKeys.DATA_NOT_FOUND) };
 
-  // @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkIfGuest]) // FIXME : checkProjectPermission
-  // async updateBoard(
-  //   @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
-  //   @Ctx() { req }: MyContext
-  // ): Promise<SprintResponse> {
-  //   console.log(req.query.projectId);
-  //   // FIXME : const { projectId } = req.query;
-  //   const projectId = "469e011e-e4bc-4afb-93ca-47dcdf5ea3fb";
-  //   try {
-  //     const board = await Board.findOne({
-  //       where: { id },
-  //       relations: ["project"],
-  //     });
-  //     if (board?.project.id !== projectId)
-  //       return {
-  //         error: generateError(errorKeys.BAD_REQUEST, "project not match"),
-  //       };
+      /* 일반 D&D 경우 */
+      if (typeof row === "number") {
+        if (!sprint.didStart) return await sprintRowDnd(row, sprint, projectId);
+        return { error: generateError(errorKeys.BAD_REQUEST) };
+      }
 
-  //     // NOTE: customRepository를 불러온다
-  //     const boardRepository = getCustomRepository(BoardRepository);
+      if (!row) {
+        if (title) sprint.title = title;
+        if (description) sprint.description = description;
+        if (startedAt) sprint.startedAt = startedAt;
+        if (dueDate) sprint.dueDate = dueDate;
+        if (typeof didStart === "boolean") {
+          const tasks = await Task.find({
+            where: { sprint: id },
+            relations: ["board", "board.task"],
+          });
 
-  //     // NOTE: 보드 id와 index를 changeBoardIndex 메소드의 인자로 넣는다.
-  //     // NOTE: response로 true와 false를 받는다.
-  //     if (newIndex !== undefined) {
-  //       const res = await boardRepository.changeBoardIndex(id, newIndex);
-  //       if (!res)
-  //         return { error: generateError(errorKeys.BAD_REQUEST, "Index") };
-  //     }
+          const board = await Board.findOne({
+            where: { boardColumnIndex: 0, project: projectId },
+          });
 
-  //     if (title !== undefined) {
-  //       const updateRes = await Board.update({ id }, { title });
-  //       if (!updateRes.affected || updateRes.affected < 1)
-  //         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //     }
+          const sprints = await sprintRepository.find({
+            where: { project: projectId },
+          });
 
-  //     const project = await Project.findOne({
-  //       where: { id: projectId },
-  //       relations: ["board", "board.task"],
-  //     });
+          const taskRepository = getRepository(Task);
+          if (didStart) {
+            tasks.map(async (task, index) => {
+              const newTask = Object.assign(task, {
+                board: board?.id,
+                boardRowIndex: index,
+              });
+              await taskRepository.save(newTask);
+            });
 
-  //     return { project };
-  //   } catch (err) {
-  //     console.log("Board update Mutation error:", err);
-  //     if (err.code === "22P02")
-  //       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-  //     return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-  //   }
+            sprints.map(async (task) => {
+              return await Sprint.update(task, { didStart: !didStart });
+            });
+
+            sprint.didStart = didStart;
+
+            getConnection().transaction(async (tm) => {
+              const sprintNotification = SprintNotification.create({
+                sprint,
+                project: projectId,
+                type: sprintNotificationType.SPRINT_START,
+              });
+              await tm.save(sprintNotification);
+              await sprintRepository.save(sprint);
+            });
+
+            return await sprintRowDnd(0, sprint, projectId);
+          }
+
+          /* didStart 가 false */
+          tasks.map(async (task) => {
+            const newTask = Object.assign(task, {
+              board: null,
+              boardRowIndex: null,
+            });
+            await taskRepository.save(newTask);
+          });
+
+          sprint.didStart = didStart;
+        }
+
+        if (isCompleted) {
+          if (!sprint.didStart) {
+            return { error: generateError(errorKeys.BAD_REQUEST) };
+          }
+          sprint.isCompleted = isCompleted;
+          const taskRepository = getRepository(Task);
+          const tasks = await taskRepository.find({
+            where: { sprint: sprint.id },
+          });
+          tasks.map(async (task) => {
+            const newTask = Object.assign(task, {
+              board: null,
+              boardRowIndex: null,
+            });
+            await taskRepository.save(newTask);
+          });
+
+          getConnection().transaction(async (tm) => {
+            const sprintNotification = SprintNotification.create({
+              sprint,
+              project: projectId,
+              type: sprintNotificationType.SPRINT_END,
+            });
+            await tm.save(sprintNotification);
+            await sprintRepository.save(sprint);
+          });
+        }
+      }
+      await sprintRepository.save(sprint);
+      return { success: true };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  async deleteSprint(
+    @Arg("projectId") projectId: string,
+    @Arg("id") id: string
+  ): Promise<SprintResponse> {
+    const sprint = await Sprint.findOne(id);
+
+    if (!sprint) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+
+    try {
+      await Sprint.delete(id);
+      return { success: true };
+    } catch (err) {
+      console.log("projectId", projectId);
+      console.log(err);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Mutation(() => SprintResponse)
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async readSprintNotification(
+    @Arg("projectId") projectId: string,
+    @Arg("id") id: string
+  ): Promise<SprintResponse> {
+    const sprintNotification = await SprintNotification.findOne(id);
+
+    if (!sprintNotification) {
+      return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+    }
+
+    try {
+      await SprintNotification.update(sprintNotification.id, { isRead: true });
+      return { success: true };
+    } catch (err) {
+      console.log("projectId", projectId);
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
+
+  @Query(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getStartedSprint(
+    @Arg("projectId") projectId: string
+  ): Promise<SprintResponse> {
+    try {
+      const sprint = await Sprint.find({
+        where: { project: projectId, didStart: true },
+      });
+      if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { sprint: sprint[0] };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 }
 
 export default SprintResolver;
