@@ -250,10 +250,11 @@ export class SprintResolver {
     }
 
     try {
-      await Sprint.delete(sprint);
+      await Sprint.delete(id);
       return { success: true };
     } catch (err) {
       console.log("projectId", projectId);
+      console.log(err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
