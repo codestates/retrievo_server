@@ -51,7 +51,7 @@ export async function sprintRowDnd(
       await sprintRepository.save(sprint);
     });
   }
-  return { success: true };
+  return { success: true, sprint };
 }
 
 export default sprintRowDnd;
