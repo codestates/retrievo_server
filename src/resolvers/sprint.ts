@@ -279,6 +279,22 @@ export class SprintResolver {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
+
+  @Query(() => SprintResponse)
+  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  async getStartedSprint(
+    @Arg("projectId") projectId: string
+  ): Promise<SprintResponse> {
+    try {
+      const sprint = await Sprint.find({
+        where: { project: projectId, didStart: true },
+      });
+      if (!sprint) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      return { sprint: sprint[0] };
+    } catch (err) {
+      return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+    }
+  }
 }
 
 export default SprintResolver;
