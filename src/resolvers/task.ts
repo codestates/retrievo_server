@@ -12,22 +12,23 @@ import TaskRepository from "../repository/TaskCustomRepository";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
-import TaskResponse from "./types/TaskResponse";
+// import TaskResponse from "./types/TaskResponse";
 import TaskCreateInput from "./types/TaskCreateInput";
 import TaskUpdateInput from "./types/TaskUpdateInput";
 import TaskDeleteResponse from "./types/TaskDeleteRespons";
+import SingleTaskResponse from "./types/SingleTaskResponse";
 
 // /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
 @Resolver()
 export class TaskResolver {
-  @Query(() => TaskResponse)
+  @Query(() => SingleTaskResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getTask(
     @Arg("id") id: string,
     @Arg("projectId") projectId: string
-  ): Promise<TaskResponse> {
+  ): Promise<SingleTaskResponse> {
     try {
       const task = await getRepository(Task)
         .createQueryBuilder("task")
@@ -46,7 +47,7 @@ export class TaskResolver {
         .getOne();
 
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-      return { task: [task] };
+      return { task };
     } catch (err) {
       console.log("projectId", projectId);
       console.log("Task Read Query Error:", err);
@@ -54,12 +55,12 @@ export class TaskResolver {
     }
   }
 
-  @Mutation(() => TaskResponse)
+  @Mutation(() => SingleTaskResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async createTask(
     @Arg("options") options: TaskCreateInput,
     @Arg("projectId") projectId: string
-  ): Promise<TaskResponse> {
+  ): Promise<SingleTaskResponse> {
     try {
       const { title, boardId, sprintId } = options;
 
@@ -117,22 +118,23 @@ export class TaskResolver {
       if (!task)
         return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
 
-      return { task: [task] };
+      return { task };
     } catch (err) {
       console.log("Task create Mutation error:", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
-  @Mutation(() => TaskResponse)
+  @Mutation(() => SingleTaskResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async updateTask(
     @Arg("options") options: TaskUpdateInput,
     @Arg("projectId") projectId: string
-  ): Promise<TaskResponse> {
+  ): Promise<SingleTaskResponse> {
     try {
       const taskRepository = getCustomRepository(TaskRepository);
       const res = await taskRepository.updateTaskAndChangeIndex(options);
+      console.log(res);
       if (res.error) return res;
 
       const task = await getRepository(Task)
@@ -152,7 +154,7 @@ export class TaskResolver {
         .getOne();
 
       if (!task) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-      return { task: [task] };
+      return { task };
     } catch (err) {
       console.log("projectId", projectId);
       console.log("Board create Mutation error:", err);

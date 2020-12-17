@@ -73,11 +73,14 @@ export class TaskLabelResolver {
   @Mutation(() => DeleteResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async deleteTaskLabel(
-    @Arg("id") id: string,
+    @Arg("labelId") labelId: string,
+    @Arg("taskId") taskId: string,
     @Arg("projectId") projectId: string
   ): Promise<DeleteResponse> {
     try {
-      const deleteRes = await TaskLabel.delete({ id });
+      const label = await Label.findOne({ id: labelId });
+      const task = await Task.findOne({ id: taskId });
+      const deleteRes = await TaskLabel.delete({ label, task });
       if (!deleteRes.affected)
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
       return { success: true };
