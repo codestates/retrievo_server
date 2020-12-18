@@ -60,7 +60,15 @@ const main = async () => {
   app.use(passport.session());
 
   app.use("/", express.static(path.resolve(__dirname, "../client/build")));
-  const routes = ["/graphql", "/subscriptions", "/playground"];
+  const routes = [
+    "/graphql",
+    "/subscriptions",
+    "/playground",
+    "/auth/google",
+    "/auth/github",
+    "/auth/google/callback",
+    "/auth/github/callback",
+  ];
 
   app.get("*", (req, res, next) => {
     if (routes.includes(req.url)) {
@@ -81,15 +89,15 @@ const main = async () => {
   app.get(
     "/auth/google/callback",
     passport.authenticate("google", {
-      successRedirect: "http://localhost:4000/graphql",
-      failureRedirect: "http://localhost:4000/graphql",
+      successRedirect: "http://retrievo.io/project/dashboard",
+      failureRedirect: "http://retrievo.io/not-found",
     })
   );
   app.get(
     "/auth/github/callback",
     passport.authenticate("github", {
-      successRedirect: "http://localhost:4000/graphql",
-      failureRedirect: "http://localhost:4000/graphql",
+      successRedirect: "http://retrievo.io/project/dashboard",
+      failureRedirect: "http://retrievo.io/not-found",
     })
   );
   // apollo Setting
