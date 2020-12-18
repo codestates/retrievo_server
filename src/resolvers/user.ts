@@ -100,6 +100,21 @@ export class UserResolver {
       });
 
       if (user) {
+        // TODO : server 용으로 만들기
+        // const sampleProjectId =
+        //   process.env.SAMPLE_PROJECT_ID ||
+        //   "13370038-8471-4c00-a933-c3e85f315a82";
+        // const guestProjectPermission = await ProjectPermission.create({
+        //   user: user.userId,
+        //   project: sampleProjectId,
+        //   isAdmin: true,
+        // });
+
+        // console.log("-------guestProjectPermission", guestProjectPermission);
+        // if (!guestProjectPermission) {
+        //   return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+        // }
+
         context.login(user);
         return { user: guestUser };
       }
