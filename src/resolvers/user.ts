@@ -111,7 +111,7 @@ export class UserResolver {
         const guestProjectPermission = await ProjectPermission.create({
           user: guestUser,
           project,
-          isAdmin: true,
+          isAdmin: false,
         }).save();
 
         console.log("-------guestProjectPermission", guestProjectPermission);
