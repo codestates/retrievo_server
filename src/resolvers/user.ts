@@ -100,26 +100,31 @@ export class UserResolver {
       });
 
       if (user) {
-        // TODO : server 용으로 만들기
-        // const sampleProjectId =
-        //   process.env.SAMPLE_PROJECT_ID ||
-        //   "13370038-8471-4c00-a933-c3e85f315a82";
-        // const guestProjectPermission = await ProjectPermission.create({
-        //   user: user.userId,
-        //   project: sampleProjectId,
-        //   isAdmin: true,
-        // });
+        const sampleProjectId =
+          process.env.SAMPLE_PROJECT_ID ||
+          "30d58b43-25ce-4385-9367-1453c8d9a2e8";
 
-        // console.log("-------guestProjectPermission", guestProjectPermission);
-        // if (!guestProjectPermission) {
-        //   return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
-        // }
+        const project = await Project.findOne({ id: sampleProjectId });
+        console.log("project", project);
+        if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+        const guestProjectPermission = await ProjectPermission.create({
+          user: guestUser,
+          project,
+          isAdmin: true,
+        }).save();
+
+        console.log("-------guestProjectPermission", guestProjectPermission);
+        if (!guestProjectPermission) {
+          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+        }
 
         context.login(user);
         return { user: guestUser };
       }
       return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
     } catch (err) {
+      console.log("err", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
