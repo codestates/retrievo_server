@@ -27,7 +27,7 @@ const main = async () => {
   // express Setting
   const app = express();
   const corsOptions = {
-    origin: "http://localhost:3000",
+    origin: "https://retrievo.io/",
     credentials: true,
   };
   // app.use(
