@@ -100,11 +100,31 @@ export class UserResolver {
       });
 
       if (user) {
+        const sampleProjectId =
+          process.env.SAMPLE_PROJECT_ID ||
+          "30d58b43-25ce-4385-9367-1453c8d9a2e8";
+
+        const project = await Project.findOne({ id: sampleProjectId });
+        console.log("project", project);
+        if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+        const guestProjectPermission = await ProjectPermission.create({
+          user: guestUser,
+          project,
+          isAdmin: false,
+        }).save();
+
+        console.log("-------guestProjectPermission", guestProjectPermission);
+        if (!guestProjectPermission) {
+          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+        }
+
         context.login(user);
         return { user: guestUser };
       }
       return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
     } catch (err) {
+      console.log("err", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
