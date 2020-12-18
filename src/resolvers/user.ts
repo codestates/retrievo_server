@@ -173,18 +173,23 @@ export class UserResolver {
         email,
         password,
       });
-
       if (user) {
         const localUser = await User.findOne({ email });
-
         if (projectId) {
           const project = await Project.findOne(projectId);
-          await ProjectPermission.create({
-            user: localUser,
-            project,
-            isAdmin: false,
-          }).save();
-
+          const projectPermission = await ProjectPermission.findOne({
+            where: {
+              project: projectId,
+              user: localUser,
+            },
+          });
+          if (!projectPermission) {
+            await ProjectPermission.create({
+              user: localUser,
+              project,
+              isAdmin: false,
+            }).save();
+          }
           if (req.session.invitationToken) {
             await redis.del(req.session.invitationToken);
           }
