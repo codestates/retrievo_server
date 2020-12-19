@@ -17,7 +17,7 @@ import { COOKIE_NAME, prod } from "./constants";
 dotenv.config({ example: ".env" });
 /* eslint-disable */
 import passport from "./services/authService";
-import path from "path";
+// import path from "path";
 // redis Setting (before apollo middleware)
 const RedisStore = connectRedis(session);
 export const redis = new Redis();
@@ -59,24 +59,24 @@ const main = async () => {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  app.use("/", express.static(path.resolve(__dirname, "../client/build")));
-  const routes = [
-    "/graphql",
-    "/subscriptions",
-    "/playground",
-    "/auth/google",
-    "/auth/github",
-    "/auth/google/callback",
-    "/auth/github/callback",
-  ];
+  // app.use("/", express.static(path.resolve(__dirname, "../client/build")));
+  // const routes = [
+  //   "/graphql",
+  //   "/subscriptions",
+  //   "/playground",
+  //   "/auth/google",
+  //   "/auth/github",
+  //   "/auth/google/callback",
+  //   "/auth/github/callback",
+  // ];
 
-  app.get("*", (req, res, next) => {
-    if (routes.includes(req.url)) {
-      return next();
-    }
+  // app.get("*", (req, res, next) => {
+  //   if (routes.includes(req.url)) {
+  //     return next();
+  //   }
 
-    res.sendFile(path.resolve(__dirname, "../client/build/index.html"));
-  });
+  //   res.sendFile(path.resolve(__dirname, "../client/build/index.html"));
+  // });
 
   app.get(
     "/auth/google",

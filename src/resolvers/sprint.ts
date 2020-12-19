@@ -1,7 +1,7 @@
 import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 
 /* Entities */
-import { getConnection, getRepository } from "typeorm";
+import { getConnection, getManager, getRepository } from "typeorm";
 import Board from "../entities/Board";
 import Sprint from "../entities/Sprint";
 import SprintNotification, {
@@ -100,15 +100,12 @@ export class SprintResolver {
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
-
     try {
       const sprints = await Sprint.find({
         where: { project: projectId },
         relations: ["project"],
       });
-
-      const row = sprints.length ? sprints.length - 1 : 0;
-
+      const row = sprints.length ? sprints.length : 0;
       const sprint = await Sprint.create({
         title,
         description,
@@ -254,17 +251,28 @@ export class SprintResolver {
     @Arg("id") id: string
   ): Promise<SprintResponse> {
     const sprint = await Sprint.findOne(id);
+    const em = getManager();
+    const sprints = await em.find(Sprint, {
+      where: { project: projectId },
+      relations: ["project"],
+    });
 
-    if (!sprint) {
+    if (!sprint || !sprints) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
 
+    const newSprints = sprints.filter((item) => item.id !== sprint.id);
+    const reorderedSprints = newSprints.map((item, index) => {
+      Object.assign(item, { row: index });
+      return item;
+    });
+
     try {
       await Sprint.delete(id);
+      await em.save(reorderedSprints);
       return { success: true };
     } catch (err) {
       console.log("projectId", projectId);
-      console.log(err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -272,7 +280,7 @@ export class SprintResolver {
   @Mutation(() => SprintResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async readSprintNotification(
-    @Arg("projectId") projectId: string,
+    // @Arg("projectId") projectId: string,
     @Arg("id") id: string
   ): Promise<SprintResponse> {
     const sprintNotification = await SprintNotification.findOne(id);
@@ -285,7 +293,6 @@ export class SprintResolver {
       await SprintNotification.update(sprintNotification.id, { isRead: true });
       return { success: true };
     } catch (err) {
-      console.log("projectId", projectId);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }

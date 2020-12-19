@@ -53,7 +53,6 @@ export class UserResolver {
         }
       );
       if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
-      console.log("----------user:", user);
       return { user };
     } catch (err) {
       console.log("getMe Query Error:", err.message);
