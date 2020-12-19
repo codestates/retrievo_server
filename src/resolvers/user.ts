@@ -101,7 +101,7 @@ export class UserResolver {
       if (user) {
         const sampleProjectId =
           process.env.SAMPLE_PROJECT_ID ||
-          "30d58b43-25ce-4385-9367-1453c8d9a2e8";
+          "532b2e51-0228-4b6a-8308-e2a79989794b";
 
         const project = await Project.findOne({ id: sampleProjectId });
         console.log("project", project);
