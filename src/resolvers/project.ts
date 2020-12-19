@@ -41,7 +41,7 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class ProjectResolver {
   @Query(() => ProjectReturnType)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async project(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
@@ -255,11 +255,11 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
+  @UseMiddleware([
+    checkAuthStatus,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateProjectName(
     @Arg("name") name: string,
     @Arg("projectId") projectId: string
@@ -281,12 +281,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectPermissionReturnType)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkIfGuest,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateProjectPermission(
     @Arg("userId") userId: string,
     @Arg("isAdmin") isAdmin: boolean,
@@ -314,7 +314,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission])
   async deleteProject(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
@@ -345,8 +345,8 @@ export class ProjectResolver {
     if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     const projectName = project.name;
     const senderName = "Retrievo Team";
-    // const URI = "https://retrievo.io/invitation/";
-    const URI = "http://localhost:3000/invitation/"; // TODO prod 떄 위 경로로 바꿔준다.
+    const URI = "https://retrievo.io/invitation/";
+    // const URI = "http://localhost:3000/invitation/"; // TODO prod 떄 위 경로로 바꿔준다.
 
     try {
       const data = emails.map(async (email: string) => {
@@ -415,8 +415,6 @@ export class ProjectResolver {
   ): Promise<ProjectReturnType | undefined> {
     const { redis, req } = context;
 
-    // TODO 경로를 retrievo.io 로 수정해주어야한다.
-
     try {
       const projectId = await redis.get(keyToken);
       let project;
@@ -458,7 +456,6 @@ export class ProjectResolver {
 
         await redis.del(keyToken);
 
-        // res.redirect(URI + projectId);
         return { success: true };
       }
 
@@ -470,8 +467,6 @@ export class ProjectResolver {
       if (projectId) {
         req.session.projectId = projectId;
         req.session.invitationToken = keyToken;
-
-        // res.redirect("https://retrievo.io/login");
         return { success: true };
       }
     } catch (err) {

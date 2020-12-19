@@ -1,10 +1,4 @@
-import {
-  Resolver,
-  Arg,
-  Query,
-  Mutation,
-  // UseMiddleware,
-} from "type-graphql";
+import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 import { getCustomRepository, getManager, getRepository } from "typeorm";
 
 /* Entities */
@@ -21,14 +15,14 @@ import BoardResponse from "./types/BoardResponse";
 import BoardUpdateInput from "./types/BoardUpdateInput";
 
 // /* Middleware */
-// import checkAuthStatus from "../middleware/checkAuthStatus";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
-// import checkProjectPermission from "../middleware/checkProjectPermission";
+import checkAuthStatus from "../middleware/checkAuthStatus";
+import checkAdminPermission from "../middleware/checkAdminPermission";
+import checkProjectPermission from "../middleware/checkProjectPermission";
 
 @Resolver()
 export class BoardResolver {
   @Query(() => BoardResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getBoards(@Arg("projectId") projectId: string): Promise<BoardResponse> {
     try {
       const currentSprint = await Sprint.findOne({
@@ -65,7 +59,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createBoard(
     @Arg("title") title: string,
     @Arg("projectId") projectId: string
@@ -149,7 +143,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async updateBoard(
     @Arg("options") { id, title, boardColumnIndex: newIndex }: BoardUpdateInput,
     @Arg("projectId") projectId: string
@@ -226,7 +220,7 @@ export class BoardResolver {
   }
 
   @Mutation(() => BoardResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteBoard(
     @Arg("id") id: string,
     @Arg("newBoardId") newBoardId: string,

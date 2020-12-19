@@ -18,11 +18,11 @@ import sprintRowDnd from "../utils/sprintRowDnd";
 /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
+import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
       const sprint = await Sprint.findOne(id, {
@@ -50,7 +50,7 @@ export class SprintResolver {
   }
 
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprints(
     @Arg("projectId") projectId: string
   ): Promise<Sprint[] | SprintResponse> {
@@ -91,7 +91,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createSprint(
     @Arg("title") title: string,
     @Arg("description") description: string,
@@ -120,7 +120,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
     @Arg("projectId") projectId: string
@@ -245,7 +245,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteSprint(
     @Arg("projectId") projectId: string,
     @Arg("id") id: string
@@ -280,7 +280,7 @@ export class SprintResolver {
   @Mutation(() => SprintResponse)
   @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async readSprintNotification(
-    // @Arg("projectId") projectId: string,
+    @Arg("projectId") projectId: string,
     @Arg("id") id: string
   ): Promise<SprintResponse> {
     const sprintNotification = await SprintNotification.findOne(id);
@@ -293,12 +293,13 @@ export class SprintResolver {
       await SprintNotification.update(sprintNotification.id, { isRead: true });
       return { success: true };
     } catch (err) {
+      console.log(projectId);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getStartedSprint(
     @Arg("projectId") projectId: string
   ): Promise<SprintResponse> {
