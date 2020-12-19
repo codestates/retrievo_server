@@ -293,6 +293,7 @@ export class SprintResolver {
       await SprintNotification.update(sprintNotification.id, { isRead: true });
       return { success: true };
     } catch (err) {
+      console.log(projectId);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }

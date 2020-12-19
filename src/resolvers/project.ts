@@ -314,7 +314,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission])
   async deleteProject(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {

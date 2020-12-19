@@ -6,10 +6,8 @@ import Task from "../entities/Task";
 
 @EntityRepository(Board)
 export class BoardRepository extends Repository<Board> {
-  // TODO : 인자를 sprintId로 바꾸시오
   async changeBoardIndex(boardId: string, newIndex: number): Promise<boolean> {
     try {
-      // TODO : entitiy를 Sprint로 바꾸시오
       const board = await Board.findOne({
         where: { id: boardId },
         relations: ["project"],
@@ -91,7 +89,6 @@ export class BoardRepository extends Repository<Board> {
     boardId: string,
     newBoardId: string
   ): Promise<boolean> {
-    // TODO: 인자를 sprintId로 바꾸시오
     try {
       const board = await Board.findOne({
         where: { id: boardId },
@@ -122,12 +119,11 @@ export class BoardRepository extends Repository<Board> {
           const tasks = await Task.find({ board, sprint });
           const newBoard = await Board.findOne({
             where: { id: newBoardId },
-            relations: ["project"],
+            relations: ["project", "task"],
           });
 
           // NOTE Task들을 이동할 보드가 같은 Project의 보드인지 확인
-          if (newBoard === undefined) return false;
-
+          if (!newBoard || !newBoard.task) return false;
           if (newBoard.project.id !== board.project.id) return false;
 
           await Promise.all(
@@ -141,7 +137,8 @@ export class BoardRepository extends Repository<Board> {
                     board: newBoard,
                     boardRowIndex:
                       task.boardRowIndex !== null
-                        ? task.boardRowIndex + tasks.length
+                        ? task.boardRowIndex +
+                          (newBoard.task?.length ? newBoard.task?.length : 0)
                         : null,
                   }
                 );
