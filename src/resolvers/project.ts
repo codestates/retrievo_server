@@ -345,7 +345,8 @@ export class ProjectResolver {
     if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     const projectName = project.name;
     const senderName = "Retrievo Team";
-    const URI = "https://retrievo.io/invitation/";
+    // const URI = "https://retrievo.io/invitation/";
+    const URI = "http://localhost:3000/invitation/"; // TODO prod 떄 위 경로로 바꿔준다.
 
     try {
       const data = emails.map(async (email: string) => {
@@ -409,12 +410,12 @@ export class ProjectResolver {
 
   @Mutation(() => ProjectReturnType)
   async routeInvitation(
-    @Ctx() context: MyContext
+    @Ctx() context: MyContext,
+    @Arg("keyToken") keyToken: string
   ): Promise<ProjectReturnType | undefined> {
-    const { redis, res, req } = context;
-    const keyToken = prod
-      ? JSON.stringify(context.req.params)
-      : "478007b3-7821-4c55-ba5c-867499386639"; // TODO Key Token을 입력할 것
+    const { redis, req } = context;
+
+    // TODO 경로를 retrievo.io 로 수정해주어야한다.
 
     try {
       const projectId = await redis.get(keyToken);
@@ -422,8 +423,6 @@ export class ProjectResolver {
       if (projectId) {
         project = await Project.findOne(projectId);
       }
-
-      const URI = "https://retrievo.io/project/";
 
       const currentUser = context.req.session?.passport?.user;
 
@@ -438,7 +437,6 @@ export class ProjectResolver {
       2. 처음 받는 초대라면, ProjectPermission 을 만들어준다.
       3. permission이 만들어지는데 성공한다면 redis 에서 토큰을 지워준다.
       4. 해당 프로젝트의 uri 로 전송
-
       */
       if (user && project) {
         const projectPermission = await ProjectPermission.findOne({
@@ -457,8 +455,10 @@ export class ProjectResolver {
           project,
           isAdmin: true,
         }).save();
+
         await redis.del(keyToken);
-        res.redirect(URI + projectId);
+
+        // res.redirect(URI + projectId);
         return { success: true };
       }
 
@@ -471,7 +471,7 @@ export class ProjectResolver {
         req.session.projectId = projectId;
         req.session.invitationToken = keyToken;
 
-        res.redirect("https://retrievo.io/login");
+        // res.redirect("https://retrievo.io/login");
         return { success: true };
       }
     } catch (err) {

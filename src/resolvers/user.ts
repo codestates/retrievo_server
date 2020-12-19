@@ -134,7 +134,8 @@ export class UserResolver {
     @Ctx() context: MyContext
   ): Promise<UserResponse> {
     const { redis, req } = context;
-    const { projectId } = options;
+    // const { projectId } = options;
+    const { projectId } = req.session;
     try {
       let hashed;
       if (prod) {
