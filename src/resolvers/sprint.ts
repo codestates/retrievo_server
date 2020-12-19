@@ -78,6 +78,12 @@ export class SprintResolver {
         return a.row - b.row;
       });
 
+      sprints.forEach((sprint) => {
+        sprint.task?.sort((taskA, taskB) => {
+          return taskA.sprintRowIndex - taskB.sprintRowIndex;
+        });
+      });
+
       return { sprints };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
