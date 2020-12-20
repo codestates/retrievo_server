@@ -26,7 +26,7 @@ const main = async () => {
   // express Setting
   const app = express();
   const corsOptions = {
-    origin: prod ? "http://retrievo.io" : "http://localhost:3000",
+    origin: prod ? "https://retrievo.io" : "http://localhost:3000",
     credentials: true,
   };
 
@@ -83,15 +83,15 @@ const main = async () => {
   app.get(
     "/auth/google/callback",
     passport.authenticate("google", {
-      successRedirect: "http://retrievo.io/auth",
-      failureRedirect: "http://retrievo.io/not-found",
+      successRedirect: "https://retrievo.io/auth",
+      failureRedirect: "https://retrievo.io/not-found",
     })
   );
   app.get(
     "/auth/github/callback",
     passport.authenticate("github", {
-      successRedirect: "http://retrievo.io/auth",
-      failureRedirect: "http://retrievo.io/not-found",
+      successRedirect: "https://retrievo.io/auth",
+      failureRedirect: "https://retrievo.io/not-found",
     })
   );
   // apollo Setting
