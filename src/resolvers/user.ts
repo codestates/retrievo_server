@@ -146,7 +146,7 @@ export class UserResolver {
 
       const doesUserExist = await User.findOne({ email: options.email });
       if (doesUserExist)
-        return { error: generateError(errorKeys.AUTH_ALREADY_EXIST) };
+        return { error: generateError(errorKeys.AUTH_ALREADY_EXIST, "email") };
 
       const newUser = await User.create({
         username: options.username,
@@ -221,6 +221,12 @@ export class UserResolver {
         error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
       };
     } catch (err) {
+      console.log("login Error:", err);
+      if (err.extensions.code === "401" || err.extensions.code === "402") {
+        return {
+          error: generateError(errorKeys.AUTH_NOT_MATCH, "password"),
+        };
+      }
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
