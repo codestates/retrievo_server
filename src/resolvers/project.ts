@@ -344,7 +344,7 @@ export class ProjectResolver {
     if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     const projectName = project.name;
     const senderName = "Retrievo Team";
-    const URI = "https://retrievo.io/invitation/";
+    const URI = "https://retrievo.io/invitation?projectCode=";
     // const URI = "http://localhost:3000/invitation/"; // TODO prod 떄 위 경로로 바꿔준다.
 
     try {
