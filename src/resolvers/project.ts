@@ -26,7 +26,6 @@ import ProjectPermission from "../entities/ProjectPermission";
 import Board from "../entities/Board";
 
 /* Utils */
-import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
@@ -200,11 +199,11 @@ export class ProjectResolver {
     @Arg("name") name: string,
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType> {
-    const userId = prod
-      ? context.req.session.passport?.user
-      : "11908f55-9650-4c52-8605-e56fa35ce4ed";
+    const userId = context.req.session.passport?.user;
 
     const user = await User.findOne(userId);
+    console.log("나는 유저 아이디야");
+    console.log("나는 유저야", user);
 
     try {
       let project;
