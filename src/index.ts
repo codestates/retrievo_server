@@ -61,7 +61,6 @@ const main = async () => {
     "/auth/github",
     "/auth/google/callback",
     "/auth/github/callback",
-    "/invitation",
   ];
 
   app.get("*", (req, res, next) => {
