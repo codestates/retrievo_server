@@ -61,11 +61,14 @@ const main = async () => {
     "/auth/github",
     "/auth/google/callback",
     "/auth/github/callback",
-    "/invitation/",
+    "/invitation",
   ];
 
   app.get("*", (req, res, next) => {
-    if (routes.includes(req.url)) {
+    console.log("-----------");
+    const rootUrl = req.url.split("?")[0];
+    console.log(rootUrl);
+    if (routes.includes(rootUrl)) {
       return next();
     }
 
