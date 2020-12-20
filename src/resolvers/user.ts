@@ -53,7 +53,6 @@ export class UserResolver {
         }
       );
       if (!user) return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
-      console.log("----------user:", user);
       return { user };
     } catch (err) {
       console.log("getMe Query Error:", err.message);
@@ -100,11 +99,31 @@ export class UserResolver {
       });
 
       if (user) {
+        const sampleProjectId =
+          process.env.SAMPLE_PROJECT_ID ||
+          "27e201d2-17d4-4ef5-a4f5-c433d1a7114d";
+
+        const project = await Project.findOne({ id: sampleProjectId });
+        console.log("project", project);
+        if (!project) return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+
+        const guestProjectPermission = await ProjectPermission.create({
+          user: guestUser,
+          project,
+          isAdmin: false,
+        }).save();
+
+        console.log("-------guestProjectPermission", guestProjectPermission);
+        if (!guestProjectPermission) {
+          return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
+        }
+
         context.login(user);
         return { user: guestUser };
       }
       return { error: generateError(errorKeys.AUTH_NOT_FOUND) };
     } catch (err) {
+      console.log("err", err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -115,7 +134,8 @@ export class UserResolver {
     @Ctx() context: MyContext
   ): Promise<UserResponse> {
     const { redis, req } = context;
-    const { projectId } = options;
+    // const { projectId } = options;
+    const { projectId } = req.session;
     try {
       let hashed;
       if (prod) {
@@ -126,7 +146,7 @@ export class UserResolver {
 
       const doesUserExist = await User.findOne({ email: options.email });
       if (doesUserExist)
-        return { error: generateError(errorKeys.AUTH_ALREADY_EXIST) };
+        return { error: generateError(errorKeys.AUTH_ALREADY_EXIST, "email") };
 
       const newUser = await User.create({
         username: options.username,
@@ -201,6 +221,12 @@ export class UserResolver {
         error: generateError(errorKeys.AUTH_NOT_MATCH, "email"),
       };
     } catch (err) {
+      console.log("login Error:", err);
+      if (err.extensions.code === "401" || err.extensions.code === "402") {
+        return {
+          error: generateError(errorKeys.AUTH_NOT_MATCH, "password"),
+        };
+      }
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }

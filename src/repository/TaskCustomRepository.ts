@@ -84,21 +84,23 @@ export class TaskRepository extends Repository<Task> {
               groupOfBoards.length - 1 === board.boardColumnIndex;
 
             const oldBoardRowIndex = task.boardRowIndex;
-            if (!oldBoardRowIndex)
+            if (oldBoardRowIndex === undefined || oldBoardRowIndex === null) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             /* case 1-1. find original board -> current idex - 1 */
             const originalBoardTasks = await Task.find({
               where: { board: task.board, sprint: task.sprint },
             });
-            if (!originalBoardTasks)
+            if (!originalBoardTasks) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
-            console.log(4, "originalBoardTasks 확인");
+            }
 
             const originalBoardTargetTasks = originalBoardTasks.filter(
               (task) => {
-                if (task.boardRowIndex === null)
+                if (task.boardRowIndex === null) {
                   return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+                }
                 return task.boardRowIndex > oldBoardRowIndex;
               }
             );
@@ -124,8 +126,9 @@ export class TaskRepository extends Repository<Task> {
             const newBoardTasks = await Task.find({
               where: { board: boardId, sprint: task.sprint },
             });
-            if (!newBoardTasks)
+            if (!newBoardTasks) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             const newBoardTargetTasks = newBoardTasks.filter((task) => {
               if (task.boardRowIndex === null) return false;
@@ -133,8 +136,9 @@ export class TaskRepository extends Repository<Task> {
             });
 
             const newBoard = await Board.findOne({ id: boardId });
-            if (!newBoard)
+            if (!newBoard) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             await Promise.all(
               newBoardTargetTasks.map(async (currnetTask) => {
@@ -168,8 +172,9 @@ export class TaskRepository extends Repository<Task> {
 
           /* case 2. !boardId && RowIndex : 보드 내 task 이동 DND */
           if (!boardId && newBoardRowIndex !== undefined) {
-            if (!board || !board.task)
+            if (!board || !board.task) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
             const isComplete =
               groupOfBoards.length - 1 === board.boardColumnIndex;
 
@@ -227,7 +232,7 @@ export class TaskRepository extends Repository<Task> {
           if (boardId) {
             const oldBoardRowIndex = task.boardRowIndex;
             if (oldBoardRowIndex === undefined || oldBoardRowIndex === null) {
-              console.log("board update error: oldBoardRowIndex 없음");
+              // console.log("board update error: oldBoardRowIndex 없음");
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
             }
 
@@ -235,7 +240,7 @@ export class TaskRepository extends Repository<Task> {
               where: { board: task.board, sprint: task.sprint },
             });
             if (!originalBoardTasks) {
-              console.log("board update error: 이전 보드 태스크 없음");
+              // console.log("board update error: 이전 보드 태스크 없음");
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
             }
 
@@ -269,8 +274,9 @@ export class TaskRepository extends Repository<Task> {
               relations: ["task"],
             });
 
-            if (!newBoard || !newBoard.task)
+            if (!newBoard || !newBoard.task) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             const completed =
               groupOfBoards.length - 1 === newBoard.boardColumnIndex;
@@ -299,8 +305,9 @@ export class TaskRepository extends Repository<Task> {
             const originalSprintTasks = await Task.find({
               where: { sprint: task.sprint },
             });
-            if (!originalSprintTasks)
+            if (!originalSprintTasks) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             const originalSprintTargetTasks = originalSprintTasks.filter(
               (task) => {
@@ -329,16 +336,18 @@ export class TaskRepository extends Repository<Task> {
             const newSprintTasks = await Task.find({
               where: { sprint: sprintId },
             });
-            if (!newSprintTasks)
+            if (!newSprintTasks) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             const newSprintTargetTasks = newSprintTasks.filter((task) => {
               return task.sprintRowIndex >= newSprintRowIndex;
             });
 
             const newSprint = await Sprint.findOne({ id: sprintId });
-            if (!newSprint)
+            if (!newSprint) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             /* case 1-2. 이동한 보드의 newSprintRowIndex부터 task들의 sprintRowIndex +1 증가 */
             await Promise.all(
@@ -363,8 +372,9 @@ export class TaskRepository extends Repository<Task> {
               const firstBoard = groupOfBoards.filter((board) => {
                 return board.boardColumnIndex === 0;
               });
-              if (!firstBoard[0] || !firstBoard[0].task)
+              if (!firstBoard[0] || !firstBoard[0].task) {
                 return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+              }
 
               await transactionalEntityManager.update(
                 Task,
@@ -449,8 +459,9 @@ export class TaskRepository extends Repository<Task> {
             const originalSprintTasks = await Task.find({
               where: { sprint: task.sprint },
             });
-            if (!originalSprintTasks)
+            if (!originalSprintTasks) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             const originalSprintTargetTasks = originalSprintTasks.filter(
               (task) => {
@@ -480,8 +491,9 @@ export class TaskRepository extends Repository<Task> {
               where: { id: sprintId },
               relations: ["task"],
             });
-            if (!newSprint || newSprint.task === undefined)
+            if (!newSprint || newSprint.task === undefined) {
               return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+            }
 
             /* case 3-2. 활성화 된 스프린트로 이동 시 Board 속성 추가 */
             if (newSprint.didStart) {
@@ -493,8 +505,9 @@ export class TaskRepository extends Repository<Task> {
               const firstBoard = groupOfBoards.filter((board) => {
                 return board.boardColumnIndex === 0;
               });
-              if (!firstBoard[0] || !firstBoard[0].task)
+              if (!firstBoard[0] || !firstBoard[0].task) {
                 return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+              }
 
               await transactionalEntityManager.update(
                 Task,
@@ -561,8 +574,9 @@ export class TaskRepository extends Repository<Task> {
       }
 
       const originalBoardTasks = await Task.find({ board: task.board });
-      if (!originalBoardTasks)
+      if (!originalBoardTasks) {
         return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+      }
 
       const sprintBoardTasks = originalBoardTasks.filter((currentTask) => {
         if (currentTask.boardRowIndex !== null && task.boardRowIndex !== null)
@@ -593,8 +607,9 @@ export class TaskRepository extends Repository<Task> {
           }
 
           const originalSprintTasks = await Task.find({ sprint: task.sprint });
-          if (!originalSprintTasks)
+          if (!originalSprintTasks) {
             return { error: generateError(errorKeys.DATA_NOT_FOUND) };
+          }
 
           const sprintTargetTasks = originalSprintTasks.filter(
             (currentTask) => {

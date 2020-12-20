@@ -1,7 +1,7 @@
 import { Resolver, Arg, Query, Mutation, UseMiddleware } from "type-graphql";
 
 /* Entities */
-import { getConnection, getRepository } from "typeorm";
+import { getConnection, getManager, getRepository } from "typeorm";
 import Board from "../entities/Board";
 import Sprint from "../entities/Sprint";
 import SprintNotification, {
@@ -18,11 +18,11 @@ import sprintRowDnd from "../utils/sprintRowDnd";
 /* Middleware */
 import checkAuthStatus from "../middleware/checkAuthStatus";
 import checkProjectPermission from "../middleware/checkProjectPermission";
-// import checkAdminPermission from "../middleware/checkAdminPermission";
+import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class SprintResolver {
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprint(@Arg("id") id: string): Promise<SprintResponse> {
     try {
       const sprint = await Sprint.findOne(id, {
@@ -50,7 +50,7 @@ export class SprintResolver {
   }
 
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getSprints(
     @Arg("projectId") projectId: string
   ): Promise<Sprint[] | SprintResponse> {
@@ -78,6 +78,12 @@ export class SprintResolver {
         return a.row - b.row;
       });
 
+      sprints.forEach((sprint) => {
+        sprint.task?.sort((taskA, taskB) => {
+          return taskA.sprintRowIndex - taskB.sprintRowIndex;
+        });
+      });
+
       return { sprints };
     } catch (err) {
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
@@ -85,7 +91,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async createSprint(
     @Arg("title") title: string,
     @Arg("description") description: string,
@@ -94,15 +100,12 @@ export class SprintResolver {
     if (!projectId) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
-
     try {
       const sprints = await Sprint.find({
         where: { project: projectId },
         relations: ["project"],
       });
-
-      const row = sprints.length ? sprints.length - 1 : 0;
-
+      const row = sprints.length ? sprints.length : 0;
       const sprint = await Sprint.create({
         title,
         description,
@@ -117,7 +120,7 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async updateSprint(
     @Arg("options") options: SprintOptionInput,
     @Arg("projectId") projectId: string
@@ -242,23 +245,34 @@ export class SprintResolver {
   }
 
   @Mutation(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkAdminPermission])
   async deleteSprint(
     @Arg("projectId") projectId: string,
     @Arg("id") id: string
   ): Promise<SprintResponse> {
     const sprint = await Sprint.findOne(id);
+    const em = getManager();
+    const sprints = await em.find(Sprint, {
+      where: { project: projectId },
+      relations: ["project"],
+    });
 
-    if (!sprint) {
+    if (!sprint || !sprints) {
       return { error: generateError(errorKeys.DATA_NOT_FOUND) };
     }
 
+    const newSprints = sprints.filter((item) => item.id !== sprint.id);
+    const reorderedSprints = newSprints.map((item, index) => {
+      Object.assign(item, { row: index });
+      return item;
+    });
+
     try {
       await Sprint.delete(id);
+      await em.save(reorderedSprints);
       return { success: true };
     } catch (err) {
       console.log("projectId", projectId);
-      console.log(err);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
@@ -279,13 +293,13 @@ export class SprintResolver {
       await SprintNotification.update(sprintNotification.id, { isRead: true });
       return { success: true };
     } catch (err) {
-      console.log("projectId", projectId);
+      console.log(projectId);
       return { error: generateError(errorKeys.INTERNAL_SERVER_ERROR) };
     }
   }
 
   @Query(() => SprintResponse)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async getStartedSprint(
     @Arg("projectId") projectId: string
   ): Promise<SprintResponse> {

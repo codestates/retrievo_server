@@ -26,7 +26,6 @@ import ProjectPermission from "../entities/ProjectPermission";
 import Board from "../entities/Board";
 
 /* Utils */
-import { prod } from "../constants";
 import generateError, { errorKeys } from "../utils/ErrorFactory";
 
 /* Types */
@@ -41,7 +40,7 @@ import checkAdminPermission from "../middleware/checkAdminPermission";
 @Resolver()
 export class ProjectResolver {
   @Query(() => ProjectReturnType)
-  // @UseMiddleware([checkAuthStatus, checkProjectPermission])
+  @UseMiddleware([checkAuthStatus, checkProjectPermission])
   async project(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
@@ -200,11 +199,11 @@ export class ProjectResolver {
     @Arg("name") name: string,
     @Ctx() context: MyContext
   ): Promise<ProjectReturnType> {
-    const userId = prod
-      ? context.req.session.passport?.user
-      : "11908f55-9650-4c52-8605-e56fa35ce4ed";
+    const userId = context.req.session.passport?.user;
 
     const user = await User.findOne(userId);
+    console.log("나는 유저 아이디야");
+    console.log("나는 유저야", user);
 
     try {
       let project;
@@ -255,11 +254,11 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
+  @UseMiddleware([
+    checkAuthStatus,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateProjectName(
     @Arg("name") name: string,
     @Arg("projectId") projectId: string
@@ -281,12 +280,12 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectPermissionReturnType)
-  // @UseMiddleware([
-  //   checkAuthStatus,
-  //   checkIfGuest,
-  //   checkProjectPermission,
-  //   checkAdminPermission,
-  // ])
+  @UseMiddleware([
+    checkAuthStatus,
+    checkIfGuest,
+    checkProjectPermission,
+    checkAdminPermission,
+  ])
   async updateProjectPermission(
     @Arg("userId") userId: string,
     @Arg("isAdmin") isAdmin: boolean,
@@ -314,7 +313,7 @@ export class ProjectResolver {
   }
 
   @Mutation(() => ProjectReturnType)
-  // @UseMiddleware([checkAuthStatus, checkAdminPermission])
+  @UseMiddleware([checkAuthStatus, checkIfGuest, checkAdminPermission])
   async deleteProject(
     @Arg("projectId") projectId: string
   ): Promise<ProjectReturnType> {
@@ -346,6 +345,7 @@ export class ProjectResolver {
     const projectName = project.name;
     const senderName = "Retrievo Team";
     const URI = "https://retrievo.io/invitation/";
+    // const URI = "http://localhost:3000/invitation/"; // TODO prod 떄 위 경로로 바꿔준다.
 
     try {
       const data = emails.map(async (email: string) => {
@@ -409,12 +409,10 @@ export class ProjectResolver {
 
   @Mutation(() => ProjectReturnType)
   async routeInvitation(
-    @Ctx() context: MyContext
+    @Ctx() context: MyContext,
+    @Arg("keyToken") keyToken: string
   ): Promise<ProjectReturnType | undefined> {
-    const { redis, res, req } = context;
-    const keyToken = prod
-      ? JSON.stringify(context.req.params)
-      : "478007b3-7821-4c55-ba5c-867499386639"; // TODO Key Token을 입력할 것
+    const { redis, req } = context;
 
     try {
       const projectId = await redis.get(keyToken);
@@ -422,8 +420,6 @@ export class ProjectResolver {
       if (projectId) {
         project = await Project.findOne(projectId);
       }
-
-      const URI = "https://retrievo.io/project/";
 
       const currentUser = context.req.session?.passport?.user;
 
@@ -438,7 +434,6 @@ export class ProjectResolver {
       2. 처음 받는 초대라면, ProjectPermission 을 만들어준다.
       3. permission이 만들어지는데 성공한다면 redis 에서 토큰을 지워준다.
       4. 해당 프로젝트의 uri 로 전송
-
       */
       if (user && project) {
         const projectPermission = await ProjectPermission.findOne({
@@ -457,8 +452,9 @@ export class ProjectResolver {
           project,
           isAdmin: true,
         }).save();
+
         await redis.del(keyToken);
-        res.redirect(URI + projectId);
+
         return { success: true };
       }
 
@@ -470,8 +466,6 @@ export class ProjectResolver {
       if (projectId) {
         req.session.projectId = projectId;
         req.session.invitationToken = keyToken;
-
-        res.redirect("https://retrievo.io/login");
         return { success: true };
       }
     } catch (err) {

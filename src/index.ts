@@ -12,7 +12,6 @@ import { ApolloServer } from "apollo-server-express";
 import dotenv from "dotenv-safe";
 import resolvers from "./resolvers";
 import { COOKIE_NAME, prod } from "./constants";
-// local
 // passport need env
 dotenv.config({ example: ".env" });
 /* eslint-disable */
@@ -27,15 +26,9 @@ const main = async () => {
   // express Setting
   const app = express();
   const corsOptions = {
-    origin: "https://retrievo.io/",
+    origin: prod ? "http://retrievo.io" : "http://localhost:3000",
     credentials: true,
   };
-  // app.use(
-  //   cors({
-  //     origin: "http://localhost:3000",
-  //     credentials: true,
-  //   })
-  // );
 
   app.use(
     session({
@@ -68,6 +61,7 @@ const main = async () => {
     "/auth/github",
     "/auth/google/callback",
     "/auth/github/callback",
+    "/invitation",
   ];
 
   app.get("*", (req, res, next) => {
@@ -89,14 +83,14 @@ const main = async () => {
   app.get(
     "/auth/google/callback",
     passport.authenticate("google", {
-      successRedirect: "http://retrievo.io/project/dashboard",
+      successRedirect: "http://retrievo.io/auth",
       failureRedirect: "http://retrievo.io/not-found",
     })
   );
   app.get(
     "/auth/github/callback",
     passport.authenticate("github", {
-      successRedirect: "http://retrievo.io/project/dashboard",
+      successRedirect: "http://retrievo.io/auth",
       failureRedirect: "http://retrievo.io/not-found",
     })
   );
