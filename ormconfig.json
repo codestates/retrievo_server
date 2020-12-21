@@ -1,0 +1,15 @@
+{
+	"type": "postgres",
+	"host": "ec2-54-160-133-106.compute-1.amazonaws.com",
+	"port": 5432,
+	"username": "wnmkzotuejvqvm",
+	"password": "0c7d6c4b7af5d4ddeba4b5a73dc0fa5f80de418152fec67955633a451be4d754",
+	"database": "db3a3107qmnidc",
+	"url": "postgres://wnmkzotuejvqvm:0c7d6c4b7af5d4ddeba4b5a73dc0fa5f80de418152fec67955633a451be4d754@ec2-54-160-133-106.compute-1.amazonaws.com:5432/db3a3107qmnidc",
+	"logging": false,
+	"synchronize": true,
+	"dropSchema": false,
+	"entities": ["dist/entities/**.js"],
+	"seeds": ["dist/seeder/**.seed.js"],
+	"factories": ["dist/seeder/**.factory.js"]
+}
