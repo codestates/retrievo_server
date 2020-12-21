@@ -9,10 +9,8 @@ export interface MailerIFC {
   invitationLink: string;
 }
 
-const { SENDGRID_API_KEY } = process.env;
-
 const mailSender = async (userInfo: MailerIFC): Promise<Error | undefined> => {
-  sgMail.setApiKey(SENDGRID_API_KEY || "noApiKey");
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY || "noApiKey");
   try {
     await sgMail.send({
       from: "admin@rockpaperqueens.com", // sender address
