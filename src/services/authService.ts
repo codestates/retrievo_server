@@ -73,7 +73,7 @@ const googleOptions = {
 const githubOptions = {
   clientID: "9978aef8f4e5e7fb6bfa",
   clientSecret: "5f4d4bb16d38fff555e30f2ab8a5e9dab1bbf7ae",
-  callbackURL: "http://localhost:4000/auth/github/callback"
+  callbackURL: "http://localhost:4000/auth/github/callback",
   scope: ["user:email"],
 };
 
