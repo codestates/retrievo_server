@@ -64,7 +64,6 @@ const main = async () => {
   ];
 
   app.get("*", (req, res, next) => {
-    console.log("-----------");
     const rootUrl = req.url.split("?")[0];
     console.log(rootUrl);
     if (routes.includes(rootUrl)) {
