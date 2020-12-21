@@ -26,7 +26,9 @@ const main = async () => {
   // express Setting
   const app = express();
   const corsOptions = {
-    origin: prod ? "https://retrievo.io" : "http://localhost:3000",
+    origin: prod
+      ? "https://rpq-retrievo.herokuapp.com/"
+      : "http://localhost:3000",
     credentials: true,
   };
 

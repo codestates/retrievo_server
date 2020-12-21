@@ -1,0 +1,164 @@
+Date : 2020-12-19 22:52:32
+Directory : /Users/paulkim/Desktop/cs_projects/retrievo_server
+Total : 113 files,  218659 codes, 15316 comments, 981 blanks, all 234956 lines
+
+Languages
++--------------+------------+------------+------------+------------+------------+
+| language     | files      | code       | comment    | blank      | total      |
++--------------+------------+------------+------------+------------+------------+
+| JavaScript   |         19 |    213,788 |     14,924 |        139 |    228,851 |
+| TypeScript   |         78 |      4,579 |        383 |        805 |      5,767 |
+| JSON         |          5 |        200 |          0 |          4 |        204 |
+| YAML         |          1 |         36 |          4 |          9 |         49 |
+| Shell Script |          3 |         29 |          3 |         12 |         44 |
+| Markdown     |          3 |         23 |          0 |         12 |         35 |
+| CSS          |          2 |          2 |          2 |          0 |          4 |
+| HTML         |          1 |          1 |          0 |          0 |          1 |
+| Ignore       |          1 |          1 |          0 |          0 |          1 |
++--------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                               | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                  |        113 |    218,659 |     15,316 |        981 |    234,956 |
+| .circleci                                                                                                          |          1 |         36 |          4 |          9 |         49 |
+| .github                                                                                                            |          1 |         16 |          0 |          7 |         23 |
+| .github/ISSUE_TEMPLATE                                                                                             |          1 |         16 |          0 |          7 |         23 |
+| client                                                                                                             |         23 |    213,815 |     14,926 |        139 |    228,880 |
+| client/build                                                                                                       |         23 |    213,815 |     14,926 |        139 |    228,880 |
+| client/build/static                                                                                                |         20 |    213,740 |     14,926 |        138 |    228,804 |
+| client/build/static/css                                                                                            |          2 |          2 |          2 |          0 |          4 |
+| client/build/static/js                                                                                             |         18 |    213,738 |     14,924 |        138 |    228,800 |
+| scripts                                                                                                            |          3 |         29 |          3 |         12 |         44 |
+| src                                                                                                                |         78 |      4,579 |        383 |        805 |      5,767 |
+| src/bin                                                                                                            |          1 |        110 |          0 |          4 |        114 |
+| src/entities                                                                                                       |         16 |        875 |         18 |        157 |      1,050 |
+| src/middleware                                                                                                     |          4 |         89 |          0 |         15 |        104 |
+| src/repository                                                                                                     |          3 |        738 |         93 |        113 |        944 |
+| src/resolvers                                                                                                      |         40 |      2,048 |        159 |        407 |      2,614 |
+| src/resolvers/types                                                                                                |         29 |        408 |          8 |        153 |        569 |
+| src/seeder                                                                                                         |          2 |        300 |         27 |         36 |        363 |
+| src/services                                                                                                       |          5 |        138 |         45 |         36 |        219 |
+| src/utils                                                                                                          |          4 |        150 |          8 |         24 |        182 |
++--------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------------------------------+--------------+------------+------------+------------+------------+
+| filename                                                                                                           | language     | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------------------------------+--------------+------------+------------+------------+------------+
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/.circleci/config.yml                                            | YAML         |         36 |          4 |          9 |         49 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/.eslintrc.js                                                    | JavaScript   |         50 |          0 |          1 |         51 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/.github/ISSUE_TEMPLATE/-retrospect--n----------.md              | Markdown     |         16 |          0 |          7 |         23 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/.prettierignore                                                 | Ignore       |          1 |          0 |          0 |          1 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/.prettierrc                                                     | JSON         |          4 |          0 |          1 |          5 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/README.md                                                       | Markdown     |          4 |          0 |          4 |          8 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/asset-manifest.json                                | JSON         |         49 |          0 |          0 |         49 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/index.html                                         | HTML         |          1 |          0 |          0 |          1 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/manifest.json                                      | JSON         |         25 |          0 |          1 |         26 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/css/14.683bfc02.chunk.css                   | CSS          |          1 |          1 |          0 |          2 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/css/2.683bfc02.chunk.css                    | CSS          |          1 |          1 |          0 |          2 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/14.f818ef8f.chunk.js                     | JavaScript   |     96,366 |      7,537 |         61 |    103,964 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/2.6dfd7d52.chunk.js                      | JavaScript   |     94,863 |      7,371 |         61 |    102,295 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/main.235a9e19.chunk.js                   | JavaScript   |      8,906 |          1 |          1 |      8,908 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/main.6c26d2d7.chunk.js                   | JavaScript   |      8,931 |          1 |          1 |      8,933 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerDailyMotion.055e2b4d.chunk.js | JavaScript   |        395 |          1 |          1 |        397 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerFacebook.2eb10c6f.chunk.js    | JavaScript   |        318 |          1 |          1 |        320 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerFilePlayer.2f91c179.chunk.js  | JavaScript   |        610 |          1 |          1 |        612 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerMixcloud.63736b75.chunk.js    | JavaScript   |        296 |          1 |          1 |        298 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerPreview.0875cf07.chunk.js     | JavaScript   |        313 |          1 |          1 |        315 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerSoundCloud.677d6d75.chunk.js  | JavaScript   |        332 |          1 |          1 |        334 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerStreamable.56a4b980.chunk.js  | JavaScript   |        282 |          1 |          1 |        284 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerTwitch.a71da59b.chunk.js      | JavaScript   |        335 |          1 |          1 |        337 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerVidyard.a2c2c3b8.chunk.js     | JavaScript   |        330 |          1 |          1 |        332 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerVimeo.e413df98.chunk.js       | JavaScript   |        365 |          1 |          1 |        367 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerWistia.95931508.chunk.js      | JavaScript   |        362 |          1 |          1 |        364 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/reactPlayerYouTube.2eefe113.chunk.js     | JavaScript   |        487 |          1 |          1 |        489 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/runtime-main.5bfd1198.js                 | JavaScript   |        163 |          1 |          1 |        165 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/client/build/static/js/runtime-main.aa1ded95.js                 | JavaScript   |         84 |          1 |          1 |         86 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/memo.temp.md                                                    | Markdown     |          3 |          0 |          1 |          4 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/package.json                                                    | JSON         |         95 |          0 |          1 |         96 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/scripts/pre-commit.sh                                           | Shell Script |          4 |          1 |          3 |          8 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/scripts/pre-push.sh                                             | Shell Script |          8 |          1 |          3 |         12 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/scripts/prepare-commit-msg.sh                                   | Shell Script |         17 |          1 |          6 |         24 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/bin/invitation.ts                                           | TypeScript   |        110 |          0 |          4 |        114 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/constants.ts                                                | TypeScript   |          3 |          0 |          1 |          4 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/Board.ts                                           | TypeScript   |         49 |          0 |          9 |         58 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/Comment.ts                                         | TypeScript   |         52 |          0 |          9 |         61 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/CommentNotification.ts                             | TypeScript   |         62 |          0 |         10 |         72 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/File.ts                                            | TypeScript   |         32 |          0 |          6 |         38 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/Label.ts                                           | TypeScript   |         34 |          0 |          6 |         40 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/Project.ts                                         | TypeScript   |         70 |          0 |         14 |         84 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/ProjectPermission.ts                               | TypeScript   |         33 |          0 |          5 |         38 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/SocialLogins.ts                                    | TypeScript   |         45 |          1 |          7 |         53 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/Sprint.ts                                          | TypeScript   |         64 |          0 |         14 |         78 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/SprintNotification.ts                              | TypeScript   |         70 |          9 |         12 |         91 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/Task.ts                                            | TypeScript   |        108 |          0 |         22 |        130 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/TaskLabel.ts                                       | TypeScript   |         25 |          0 |          4 |         29 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/TaskNotification.ts                                | TypeScript   |         68 |          5 |         13 |         86 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/User.ts                                            | TypeScript   |        102 |          3 |         20 |        125 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/UserTask.ts                                        | TypeScript   |         28 |          0 |          4 |         32 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/entities/index.ts                                           | TypeScript   |         33 |          0 |          2 |         35 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/index.ts                                                    | TypeScript   |         92 |         32 |          6 |        130 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/middleware/checkAdminPermission.ts                          | TypeScript   |         26 |          0 |          4 |         30 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/middleware/checkAuthStatus.ts                               | TypeScript   |         15 |          0 |          3 |         18 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/middleware/checkIfGuest.ts                                  | TypeScript   |         21 |          0 |          4 |         25 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/middleware/checkProjectPermission.ts                        | TypeScript   |         27 |          0 |          4 |         31 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/repository/BoardCustomRepository.ts                         | TypeScript   |        145 |         46 |         32 |        223 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/repository/TaskCustomRepository.ts                          | TypeScript   |        517 |         47 |         69 |        633 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/repository/UserTaskRepository.ts                            | TypeScript   |         76 |          0 |         12 |         88 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/board.ts                                          | TypeScript   |        199 |         41 |         38 |        278 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/comment.ts                                        | TypeScript   |        134 |          5 |         23 |        162 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/file.ts                                           | TypeScript   |          0 |         14 |          3 |         17 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/index.ts                                          | TypeScript   |         21 |          0 |          2 |         23 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/label.ts                                          | TypeScript   |         73 |          4 |         12 |         89 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/project.ts                                        | TypeScript   |        365 |         55 |         65 |        485 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/sprint.ts                                         | TypeScript   |        267 |         13 |         38 |        318 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/task.ts                                           | TypeScript   |        159 |          5 |         18 |        182 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/taskLabel.ts                                      | TypeScript   |         76 |          5 |         12 |         93 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/BoardOptionInput.ts                         | TypeScript   |         11 |          1 |          4 |         16 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/BoardResponse.ts                            | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/BoardUpdateInput.ts                         | TypeScript   |         11 |          1 |          4 |         16 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/CommentCreateInput.ts                       | TypeScript   |          9 |          0 |          4 |         13 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/CommentDeleteResponse.ts                    | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/CommentResponse.ts                          | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/DeleteResponse.ts                           | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/DeleteUserTaskResponse.ts                   | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/Error.ts                                    | TypeScript   |         11 |          0 |          5 |         16 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/LabelDeleteRespons.ts                       | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/LabelResponse.ts                            | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/LabelUpdateInput.ts                         | TypeScript   |          9 |          0 |          4 |         13 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/LoginInput.ts                               | TypeScript   |         11 |          1 |          3 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/MyContext.ts                                | TypeScript   |         10 |          0 |          2 |         12 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/ProjectListResponse.ts                      | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/ProjectResponse.ts                          | TypeScript   |         63 |          0 |         21 |         84 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/SingleTaskResponse.ts                       | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/SprintOptionInput.ts                        | TypeScript   |         21 |          1 |          9 |         31 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/SprintResponse.ts                           | TypeScript   |         15 |          3 |          7 |         25 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/TaskCreateInput.ts                          | TypeScript   |         13 |          0 |          6 |         19 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/TaskDeleteRespons.ts                        | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/TaskLabelResponse.ts                        | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/TaskResponse.ts                             | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/TaskUpdateInput.ts                          | TypeScript   |         34 |          0 |         13 |         47 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/TaskUpdateResponse.ts                       | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/UserResponse.ts                             | TypeScript   |         19 |          0 |          7 |         26 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/UserTaskResponse.ts                         | TypeScript   |         11 |          0 |          4 |         15 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/UserUpdateOptions.ts                        | TypeScript   |         10 |          0 |          4 |         14 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/types/UsernamePasswordInput.ts                    | TypeScript   |         13 |          1 |          4 |         18 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/user.ts                                           | TypeScript   |        288 |          5 |         33 |        326 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/resolvers/userTask.ts                                       | TypeScript   |         58 |          4 |         10 |         72 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/seeder/index.factory.ts                                     | TypeScript   |        143 |          1 |         20 |        164 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/seeder/index.seed.ts                                        | TypeScript   |        157 |         26 |         16 |        199 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/services/authService.ts                                     | TypeScript   |        113 |          5 |         20 |        138 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/services/fileService.ts                                     | TypeScript   |          0 |         40 |         10 |         50 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/services/invitationService.ts                               | TypeScript   |          0 |          0 |          1 |          1 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/services/mailerService.ts                                   | TypeScript   |         25 |          0 |          4 |         29 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/services/notificationService.ts                             | TypeScript   |          0 |          0 |          1 |          1 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/types.ts                                                    | TypeScript   |         36 |          1 |          6 |         43 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/utils/AWSS3Uploader.ts                                      | TypeScript   |          0 |          6 |          2 |          8 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/utils/ErrorFactory.ts                                       | TypeScript   |         78 |          1 |          9 |         88 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/utils/authUtils.ts                                          | TypeScript   |         25 |          0 |          3 |         28 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/src/utils/sprintRowDnd.ts                                       | TypeScript   |         47 |          1 |         10 |         58 |
+| /Users/paulkim/Desktop/cs_projects/retrievo_server/tsconfig.json                                                   | JSON         |         27 |          0 |          1 |         28 |
+| Total                                                                                                              |              |    218,659 |     15,316 |        981 |    234,956 |
++--------------------------------------------------------------------------------------------------------------------+--------------+------------+------------+------------+------------+
