@@ -63,17 +63,25 @@ passport.use(
 /// /SocialLogins//  ///
 /// ///////////////  ///
 
+const {
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL,
+  GITHUB_CLIENT_ID,
+  GITHUB_SECRET,
+  GITHUB_CALLBACK_URL,
+} = process.env;
+
 const googleOptions = {
-  clientID:
-    "10963333100-ih0b3mbs9d1la8go1780mqqkobn4ngt5.apps.googleusercontent.com",
-  clientSecret: "b3V0_-dXTCSKwsrChG27bG2z",
-  callbackURL: "http://localhost:4000/auth/google/callback",
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: GOOGLE_CALLBACK_URL,
 };
 
 const githubOptions = {
-  clientID: "9978aef8f4e5e7fb6bfa",
-  clientSecret: "5f4d4bb16d38fff555e30f2ab8a5e9dab1bbf7ae",
-  callbackURL: "http://localhost:4000/auth/github/callback",
+  clientID: GITHUB_CLIENT_ID,
+  clientSecret: GITHUB_SECRET,
+  callbackURL: GITHUB_CALLBACK_URL,
   scope: ["user:email"],
 };
 

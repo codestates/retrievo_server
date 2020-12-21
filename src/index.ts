@@ -9,17 +9,20 @@ import { buildContext } from "graphql-passport";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import { ApolloServer } from "apollo-server-express";
-// import dotenv from "dotenv-safe";
+import dotenv from "dotenv-safe";
 import resolvers from "./resolvers";
 import { COOKIE_NAME, prod } from "./constants";
 // passport need env
-// dotenv.config({ example: ".env" });
+dotenv.config({ example: ".env" });
 /* eslint-disable */
 import passport from "./services/authService";
 import path from "path";
 // redis Setting (before apollo middleware)
+const { REDIS_URL } = process.env;
 const RedisStore = connectRedis(session);
-export const redis = new Redis();
+
+export const redis = new Redis(REDIS_URL);
+
 const main = async () => {
   // orm Setting
   await createConnection();
