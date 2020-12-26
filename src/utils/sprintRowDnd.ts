@@ -51,7 +51,15 @@ export async function sprintRowDnd(
       await sprintRepository.save(sprint);
     });
   }
-  return { success: true, sprint };
+
+  const sprints = await Sprint.find({ where: { project: projectId } });
+  const result = [...sprints];
+  result.sort((a, b) => a.row - b.row);
+
+  return {
+    success: true,
+    sprints: result,
+  };
 }
 
 export default sprintRowDnd;

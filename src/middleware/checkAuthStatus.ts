@@ -11,7 +11,7 @@ export const checkAuthStatus: MiddlewareFn<MyContext> = async (
   if (!currentUser)
     throw new AuthenticationError("Please login to access to the service 😱");
   console.log("!!!checkAuthStatus pass!!!");
-  return await next();
+  return next();
 };
 
 export default checkAuthStatus;
