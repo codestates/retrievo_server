@@ -37,6 +37,7 @@ export class UserResolver {
   @UseMiddleware([checkAuthStatus])
   async getMe(@Ctx() context: MyContext): Promise<UserResponse> {
     const id = context.req.session.passport?.user;
+    console.log(id);
     try {
       const user = await User.findOne(
         { id },
@@ -101,7 +102,7 @@ export class UserResolver {
       if (user) {
         const sampleProjectId =
           process.env.SAMPLE_PROJECT_ID ||
-          "27e201d2-17d4-4ef5-a4f5-c433d1a7114d";
+          "5e3dead9-8070-4e94-9f8e-bc0b3d9d6b8a";
 
         const project = await Project.findOne({ id: sampleProjectId });
         console.log("project", project);
