@@ -15,7 +15,7 @@
 <h3 align="left">Languages and Tools:</h3>
 
 ![stack1](https://i.ibb.co/bRQqvLZ/retrievo-sw-Architecture.png)
-![stack2](https://i.ibb.co/ZHBvqJT/Untitled.png)
+<img width="500px" src="https://i.ibb.co/ZHBvqJT/Untitled.png" />
 
 ## Install
 
