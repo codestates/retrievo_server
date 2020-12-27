@@ -7,6 +7,7 @@
 </p>
 
 ### 🏠 [Homepage](.)
+![screenshot](https://i.ibb.co/LRLC1rR/gnome-shell-screenshot-GWH6-V0.png)
 
 #### Retrievo is a web application designed to help small teams organize, track, and manage their work.
 #### 리트리보는 소규모 팀 프로젝트의 관리를 위한 웹 앱입니다.
