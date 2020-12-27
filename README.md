@@ -38,7 +38,7 @@ Email: paulbkim01@gmail.com
 Email: dongoc21hj@gmail.com
 
 👤  Si Choi <br />
-Email: 0334pc@gmail.com
+Email: sichoidev@gmail.com
 
 ## Show your support
 
