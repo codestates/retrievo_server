@@ -3,6 +3,7 @@
   <a href="https://retrievo.io/" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/my-app.svg">
   </a>
+<p>[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=codestates)](https://github.com/codestates/retrievo_server)</p>
 </p>
 
 ### 🏠 [Homepage](.)
@@ -31,7 +32,7 @@ npm run start
 Email: developer.kje@gmail.com
 
 👤  Paul B. Kim <br />
-Email: pbkim0725@gmail.com
+Email: paulbkim01@gmail.com
 
 👤  Hajung Song <br />
 Email: dongoc21hj@gmail.com
