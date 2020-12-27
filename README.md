@@ -1,4 +1,4 @@
-<h1 align="center">Welcome to my-app 👋</h1>
+<h1 align="center">Welcome to Retrievo! 🐶 </h1>
 <p>
   <a href="https://www.npmjs.com/package/my-app" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/my-app.svg">
