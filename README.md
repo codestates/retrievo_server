@@ -6,13 +6,13 @@
   <a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fcodestates%2Fretrievo_server%2Fedit%2Fdev%2FREADME.md&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false"/></a>                      
 </p>
 
-### 🏠 [Homepage](.)
+# 🏠 [Homepage](.)
 ![screenshot](https://i.ibb.co/LRLC1rR/gnome-shell-screenshot-GWH6-V0.png)
 
 #### Retrievo is a web application designed to help small teams organize, track, and manage their work.
 #### 리트리보는 소규모 팀 프로젝트의 관리를 위한 웹 앱입니다.
 
-<h3 align="left">Languages and Tools:</h3>
+<h1 align="left">Languages and Tools:</h1>
 
 ![stack1](https://i.ibb.co/bRQqvLZ/retrievo-sw-Architecture.png)
 <img width="500px" src="https://i.ibb.co/ZHBvqJT/Untitled.png" />
