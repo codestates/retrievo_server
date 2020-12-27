@@ -3,7 +3,7 @@
   <a href="https://retrievo.io/" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/my-app.svg">
   </a>
-[![Anurag's github stats](https://github-readme-stats.vercel.app/api?username=codestates)](https://github.com/anuraghazra/github-readme-stats)
+[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=codestates&layout=compact)](https://github.com/codestates/retrievo_server/github-readme-stats)
 </p>
 
 ### 🏠 [Homepage](.)
