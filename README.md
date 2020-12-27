@@ -3,6 +3,7 @@
   <a href="https://retrievo.io/" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/my-app.svg">
   </a>
+  <a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fgjbae1212%2Fhit-counter"/></a>                        
 </p>
 
 ### 🏠 [Homepage](.)
