@@ -28,16 +28,16 @@ npm run start
 ```
 
 ## Author
-👤 JungEun Kim
+👤 JungEun Kim <br />
 Email: developer.kje@gmail.com
 
-👤 Paul B. Kim
+👤 Paul B. Kim <br />
 Email: pbkim0725@gmail.com
 
-👤 Hajung Song
+👤 Hajung Song <br />
 Email: dongoc21hj@gmail.com
 
-👤 Si Choi
+👤 Si Choi <br />
 Email: 0334pc@gmail.com
 
 ## Show your support
