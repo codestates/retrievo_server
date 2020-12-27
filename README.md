@@ -3,7 +3,6 @@
   <a href="https://retrievo.io/" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/my-app.svg">
   </a>
-<p>[![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=codestates)](https://github.com/codestates/retrievo_server)</p>
 </p>
 
 ### 🏠 [Homepage](.)
